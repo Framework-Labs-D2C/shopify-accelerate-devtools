@@ -7,5 +7,7 @@
  *  - Running typescript files
  *  - Tailwind processes
  *  - Shopify CLI processes
- *  -
+ *  - Esbuild?
+ *  - Provide proper types
  * */
+
