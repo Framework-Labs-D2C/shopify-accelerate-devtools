@@ -1,11 +1,12 @@
 #!/usr/bin/env ts-node-script
-console.log(process.cwd(), "shopify-theme-dev: process.cwd()");
+
 import path from "path";
 import toml from "toml";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { init } from "./src";
-import { runTailwindCSSWatcher } from "./src/tailwind-watch";
+import { runTailwindCSSWatcher } from "./tailwind/tailwind-watch";
+
 import { readFileSync } from "./utils/fs";
 import { JSONParse } from "./utils/json";
 

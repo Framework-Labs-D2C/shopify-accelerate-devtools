@@ -37,6 +37,7 @@
     "@shopify/shopify-api": "^9.3.2",
     "@swc/core": "^1.4.2",
     "@swc/helpers": "^0.5.6",
+    "autoprefixer": "^10.4.19",
     "chalk": "4.1.2",
     "commander": "^12.0.0",
     "decache": "^4.6.2",
@@ -52,7 +53,11 @@
     "toml": "^3.0.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "zustand": "^4.5.1"
+    "zustand": "^4.5.1",
+    "@tailwindcss/aspect-ratio": "^0.4.2",
+    "@tailwindcss/container-queries": "^0.1.1",
+    "tailwindcss": "0.0.0-insiders.a5a6158",
+    "tailwindcss-container-queries-with-max-width": "^0.1.5"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
