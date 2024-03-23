@@ -159,6 +159,12 @@ interface Event {
   message: FormattedString!
 }
 
+"A additional cost, charged by the merchant, on an order. Examples include return shipping fees and restocking fees."
+interface Fee {
+  "The unique ID for the Fee."
+  id: ID!
+}
+
 "A file interface."
 interface File {
   "A word or phrase to describe the contents or the function of a file."
@@ -412,6 +418,14 @@ interface OnlineStorePreviewable {
   onlineStorePreviewUrl: URL
 }
 
+"An entity that represents details of an asynchronous operation on a product."
+interface ProductOperation {
+  "The product that's created or updated during this operation."
+  product: Product
+  "The status of this operation."
+  status: ProductOperationStatus!
+}
+
 """
 
 Represents a resource that can be published to a channel.
@@ -419,12 +433,12 @@ A publishable resource can be either a Product or Collection.
 """
 interface Publishable {
   "The number of publications a resource is published to without feedback errors."
-  availablePublicationCount: Int!
+  availablePublicationsCount: Count
   "The number of publications a resource is published on."
   publicationCount(
     "Include only the resource's publications that are published. If false, then return all the resource's publications including future publications."
     onlyPublished: Boolean = true
-  ): Int!
+  ): Int! @deprecated(reason: "Use `resourcePublicationsCount` instead.")
   "Check to see whether the resource is published to a given channel."
   publishedOnChannel(
     "The ID of the channel to check."
@@ -457,6 +471,11 @@ interface Publishable {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ResourcePublicationConnection!
+  "The number of publications a resource is published on."
+  resourcePublicationsCount(
+    "Include only the resource's publications that are published. If false, then return all the resource's publications including future publications."
+    onlyPublished: Boolean = true
+  ): Count
   "The list of resources that are either published or staged to be published to a publication."
   resourcePublicationsV2(
     "Returns the elements that come after the specified cursor."
@@ -640,7 +659,7 @@ interface SubscriptionContractBase {
     reverse: Boolean = false
   ): SubscriptionManualDiscountConnection!
   "The number of lines associated with the subscription contract."
-  lineCount: Int!
+  lineCount: Int! @deprecated(reason: "Use `linesCount` instead.")
   "The list of subscription lines associated with the subscription contract."
   lines(
     "Returns the elements that come after the specified cursor."
@@ -654,6 +673,8 @@ interface SubscriptionContractBase {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): SubscriptionLineConnection!
+  "The number of lines associated with the subscription contract."
+  linesCount: Count
   "The note field that will be applied to the generated orders."
   note: String
   "A list of the subscription contract's orders."
@@ -735,7 +756,7 @@ union DiscountShippingDestinationSelection = DiscountCountries | DiscountCountry
 
 The resource referenced by the metafield value.
 """
-union MetafieldReference = Collection | GenericFile | MediaImage | Metaobject | OnlineStorePage | Product | ProductVariant | Video
+union MetafieldReference = Collection | GenericFile | MediaImage | Metaobject | Model3d | OnlineStorePage | Product | ProductVariant | Video
 
 """
 
@@ -747,7 +768,7 @@ union MetafieldReferencer = AppInstallation | Collection | Customer | DeliveryCu
 
 A change that has been applied to an order.
 """
-union OrderStagedChange = OrderStagedChangeAddCustomItem | OrderStagedChangeAddLineItemDiscount | OrderStagedChangeAddShippingLine | OrderStagedChangeAddVariant | OrderStagedChangeDecrementItem | OrderStagedChangeIncrementItem
+union OrderStagedChange = OrderStagedChangeAddCustomItem | OrderStagedChangeAddLineItemDiscount | OrderStagedChangeAddShippingLine | OrderStagedChangeAddVariant | OrderStagedChangeDecrementItem | OrderStagedChangeIncrementItem | OrderStagedChangeRemoveShippingLine
 
 "Payment details related to a transaction."
 union PaymentDetails = CardPaymentDetails | ShopPayInstallmentsPaymentDetails
@@ -977,6 +998,8 @@ type Abandonment implements Node {
   id: ID!
   "Whether the products in abandonment are available."
   inventoryAvailable: Boolean!
+  "Whether the abandonment event comes from a custom storefront channel."
+  isFromCustomStorefront: Boolean!
   "Whether the abandonment event comes from the Online Store sales channel."
   isFromOnlineStore: Boolean!
   "Whether the abandonment event comes from the Shop app sales channel."
@@ -2477,6 +2500,13 @@ type CalculatedOrder implements Node {
   originalOrder: Order!
   """
 
+  Returns the shipping lines on the order that existed before starting the edit.
+  Will include any changes that have been made as well as shipping lines added during the current edit.
+  Returns only the first 250 shipping lines.
+  """
+  shippingLines: [CalculatedShippingLine!]!
+  """
+
   List of changes made to the order during the current edit.
   """
   stagedChanges(
@@ -2522,6 +2552,21 @@ type CalculatedScriptDiscountApplication implements CalculatedDiscountApplicatio
   targetType: DiscountApplicationTargetType!
   "The value of the discount application."
   value: PricingValue!
+}
+
+"""
+
+A shipping line item involved in order editing that may be newly added or have new changes applied.
+"""
+type CalculatedShippingLine {
+  "A globally-unique ID."
+  id: ID
+  "The price of the shipping line."
+  price: MoneyBag!
+  "The staged status of the shipping line."
+  stagedStatus: CalculatedShippingLineStagedStatus!
+  "The title of the shipping line."
+  title: String!
 }
 
 "Card payment details related to a transaction."
@@ -2689,6 +2734,127 @@ type CartTransformFeature {
   eligibleOperations: CartTransformEligibleOperations!
 }
 
+"Tracks an adjustment to the cash in a cash tracking session for a point of sale device over the course of a shift."
+type CashTrackingAdjustment implements Node {
+  "The amount of cash being added or removed."
+  cash: MoneyV2!
+  "A globally-unique ID."
+  id: ID!
+  "The note entered when the adjustment was made."
+  note: String
+  "The staff member who made the adjustment."
+  staffMember: StaffMember!
+  "The time when the adjustment was made."
+  time: DateTime!
+}
+
+"""
+
+An auto-generated type for paginating through multiple CashTrackingAdjustments.
+"""
+type CashTrackingAdjustmentConnection {
+  "A list of edges."
+  edges: [CashTrackingAdjustmentEdge!]!
+  "A list of the nodes contained in CashTrackingAdjustmentEdge."
+  nodes: [CashTrackingAdjustment!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+
+"""
+
+An auto-generated type which holds one CashTrackingAdjustment and a cursor during pagination.
+"""
+type CashTrackingAdjustmentEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of CashTrackingAdjustmentEdge."
+  node: CashTrackingAdjustment!
+}
+
+"Tracks the balance in a cash drawer for a point of sale device over the course of a shift."
+type CashTrackingSession implements Node {
+  "The adjustments made to the cash drawer during this session."
+  adjustments(
+    "Returns the elements that come after the specified cursor."
+    after: String,
+    "Returns the elements that come before the specified cursor."
+    before: String,
+    "Returns up to the first `n` elements from the list."
+    first: Int,
+    "Returns up to the last `n` elements from the list."
+    last: Int,
+    "Reverse the order of the underlying list."
+    reverse: Boolean = false,
+    "Sort the underlying list by the given key."
+    sortKey: AdjustmentsSortKeys = TIME
+  ): CashTrackingAdjustmentConnection!
+  "Whether this session is tracking cash payments."
+  cashTrackingEnabled: Boolean!
+  "The counted cash balance when the session was closed."
+  closingBalance: MoneyV2
+  "The note entered when the session was closed."
+  closingNote: String
+  "The user who closed the session."
+  closingStaffMember: StaffMember
+  "When the session was closed."
+  closingTime: DateTime
+  "The expected balance at the end of the session or the expected current balance for sessions that are still open."
+  expectedBalance: MoneyV2!
+  "The amount that was expected to be in the cash drawer at the end of the session, calculated after the session was closed."
+  expectedClosingBalance: MoneyV2
+  "The amount expected to be in the cash drawer based on the previous session."
+  expectedOpeningBalance: MoneyV2
+  "A globally-unique ID."
+  id: ID!
+  "The location of the point of sale device during this session."
+  location: Location
+  "The net cash sales made for the duration of this cash tracking session."
+  netCashSales: MoneyV2!
+  "The counted cash balance when the session was opened."
+  openingBalance: MoneyV2!
+  "The note entered when the session was opened."
+  openingNote: String
+  "The user who opened the session."
+  openingStaffMember: StaffMember
+  "When the session was opened."
+  openingTime: DateTime!
+  "The register name for the point of sale device that this session is tracking cash for."
+  registerName: String!
+  "The sum of all adjustments made during the session, excluding the final adjustment."
+  totalAdjustments: MoneyV2
+  "The sum of all cash refunds for the duration of this cash tracking session."
+  totalCashRefunds: MoneyV2!
+  "The sum of all cash sales for the duration of this cash tracking session."
+  totalCashSales: MoneyV2!
+  "The total discrepancy for the session including starting and ending."
+  totalDiscrepancy: MoneyV2
+}
+
+"""
+
+An auto-generated type for paginating through multiple CashTrackingSessions.
+"""
+type CashTrackingSessionConnection {
+  "A list of edges."
+  edges: [CashTrackingSessionEdge!]!
+  "A list of the nodes contained in CashTrackingSessionEdge."
+  nodes: [CashTrackingSession!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+
+"""
+
+An auto-generated type which holds one CashTrackingSession and a cursor during pagination.
+"""
+type CashTrackingSessionEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of CashTrackingSessionEdge."
+  node: CashTrackingSession!
+}
+
 """
 
 An auto-generated type for paginating through multiple Catalogs.
@@ -2700,8 +2866,6 @@ type CatalogConnection {
   nodes: [Catalog!]!
   "Information to aid in pagination."
   pageInfo: PageInfo!
-  "The total count of Catalogs."
-  totalCount: UnsignedInt64!
 }
 
 "Return type for `catalogContextUpdate` mutation."
@@ -2863,6 +3027,43 @@ type Channel implements Node {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ProductConnection!
+  "The count of products published to the channel. Limited to a maximum of 10000."
+  productsCount(
+    """
+
+    Apply one or multiple filters to the query.
+    | name | description | acceptable_values | default_value | example_use |
+    | ---- | ---- | ---- | ---- | ---- |
+    | barcode |
+    | bundles |
+    | created_at |
+    | delivery_profile_id |
+    | error_feedback |
+    | gift_card |
+    | has_only_composites |
+    | has_only_default_variant |
+    | has_variant_with_components |
+    | id |
+    | inventory_total |
+    | is_price_reduced |
+    | out_of_stock_somewhere |
+    | price |
+    | product_configuration_owner |
+    | product_publication_status |
+    | product_type |
+    | publishable_status |
+    | published_status |
+    | sku |
+    | status |
+    | tag |
+    | tag_not |
+    | title |
+    | updated_at |
+    | vendor |
+    Refer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.
+    """
+    query: String
+  ): Count
   "Whether the channel supports future publishing."
   supportsFuturePublishing: Boolean!
 }
@@ -2979,6 +3180,21 @@ type CheckoutBrandingButtonColorRoles {
   text: String
 }
 
+"The customizations for the breadcrumbs that represent a buyer's journey to the checkout."
+type CheckoutBrandingBuyerJourney {
+  """
+
+  An option to display or hide the breadcrumbs that represent the buyer's journey on 3-page checkout.
+  """
+  visibility: CheckoutBrandingVisibility
+}
+
+"The customizations that you can make to cart links at checkout."
+type CheckoutBrandingCartLink {
+  "Whether the cart link is visible at checkout."
+  visibility: CheckoutBrandingVisibility
+}
+
 "The checkboxes customizations."
 type CheckoutBrandingCheckbox {
   "The corner radius used for checkboxes."
@@ -3057,6 +3273,16 @@ type CheckoutBrandingColorSchemes {
   scheme1: CheckoutBrandingColorScheme
   "The secondary scheme. By default, it’s used for secondary areas, like Checkout’s Order Summary."
   scheme2: CheckoutBrandingColorScheme
+  """
+
+  An extra scheme available to customize more surfaces, components or specific states of the user interface.
+  """
+  scheme3: CheckoutBrandingColorScheme
+  """
+
+  An extra scheme available to customize more surfaces, components or specific states of the user interface.
+  """
+  scheme4: CheckoutBrandingColorScheme
 }
 
 "The color settings for global colors and color schemes."
@@ -3125,14 +3351,25 @@ type CheckoutBrandingCustomFont implements CheckoutBrandingFont {
 
 "The customizations that apply to specific components or areas of the user interface."
 type CheckoutBrandingCustomizations {
+  "The customizations for the breadcrumbs that represent a buyer's journey to the checkout."
+  buyerJourney: CheckoutBrandingBuyerJourney
+  """
+
+  The checkout cart link customizations. For example, by setting the visibility field to `HIDDEN`, you can hide the cart icon in the header for one-page checkout, and the cart link in breadcrumbs in three-page checkout.
+  """
+  cartLink: CheckoutBrandingCartLink
   "The checkboxes customizations."
   checkbox: CheckoutBrandingCheckbox
   "The choice list customizations."
   choiceList: CheckoutBrandingChoiceList
   "The form controls customizations."
   control: CheckoutBrandingControl
+  "The express checkout customizations."
+  expressCheckout: CheckoutBrandingExpressCheckout
   "The favicon image."
   favicon: CheckoutBrandingImage
+  "The footer customizations."
+  footer: CheckoutBrandingFooter
   "The global customizations."
   global: CheckoutBrandingGlobal
   "The header customizations."
@@ -3174,6 +3411,18 @@ type CheckoutBrandingDesignSystem {
   typography: CheckoutBrandingTypography
 }
 
+"The Express Checkout customizations."
+type CheckoutBrandingExpressCheckout {
+  "The Express Checkout buttons customizations."
+  button: CheckoutBrandingExpressCheckoutButton
+}
+
+"The Express Checkout button customizations."
+type CheckoutBrandingExpressCheckoutButton {
+  "The corner radius used for the Express Checkout buttons."
+  cornerRadius: CheckoutBrandingCornerRadius
+}
+
 """
 
 A font group. To learn more about updating fonts, refer to the
@@ -3197,6 +3446,20 @@ type CheckoutBrandingFontSize {
   base: Float
   "The scale ratio used to derive all font sizes such as small and large."
   ratio: Float
+}
+
+"A container for the footer section customizations."
+type CheckoutBrandingFooter {
+  "The footer content settings."
+  content: CheckoutBrandingFooterContent
+  "The footer position."
+  position: CheckoutBrandingFooterPosition
+}
+
+"The footer content customizations."
+type CheckoutBrandingFooterContent {
+  "The visibility settings for footer content."
+  visibility: CheckoutBrandingVisibility
 }
 
 "The global customizations."
@@ -3241,6 +3504,8 @@ type CheckoutBrandingLogo {
   image: Image
   "The maximum width of the logo."
   maxWidth: Int
+  "The visibility of the logo."
+  visibility: CheckoutBrandingVisibility
 }
 
 "The main container customizations."
@@ -3249,6 +3514,28 @@ type CheckoutBrandingMain {
   backgroundImage: CheckoutBrandingImage
   "The selected color scheme of the main container."
   colorScheme: CheckoutBrandingColorSchemeSelection
+  "The settings for the main sections."
+  section: CheckoutBrandingMainSection
+}
+
+"The main sections customizations."
+type CheckoutBrandingMainSection {
+  "The background style of the main sections."
+  background: CheckoutBrandingBackground
+  "The border for the main sections."
+  border: CheckoutBrandingSimpleBorder
+  "The border style of the main sections."
+  borderStyle: CheckoutBrandingBorderStyle
+  "The border width of the main sections."
+  borderWidth: CheckoutBrandingBorderWidth
+  "The selected color scheme of the main sections."
+  colorScheme: CheckoutBrandingColorSchemeSelection
+  "The corner radius of the main sections."
+  cornerRadius: CheckoutBrandingCornerRadius
+  "The padding of the main sections."
+  padding: CheckoutBrandingSpacingKeyword
+  "The shadow of the main sections."
+  shadow: CheckoutBrandingShadow
 }
 
 "The merchandise thumbnails customizations."
@@ -3265,6 +3552,28 @@ type CheckoutBrandingOrderSummary {
   backgroundImage: CheckoutBrandingImage
   "The selected color scheme of the order summary container."
   colorScheme: CheckoutBrandingColorSchemeSelection
+  "The settings for the order summary sections."
+  section: CheckoutBrandingOrderSummarySection
+}
+
+"The order summary sections customizations."
+type CheckoutBrandingOrderSummarySection {
+  "The background style of the order summary sections."
+  background: CheckoutBrandingBackground
+  "The border for the order summary sections."
+  border: CheckoutBrandingSimpleBorder
+  "The border style of the order summary sections."
+  borderStyle: CheckoutBrandingBorderStyle
+  "The border width of the order summary sections."
+  borderWidth: CheckoutBrandingBorderWidth
+  "The selected color scheme of the order summary sections."
+  colorScheme: CheckoutBrandingColorSchemeSelection
+  "The corner radius of the order summary sections."
+  cornerRadius: CheckoutBrandingCornerRadius
+  "The padding of the order summary sections."
+  padding: CheckoutBrandingSpacingKeyword
+  "The shadow of the order summary sections."
+  shadow: CheckoutBrandingShadow
 }
 
 "The selects customizations."
@@ -3398,7 +3707,7 @@ Collections can also be created for a custom group of products. These are called
 """
 type Collection implements HasMetafieldDefinitions & HasMetafields & HasPublishedTranslations & Node & Publishable {
   "The number of publications a resource is published to without feedback errors."
-  availablePublicationCount: Int!
+  availablePublicationsCount: Count
   """
 
   A single-line, text-only description of the collection, stripped of any HTML tags and formatting that were included in the description.
@@ -3529,12 +3838,12 @@ type Collection implements HasMetafieldDefinitions & HasMetafields & HasPublishe
     sortKey: ProductCollectionSortKeys = COLLECTION_DEFAULT
   ): ProductConnection!
   "The number of products in the collection."
-  productsCount: Int!
+  productsCount: Count
   "The number of publications a resource is published on."
   publicationCount(
     "Include only the resource's publications that are published. If false, then return all the resource's publications including future publications."
     onlyPublished: Boolean = true
-  ): Int!
+  ): Int! @deprecated(reason: "Use `resourcePublicationsCount` instead.")
   "The channels where the collection is published."
   publications(
     "Returns the elements that come after the specified cursor."
@@ -3582,6 +3891,11 @@ type Collection implements HasMetafieldDefinitions & HasMetafields & HasPublishe
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ResourcePublicationConnection!
+  "The number of publications a resource is published on."
+  resourcePublicationsCount(
+    "Include only the resource's publications that are published. If false, then return all the resource's publications including future publications."
+    onlyPublished: Boolean = true
+  ): Count
   "The list of resources that are either published or staged to be published to a publication."
   resourcePublicationsV2(
     "Returns the elements that come after the specified cursor."
@@ -3951,7 +4265,7 @@ type CompaniesDeletePayload {
 "Represents information about a company which is also a customer of the shop."
 type Company implements CommentEventSubject & HasEvents & HasMetafieldDefinitions & HasMetafields & Navigable & Node {
   "The number of contacts that belong to the company."
-  contactCount: Int!
+  contactCount: Int! @deprecated(reason: "Use `contactsCount` instead.")
   "The list of roles for the company contacts."
   contactRoles(
     "Returns the elements that come after the specified cursor."
@@ -3999,6 +4313,8 @@ type Company implements CommentEventSubject & HasEvents & HasMetafieldDefinition
     "Sort the underlying list by the given key."
     sortKey: CompanyContactSortKeys = ID
   ): CompanyContactConnection!
+  "The number of contacts that belong to the company."
+  contactsCount: Count
   "The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company was created in Shopify."
   createdAt: DateTime!
   "The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company became the customer."
@@ -4074,8 +4390,6 @@ type Company implements CommentEventSubject & HasEvents & HasMetafieldDefinition
   id: ID!
   "The lifetime duration of the company, since it became a customer of the shop. Examples: `2 days`, `3 months`, `1 year`."
   lifetimeDuration: String!
-  "The number of locations that belong to the company."
-  locationCount: Int!
   "The list of locations in the company."
   locations(
     "Returns the elements that come after the specified cursor."
@@ -4105,6 +4419,8 @@ type Company implements CommentEventSubject & HasEvents & HasMetafieldDefinition
     "Sort the underlying list by the given key."
     sortKey: CompanyLocationSortKeys = ID
   ): CompanyLocationConnection!
+  "The number of locations that belong to the company."
+  locationsCount: Count
   "The main contact for the company."
   mainContact: CompanyContact
   "Returns a metafield by namespace and key that belongs to the resource."
@@ -4168,8 +4484,6 @@ type Company implements CommentEventSubject & HasEvents & HasMetafieldDefinition
   name: String!
   "A note about the company."
   note: String
-  "The total number of orders placed for this company, across all its locations."
-  orderCount: Int!
   "The list of the company's orders."
   orders(
     "Returns the elements that come after the specified cursor."
@@ -4185,6 +4499,8 @@ type Company implements CommentEventSubject & HasEvents & HasMetafieldDefinition
     "Sort the underlying list by the given key."
     sortKey: OrderSortKeys = ID
   ): OrderConnection!
+  "The total number of orders placed for this company, across all its locations."
+  ordersCount: Count
   "Returns a private metafield by namespace and key that belongs to the resource."
   privateMetafield(
     "The key for the private metafield."
@@ -4640,6 +4956,8 @@ type CompanyLocation implements CommentEventSubject & HasEvents & HasMetafieldDe
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): CatalogConnection!
+  "The number of catalogs associated with the company location."
+  catalogsCount: Count
   "The company that the company location belongs to."
   company: Company!
   "The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) at which the company location was created in Shopify."
@@ -5043,6 +5361,14 @@ type CompanyUpdatePayload {
   company: Company
   "The list of errors that occurred from executing the mutation."
   userErrors: [BusinessCustomerUserError!]!
+}
+
+"Details for count of elements."
+type Count {
+  "Count of elements."
+  count: Int!
+  "Precision of count, how exact is the value."
+  precision: CountPrecision!
 }
 
 "The list of all the countries from the combined shipping zones for the shop."
@@ -5692,7 +6018,7 @@ type CustomerJourneySummary {
     reverse: Boolean = false
   ): CustomerMomentConnection
   "The total number of customer moments associated with this order. Returns null if the order is still in the process of being attributed."
-  momentsCount: Int
+  momentsCount: Count
   "Whether the attributed sessions for the order have been created yet."
   ready: Boolean!
 }
@@ -6947,7 +7273,7 @@ type DeliveryLocationGroup implements Node {
     sortKey: LocationSortKeys = NAME
   ): LocationConnection!
   "A count of all locations that are part of this location group."
-  locationsCount: Int!
+  locationsCount: Count
 }
 
 "Links a location group with a zone and the associated method definitions."
@@ -7013,6 +7339,8 @@ type DeliveryLocationLocalPickupSettingsError implements DisplayableError {
 
 "The delivery method used by a fulfillment order."
 type DeliveryMethod implements Node {
+  "The Additional information to consider when performing the delivery."
+  additionalInformation: DeliveryMethodAdditionalInformation
   "The branded promise that was presented to the buyer during checkout.  For example: Shop Promise."
   brandedPromise: DeliveryBrandedPromise
   "A globally-unique ID."
@@ -7025,6 +7353,17 @@ type DeliveryMethod implements Node {
   minDeliveryDateTime: DateTime
   "A reference to the shipping method."
   serviceCode: String
+}
+
+"""
+
+Additional information included on a delivery method that will help during the delivery process.
+"""
+type DeliveryMethodAdditionalInformation {
+  "The delivery instructions to follow when performing the delivery."
+  instructions: String
+  "The phone number to contact when performing the delivery."
+  phone: String
 }
 
 """
@@ -7140,10 +7479,10 @@ type DeliveryProfile implements Node {
   name: String!
   "The number of active origin locations for the profile."
   originLocationCount: Int!
-  "The number of product variants for this profile. The count for the default profile isn't supported and will return -1."
-  productVariantsCount: Int! @deprecated(reason: "Use `productVariantsCountV2` instead.")
   "How many product variants are in this profile."
-  productVariantsCountV2: DeliveryProductVariantsCount!
+  productVariantsCount: Count
+  "How many product variants are in this profile."
+  productVariantsCountV2: DeliveryProductVariantsCount! @deprecated(reason: "Use `productVariantsCount` instead.")
   "The products and variants associated with this profile."
   profileItems(
     "Returns the elements that come after the specified cursor."
@@ -7825,8 +8164,6 @@ type DiscountCodeApp {
   appliesOncePerCustomer: Boolean!
   "The number of times that the discount has been used."
   asyncUsageCount: Int!
-  "The number of redeem codes for the discount."
-  codeCount: Int!
   "A list of redeem codes for the discount."
   codes(
     "Returns the elements that come after the specified cursor."
@@ -7858,6 +8195,8 @@ type DiscountCodeApp {
     "Sort the underlying list by the given key."
     sortKey: DiscountCodeSortKeys = ID
   ): DiscountRedeemCodeConnection!
+  "The number of redeem codes for the discount."
+  codesCount: Count
   "Determines which discount classes the discount can combine with."
   combinesWith: DiscountCombinesWith!
   "The date and time when the discount was created."
@@ -7940,8 +8279,6 @@ type DiscountCodeBasic {
   appliesOncePerCustomer: Boolean!
   "The number of times that the discount has been used."
   asyncUsageCount: Int!
-  "The number of redeem codes for the discount."
-  codeCount: Int!
   "A list of redeem codes for the discount."
   codes(
     "Returns the elements that come after the specified cursor."
@@ -7973,6 +8310,8 @@ type DiscountCodeBasic {
     "Sort the underlying list by the given key."
     sortKey: DiscountCodeSortKeys = ID
   ): DiscountRedeemCodeConnection!
+  "The number of redeem codes for the discount."
+  codesCount: Count
   "Determines which discount classes the discount can combine with."
   combinesWith: DiscountCombinesWith!
   "The date and time when the discount was created."
@@ -8057,8 +8396,6 @@ type DiscountCodeBxgy {
   appliesOncePerCustomer: Boolean!
   "The number of times that the discount has been used."
   asyncUsageCount: Int!
-  "The number of redeem codes for the discount."
-  codeCount: Int!
   "A list of redeem codes for the discount."
   codes(
     "Returns the elements that come after the specified cursor."
@@ -8090,6 +8427,8 @@ type DiscountCodeBxgy {
     "Sort the underlying list by the given key."
     sortKey: DiscountCodeSortKeys = ID
   ): DiscountRedeemCodeConnection!
+  "The number of redeem codes for the discount."
+  codesCount: Count
   "Determines which discount classes the discount can combine with."
   combinesWith: DiscountCombinesWith!
   "The date and time when the discount was created."
@@ -8168,8 +8507,6 @@ type DiscountCodeFreeShipping {
   appliesOncePerCustomer: Boolean!
   "The number of times that the discount has been used."
   asyncUsageCount: Int!
-  "The number of redeem codes for the discount."
-  codeCount: Int!
   "A list of redeem codes for the discount."
   codes(
     "Returns the elements that come after the specified cursor."
@@ -8201,6 +8538,8 @@ type DiscountCodeFreeShipping {
     "Sort the underlying list by the given key."
     sortKey: DiscountCodeSortKeys = ID
   ): DiscountRedeemCodeConnection!
+  "The number of redeem codes for the discount."
+  codesCount: Count
   "Determines which discount classes the discount can combine with."
   combinesWith: DiscountCombinesWith!
   "The date and time when the discount was created."
@@ -9320,7 +9659,7 @@ type DraftOrderLineItem implements Node {
   id: ID!
   "The image associated with the draft order line item."
   image: Image
-  "Whether the line item is a gift card."
+  "Whether the line item represents the purchase of a gift card."
   isGiftCard: Boolean!
   "The name of the product."
   name: String!
@@ -9539,6 +9878,38 @@ type EventEdge {
   node: Event!
 }
 
+"An item for exchange."
+type ExchangeLineItem implements Node {
+  "A globally-unique ID."
+  id: ID!
+  "The order line item for the exchange."
+  lineItem: LineItem
+}
+
+"""
+
+An auto-generated type for paginating through multiple ExchangeLineItems.
+"""
+type ExchangeLineItemConnection {
+  "A list of edges."
+  edges: [ExchangeLineItemEdge!]!
+  "A list of the nodes contained in ExchangeLineItemEdge."
+  nodes: [ExchangeLineItem!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+
+"""
+
+An auto-generated type which holds one ExchangeLineItem and a cursor during pagination.
+"""
+type ExchangeLineItemEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of ExchangeLineItemEdge."
+  node: ExchangeLineItem!
+}
+
 "An exchange where existing items on an order are returned and new items are added to the order."
 type ExchangeV2 implements Node {
   "The details of the new items in the exchange."
@@ -9629,6 +10000,8 @@ type ExchangeV2LineItem {
   giftCard: Boolean!
   "The gift cards associated with the line item."
   giftCards: [GiftCard!]!
+  "Whether the line item represents the purchase of a gift card."
+  isGiftCard: Boolean!
   "The line item associated with this object."
   lineItem: LineItem
   "The name of the product."
@@ -9721,6 +10094,30 @@ type FailedRequirement {
   encounters when trying to make use of their Shop and its resources.
   """
   message: String!
+}
+
+"A sale associated with a fee."
+type FeeSale implements Sale {
+  "The type of order action that the sale represents."
+  actionType: SaleActionType!
+  "The fee associated with the sale."
+  fee: Fee!
+  "The unique ID for the sale."
+  id: ID!
+  "The line type assocated with the sale."
+  lineType: SaleLineType!
+  "The number of units either ordered or intended to be returned."
+  quantity: Int
+  "All individual taxes associated with the sale."
+  taxes: [SaleTax!]!
+  "The total sale amount after taxes and discounts."
+  totalAmount: MoneyBag!
+  "The total discounts allocated to the sale after taxes."
+  totalDiscountAmountAfterTaxes: MoneyBag!
+  "The total discounts allocated to the sale before taxes."
+  totalDiscountAmountBeforeTaxes: MoneyBag!
+  "The total amount of taxes for the sale."
+  totalTaxAmount: MoneyBag!
 }
 
 "Return type for `fileAcknowledgeUpdateFailed` mutation."
@@ -10823,7 +11220,7 @@ type FulfillmentOrderLocationForMove {
   Total number of fulfillment order line items that can be moved from their current assigned location to the
   given location.
   """
-  availableLineItemsCount: UnsignedInt64!
+  availableLineItemsCount: Count
   "The location being considered as the fulfillment order's new assigned location."
   location: Location!
   """
@@ -10855,7 +11252,7 @@ type FulfillmentOrderLocationForMove {
   Total number of fulfillment order line items that can't be moved from their current assigned location to the
   given location.
   """
-  unavailableLineItemsCount: UnsignedInt64!
+  unavailableLineItemsCount: Count
 }
 
 """
@@ -10964,15 +11361,8 @@ type FulfillmentOrderMovePayload {
 
   The fulfillment order which now contains the moved line items and is assigned to the destination location.
 
-  **First scenario:** All line items belonging to the original fulfillment order are re-assigned.
-
-  In this case, this will be the original fulfillment order.
-
-  **Second scenario:** A subset of the line items belonging to the original fulfillment order are re-assigned.
-
-  If the new location is already assigned to fulfill line items on the order, then
-  this will be an existing active fulfillment order.
-  Otherwise, this will be a new fulfillment order with the moved line items assigned.
+  If the original fulfillment order doesn't have any line items which are fully or partially fulfilled, the original fulfillment order will be moved to the new location.
+  However if this isn't the case, the moved fulfillment order will differ from the original one.
   """
   movedFulfillmentOrder: FulfillmentOrder
   """
@@ -11850,14 +12240,6 @@ type InventoryAdjustQuantitiesUserError implements DisplayableError {
   message: String!
 }
 
-"Return type for `inventoryAdjustQuantity` mutation."
-type InventoryAdjustQuantityPayload {
-  "Represents the updated inventory quantity of an inventory item at a specific location."
-  inventoryLevel: InventoryLevel
-  "The list of errors that occurred from executing the mutation."
-  userErrors: [UserError!]!
-}
-
 """
 
 Represents a group of adjustments made as part of the same operation.
@@ -11888,14 +12270,6 @@ type InventoryAdjustmentGroup implements Node {
   referenceDocumentUri: String
   "The staff member associated with the inventory event."
   staffMember: StaffMember
-}
-
-"Return type for `inventoryBulkAdjustQuantityAtLocation` mutation."
-type InventoryBulkAdjustQuantityAtLocationPayload {
-  "Represents the updated inventory quantities of an inventory item at the location."
-  inventoryLevels: [InventoryLevel!]
-  "The list of errors that occurred from executing the mutation."
-  userErrors: [UserError!]!
 }
 
 "Return type for `inventoryBulkToggleActivation` mutation."
@@ -12011,7 +12385,9 @@ type InventoryItem implements LegacyInteroperability & Node {
   "The ID of the corresponding resource in the REST Admin API."
   legacyResourceId: UnsignedInt64!
   "The number of locations where this inventory item is stocked."
-  locationsCount: Int!
+  locationsCount: Count
+  "The packaging dimensions of the inventory item."
+  measurement: InventoryItemMeasurement!
   "The ISO 3166-2 alpha-2 province code of where the item originated from."
   provinceCodeOfOrigin: String
   "Whether the inventory item requires shipping."
@@ -12054,6 +12430,17 @@ type InventoryItemEdge {
   node: InventoryItem!
 }
 
+"""
+
+Represents the packaged dimension for an inventory item.
+"""
+type InventoryItemMeasurement implements Node {
+  "A globally-unique ID."
+  id: ID!
+  "The weight of the inventory item."
+  weight: Weight
+}
+
 "Return type for `inventoryItemUpdate` mutation."
 type InventoryItemUpdatePayload {
   "The inventory item that was updated."
@@ -12067,20 +12454,14 @@ type InventoryItemUpdatePayload {
 The quantities of an inventory item that are related to a specific location.
 """
 type InventoryLevel implements Node {
-  "The quantity of inventory items that are available at the inventory level's associated location."
-  available: Int! @deprecated(reason: "Use the `quantities` field instead and specify available for names. Example: `quantities(names:[\"available\"]){name quantity}`.\n")
   "Whether the inventory items associated with the inventory level can be deactivated."
   canDeactivate: Boolean!
   "The date and time when the inventory level was created."
   createdAt: DateTime!
   "Describes either the impact of deactivating the inventory level, or why the inventory level can't be deactivated."
   deactivationAlert: String
-  "Describes, in HTML with embedded URLs, either the impact of deactivating the inventory level or why the inventory level can't be deactivated."
-  deactivationAlertHtml: FormattedString @deprecated(reason: "Use `deactivationAlert` instead.")
   "A globally-unique ID."
   id: ID!
-  "The quantity of inventory items that are going to the inventory level's associated location."
-  incoming: Int! @deprecated(reason: "Use the `quantities` field instead and specify incoming for names. Example: `quantities(names:[\"incoming\"]){name quantity}`.\n")
   "Inventory item associated with the inventory level."
   item: InventoryItem!
   "The location associated with the inventory level."
@@ -12331,21 +12712,24 @@ type LineItem implements Node {
   canRestock: Boolean! @deprecated(reason: "Use `restockable` instead.")
   "The subscription contract associated with this line item."
   contract: SubscriptionContract
-  "The line item's quantity, minus the removed quantity."
+  "The number of units ordered, excluding refunded and removed units."
   currentQuantity: Int!
   "A list of attributes that represent custom features or special requests."
   customAttributes: [Attribute!]!
-  "The discounts that have been allocated onto the line item by discount applications, not including order edits and refunds."
+  "The discounts that have been allocated to the line item by discount applications, including discounts allocated to refunded and removed quantities."
   discountAllocations: [DiscountAllocation!]!
-  "The total line price after discounts are applied, in shop currency."
+  "The total discounted price of the line item in shop currency, including refunded and removed quantities. This value doesn't include order-level discounts."
   discountedTotal: Money! @deprecated(reason: "Use `discountedTotalSet` instead.")
-  "The total line price after discounts are applied, in shop and presentment currencies."
-  discountedTotalSet: MoneyBag!
-  "The approximate split price of a line item unit, in shop currency. This value doesn't include discounts applied to the entire order."
+  "The total discounted price of the line item in shop and presentment currencies, including refunded and removed quantities. This value doesn't include order-level discounts. Code-based discounts aren't included by default."
+  discountedTotalSet(
+    "Whether to include code-based discounts in the total."
+    withCodeDiscounts: Boolean = false
+  ): MoneyBag!
+  "The approximate unit price of the line item in shop currency. This value includes line-level discounts and discounts applied to refunded and removed quantities. It doesn't include order-level discounts."
   discountedUnitPrice: Money! @deprecated(reason: "Use `discountedUnitPriceSet` instead.")
-  "The approximate split price of the line item, including any discounts that apply to the entire order."
+  "The approximate unit price of the line item in shop and presentment currencies. This value includes discounts applied to refunded and removed quantities."
   discountedUnitPriceAfterAllDiscountsSet: MoneyBag!
-  "The approximate split price of a line item unit, in shop and presentment currencies. This value doesn't include discounts applied to the entire order."
+  "The approximate unit price of the line item in shop and presentment currencies. This value includes line-level discounts and discounts applied to refunded and removed quantities. It doesn't include order-level discounts."
   discountedUnitPriceSet: MoneyBag!
   "The duties associated with the line item."
   duties: [Duty!]!
@@ -12378,6 +12762,8 @@ type LineItem implements Node {
   id: ID!
   "The image associated to the line item's variant."
   image: Image
+  "Whether the line item represents the purchase of a gift card."
+  isGiftCard: Boolean!
   "The line item group associated to the line item."
   lineItemGroup: LineItemGroup
   "Whether the line item can be edited or not."
@@ -12388,21 +12774,25 @@ type LineItem implements Node {
   nonFulfillableQuantity: Int!
   """
 
-  The total price without discounts applied, in shop currency.
-  This value is based on the unit price of the variant x quantity.
+  In shop currency, the total price of the line item when the order was created.
+  This value doesn't include discounts.
   """
   originalTotal: Money! @deprecated(reason: "Use `originalTotalSet` instead.")
-  "The total price in shop and presentment currencies, without discounts applied. This value is based on the unit price of the variant x quantity."
+  """
+
+  In shop and presentment currencies, the total price of the line item when the order was created.
+  This value doesn't include discounts.
+  """
   originalTotalSet: MoneyBag!
-  "The variant unit price without discounts applied, in shop currency."
+  "In shop currency, the unit price of the line item when the order was created. This value doesn't include discounts."
   originalUnitPrice: Money! @deprecated(reason: "Use `originalUnitPriceSet` instead.")
-  "The variant unit price without discounts applied, in shop and presentment currencies."
+  "In shop and presentment currencies, the unit price of the line item when the order was created. This value doesn't include discounts."
   originalUnitPriceSet: MoneyBag!
   "The Product object associated with this line item's variant."
   product: Product
-  "The number of variant units ordered."
+  "The number of units ordered, including refunded and removed units."
   quantity: Int!
-  "The line item's quantity, minus the refunded quantity."
+  "The number of units ordered, excluding refunded units."
   refundableQuantity: Int!
   "Whether physical shipping is required for the variant."
   requiresShipping: Boolean!
@@ -12414,7 +12804,7 @@ type LineItem implements Node {
   sku: String
   "Staff attributed to the line item."
   staffMember: StaffMember
-  "The taxes charged for this line item."
+  "The taxes charged for the line item, including taxes charged for refunded and removed quantities."
   taxLines(
     "Truncate the array result to this size."
     first: Int
@@ -12423,17 +12813,17 @@ type LineItem implements Node {
   taxable: Boolean!
   "The title of the product at time of order creation."
   title: String!
-  "The total amount of the discount allocated to the line item in the shop currency."
+  "The total discount allocated to the line item in shop currency, including the total allocated to refunded and removed quantities. This value doesn't include order-level discounts."
   totalDiscount: Money! @deprecated(reason: "Use `totalDiscountSet` instead.")
-  "The total amount of the discount that's allocated to the line item, in the shop and presentment currencies. This field must be explicitly set using draft orders, Shopify scripts, or the API."
+  "The total discount allocated to the line item in shop and presentment currencies, including the total allocated to refunded and removed quantities. This value doesn't include order-level discounts."
   totalDiscountSet: MoneyBag!
-  "The total discounted value of unfulfilled units, in shop currency."
+  "In shop currency, the total discounted price of the unfulfilled quantity for the line item."
   unfulfilledDiscountedTotal: Money! @deprecated(reason: "Use `unfulfilledDiscountedTotalSet` instead.")
-  "The total discounted value of unfulfilled units, in shop and presentment currencies."
+  "In shop and presentment currencies, the total discounted price of the unfulfilled quantity for the line item."
   unfulfilledDiscountedTotalSet: MoneyBag!
-  "The total price, without any discounts applied. This value is based on the unit price of the variant x quantity of all unfulfilled units, in shop currency."
+  "In shop currency, the total price of the unfulfilled quantity for the line item. This value doesn't include discounts."
   unfulfilledOriginalTotal: Money! @deprecated(reason: "Use `unfulfilledOriginalTotalSet` instead.")
-  "The total price, without any discounts applied. This value is based on the unit price of the variant x quantity of all unfulfilled units, in shop and presentment currencies."
+  "In shop and presentment currencies, the total price of the unfulfilled quantity for the line item. This value doesn't include discounts."
   unfulfilledOriginalTotalSet: MoneyBag!
   "The number of units not yet fulfilled."
   unfulfilledQuantity: Int!
@@ -12518,6 +12908,8 @@ type LineItemMutable implements Node {
   id: ID!
   "The image associated to the line item's variant."
   image: Image
+  "Whether the line item represents the purchase of a gift card."
+  isGiftCard: Boolean!
   "Whether the line item can be edited or not."
   merchantEditable: Boolean!
   "The name of the product."
@@ -12627,6 +13019,14 @@ type Link implements HasPublishedTranslations {
   url: URL!
 }
 
+"The identifier for the metafield linked to this option."
+type LinkedMetafield {
+  "Key of the metafield the option is linked to."
+  key: String
+  "Namespace of the metafield the option is linked to."
+  namespace: String
+}
+
 "A locale."
 type Locale {
   "Locale ISO code."
@@ -12684,6 +13084,8 @@ type Location implements HasMetafieldDefinitions & HasMetafields & LegacyInterop
   address: LocationAddress!
   "Whether the location address has been verified."
   addressVerified: Boolean!
+  "The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) that the location was added to a shop."
+  createdAt: DateTime!
   "Whether this location can be deactivated."
   deactivatable: Boolean!
   "The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) that the location was deactivated at. For example, 3:30 pm on September 7, 2019 in the time zone of UTC (Universal Time Coordinated) is represented as `\"2019-09-07T15:50:00Z`\"."
@@ -12732,6 +13134,8 @@ type Location implements HasMetafieldDefinitions & HasMetafields & LegacyInterop
   ): InventoryLevelConnection!
   "Whether the location is active."
   isActive: Boolean!
+  "Whether this location is a fulfillment service."
+  isFulfillmentService: Boolean!
   "Whether the location is your primary location for shipping inventory."
   isPrimary: Boolean! @deprecated(reason: "The concept of a primary location is deprecated, shipsInventory can be used to get a fallback location")
   "The ID of the corresponding resource in the REST Admin API."
@@ -12823,6 +13227,8 @@ type Location implements HasMetafieldDefinitions & HasMetafields & LegacyInterop
   shipsInventory: Boolean!
   "List of suggested addresses for this location (empty if none)."
   suggestedAddresses: [LocationSuggestedAddress!]!
+  "The date and time ([ISO 8601 format](http://en.wikipedia.org/wiki/ISO_8601)) when the location was last updated."
+  updatedAt: DateTime!
 }
 
 "Return type for `locationActivate` mutation."
@@ -13179,6 +13585,8 @@ type Market implements HasMetafieldDefinitions & HasMetafields & Node {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): MarketCatalogConnection!
+  "The number of catalogs that belong to the market."
+  catalogsCount: Count
   "The market’s currency settings."
   currencySettings: MarketCurrencySettings!
   """
@@ -13639,19 +14047,19 @@ this market.
 type MarketWebPresence implements Node {
   """
 
-  The ISO codes for the alternate locales. When a domain is used, these locales will be
+  The ShopLocale object for the alternate locales. When a domain is used, these locales will be
   available as language-specific subfolders. For example, if English is an
   alternate locale, and `example.ca` is the market’s domain, then
   `example.ca/en` will load in English.
   """
-  alternateLocales: [String!]!
+  alternateLocales: [ShopLocale!]!
   """
 
-  The ISO code for the default locale. When a domain is used, this is the locale that will
+  The ShopLocale object for the default locale. When a domain is used, this is the locale that will
   be used when the domain root is accessed. For example, if French is the default locale,
   and `example.ca` is the market’s domain, then `example.ca` will load in French.
   """
-  defaultLocale: String!
+  defaultLocale: ShopLocale!
   """
 
   The web presence’s domain.
@@ -14587,6 +14995,19 @@ type MetafieldEdge {
 
 """
 
+Identifies a metafield by its owner resource, namespace, and key.
+"""
+type MetafieldIdentifier {
+  "The key of the metafield."
+  key: String!
+  "The namespace of the metafield."
+  namespace: String!
+  "GID of the owner resource that the metafield belongs to."
+  ownerId: ID!
+}
+
+"""
+
 An auto-generated type for paginating through multiple MetafieldReferences.
 """
 type MetafieldReferenceConnection {
@@ -14720,6 +15141,14 @@ type MetafieldStorefrontVisibilityEdge {
   cursor: String!
   "The item at the end of MetafieldStorefrontVisibilityEdge."
   node: MetafieldStorefrontVisibility!
+}
+
+"Return type for `metafieldsDelete` mutation."
+type MetafieldsDeletePayload {
+  "List of metafield identifiers that were deleted, null if the corresponding metafield isn't found."
+  deletedMetafields: [MetafieldIdentifier]
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [UserError!]!
 }
 
 "Return type for `metafieldsSet` mutation."
@@ -16570,9 +16999,7 @@ type Mutation {
 
     Whether the customer should be notified when fulfillments are created for this fulfillment order.
     """
-    notifyCustomer: Boolean,
-    "A reference to the [ShippingMethod](https://shopify.dev/api/admin-graphql/latest/objects/shippingmethod) code, such as `FREE_SHIPPING`."
-    shippingMethod: String
+    notifyCustomer: Boolean
   ): FulfillmentOrderSubmitFulfillmentRequestPayload
   "Releases the fulfillment holds on a list of fulfillment orders."
   fulfillmentOrdersReleaseHolds(
@@ -16617,17 +17044,6 @@ type Mutation {
     [fulfillment and cancellation requests](https://shopify.dev/apps/fulfillment/fulfillment-service-apps/manage-fulfillments#step-2-receive-fulfillment-requests-and-cancellations).
     """
     callbackUrl: URL!,
-    """
-
-    Whether the fulfillment service uses the [fulfillment order based workflow](
-    https://shopify.dev/apps/fulfillment/fulfillment-service-apps/manage-fulfillments
-    ) for managing fulfillments.
-
-    [As of 2022-07 API version](https://shopify.dev/changelog/legacy-fulfillment-api-deprecation),
-    the fulfillment order based workflow is the only way to manage fulfillments,
-    and `fulfillmentOrdersOptIn` must be set to `true`.
-    """
-    fulfillmentOrdersOptIn: Boolean!,
     """
 
     Whether the fulfillment service manages product inventory and provides updates to Shopify.
@@ -16680,6 +17096,8 @@ type Mutation {
     callbackUrl: URL,
     "The id of the fulfillment service."
     id: ID!,
+    "Whether the fulfillment service tracks product inventory and provides updates to Shopify."
+    inventoryManagement: Boolean,
     "The name of the fulfillment service."
     name: String,
     "Whether the fulfillment service can stock inventory alongside other locations."
@@ -16739,18 +17157,6 @@ type Mutation {
     "The information required to adjust inventory quantities."
     input: InventoryAdjustQuantitiesInput!
   ): InventoryAdjustQuantitiesPayload
-  "Adjusts the inventory by a certain quantity."
-  inventoryAdjustQuantity(
-    "Provides the input fields required to update an inventory level."
-    input: InventoryAdjustQuantityInput!
-  ): InventoryAdjustQuantityPayload @deprecated(reason: "Use `inventoryAdjustQuantities` instead.")
-  "Adjusts the inventory at a location for multiple inventory items."
-  inventoryBulkAdjustQuantityAtLocation(
-    "Specifies adjustments for items."
-    inventoryItemAdjustments: [InventoryAdjustItemInput!]!,
-    "Specifies where the item should be adjusted."
-    locationId: ID!
-  ): InventoryBulkAdjustQuantityAtLocationPayload @deprecated(reason: "Use `inventoryAdjustQuantities` instead.")
   "Modify the activation status of an inventory item at locations. Activating an inventory item at a particular location allows that location to stock that inventory item. Deactivating an inventory item at a location removes the inventory item's quantities and turns off the inventory item from that location."
   inventoryBulkToggleActivation(
     "The ID of the inventory item to modify the activation status locations for."
@@ -17053,6 +17459,11 @@ type Mutation {
     "The ID of the `MetafieldStorefrontVisibility` record to delete."
     id: ID!
   ): MetafieldStorefrontVisibilityDeletePayload @deprecated(reason: "This mutation will be removed in a future version. Use the `metafieldDefinitionUpdate` mutation with `access.storefront` set instead.\n")
+  "Deletes multiple metafields in bulk."
+  metafieldsDelete(
+    "A list of identifiers specifying metafields to delete. At least one identifier must be specified."
+    metafields: [MetafieldIdentifierInput!]!
+  ): MetafieldsDeletePayload
   """
 
   Sets metafield values. Metafield values will be set regardless if they were previously created or not.
@@ -17154,6 +17565,8 @@ type Mutation {
   ): OrderClosePayload
   "Creates a payment for an order by mandate."
   orderCreateMandatePayment(
+    "The payment amount to collect."
+    amount: MoneyInput,
     """
 
     Whether the payment should be authorized or captured. If `false`, then the authorization of
@@ -17203,6 +17616,17 @@ type Mutation {
     "The ID of the calculated line item to add the discount to."
     lineItemId: ID!
   ): OrderEditAddLineItemDiscountPayload
+  "Adds a shipping line to an existing order. For more information on how to use the GraphQL Admin API to edit an existing order, refer to [Edit existing orders](https://shopify.dev/apps/fulfillment/order-management-apps/order-editing)."
+  orderEditAddShippingLine(
+    """
+
+    The ID of the [calculated order](https://shopify.dev/api/admin-graphql/latest/objects/calculatedorder)
+    to edit.
+    """
+    id: ID!,
+    "The shipping line to be added."
+    shippingLine: OrderEditAddShippingLineInput!
+  ): OrderEditAddShippingLinePayload
   "Adds a line item from an existing product variant."
   orderEditAddVariant(
     "Whether the mutation can create a line item for a variant that's already on the calculated order."
@@ -17276,6 +17700,20 @@ type Mutation {
     """
     id: ID!
   ): OrderEditRemoveLineItemDiscountPayload @deprecated(reason: "Use generic OrderEditRemoveDiscount mutation instead.")
+  "Removes a shipping line from an existing order. For more information on how to use the GraphQL Admin API to edit an existing order, refer to [Edit existing orders](https://shopify.dev/apps/fulfillment/order-management-apps/order-editing)."
+  orderEditRemoveShippingLine(
+    """
+
+    The ID of the [calculated order](https://shopify.dev/api/admin-graphql/latest/objects/calculatedorder)
+    to edit.
+    """
+    id: ID!,
+    """
+
+    The ID of the calculated shipping line to remove.
+    """
+    shippingLineId: ID!
+  ): OrderEditRemoveShippingLinePayload
   "Sets the quantity of a line item on an order that is being edited. For more information on how to use the GraphQL Admin API to edit an existing order, refer to [Edit existing orders](https://shopify.dev/apps/fulfillment/order-management-apps/order-editing)."
   orderEditSetQuantity(
     "The ID of the calculated order to edit. The edit changes the quantity on the line item."
@@ -17307,6 +17745,22 @@ type Mutation {
     """
     id: ID!
   ): OrderEditUpdateDiscountPayload
+  "Updates a shipping line on the current order edit. For more information on how to use the GraphQL Admin API to edit an existing order, refer to [Edit existing orders](https://shopify.dev/apps/fulfillment/order-management-apps/order-editing)."
+  orderEditUpdateShippingLine(
+    """
+
+    The ID of the [calculated order](https://shopify.dev/api/admin-graphql/latest/objects/calculatedorder)
+    from which to update the shipping line.
+    """
+    id: ID!,
+    "The updated shipping line."
+    shippingLine: OrderEditUpdateShippingLineInput!,
+    """
+
+    The ID of the calculated shipping line to update.
+    """
+    shippingLineId: ID!
+  ): OrderEditUpdateShippingLinePayload
   "Sends an email invoice for an order."
   orderInvoiceSend(
     "The email input fields for the order invoice. The `bcc` and `from` fields should be store or staff account emails."
@@ -17330,6 +17784,11 @@ type Mutation {
     "The input for the mutation."
     input: OrderOpenInput!
   ): OrderOpenPayload
+  "Create a risk assessment for an order."
+  orderRiskAssessmentCreate(
+    "The input fields required to create a risk assessment."
+    orderRiskAssessmentInput: OrderRiskAssessmentCreateInput!
+  ): OrderRiskAssessmentCreatePayload
   "Updates the fields of an order."
   orderUpdate(
     "The input for the mutation."
@@ -17381,7 +17840,7 @@ type Mutation {
     "The input fields used to update the payment terms."
     input: PaymentTermsUpdateInput!
   ): PaymentTermsUpdatePayload
-  "Creates a price list. You can use the `priceListCreate` mutation to create a new price list for a country. This enables you to sell your products with international pricing."
+  "Creates a price list. You can use the `priceListCreate` mutation to create a new price list and associate it with a catalog. This enables you to sell your products with contextual pricing."
   priceListCreate(
     "The properties of the new price list."
     input: PriceListCreateInput!
@@ -17624,14 +18083,6 @@ type Mutation {
 
   Asynchronously duplicate a single product.
   """
-  productDuplicateAsync(
-    "The params for duplicating the product."
-    input: ProductDuplicateAsyncInput!
-  ): ProductDuplicateAsyncPayload @deprecated(reason: "Use `productDuplicateAsyncV2` instead.")
-  """
-
-  Asynchronously duplicate a single product.
-  """
   productDuplicateAsyncV2(
     "The params for duplicating the product."
     input: ProductDuplicateAsyncInput!
@@ -17682,6 +18133,83 @@ type Mutation {
     "The IDs of the selling plan groups to add."
     sellingPlanGroupIds: [ID!]!
   ): ProductLeaveSellingPlanGroupsPayload
+  """
+
+  Updates a product option.
+  """
+  productOptionUpdate(
+    "Option to update."
+    option: OptionUpdateInput!,
+    "New option values to create."
+    optionValuesToAdd: [OptionValueCreateInput!],
+    "IDs of the existing option values to delete."
+    optionValuesToDelete: [ID!],
+    "Existing option values to update."
+    optionValuesToUpdate: [OptionValueUpdateInput!],
+    "The ID of the Product the Option belongs to."
+    productId: ID!,
+    """
+
+    The strategy defines which behavior the mutation should observe regarding variants,
+    such as creating variants or deleting them in response to option values to add or to delete.
+    If not provided or set to null, the strategy `LEAVE_AS_IS` will be used.
+    """
+    variantStrategy: ProductOptionUpdateVariantStrategy
+  ): ProductOptionUpdatePayload
+  """
+
+  Creates options on a product.
+  """
+  productOptionsCreate(
+    "Options to add to the product."
+    options: [OptionCreateInput!]!,
+    "The ID of the product to update."
+    productId: ID!
+  ): ProductOptionsCreatePayload
+  """
+
+  Deletes the specified options.
+  """
+  productOptionsDelete(
+    "IDs of the options to delete from the product."
+    options: [ID!]!,
+    "ID of the product from which to delete the options."
+    productId: ID!,
+    "The strategy defines which behavior the mutation should observe,such as how to handle a situation where deleting an option would result in duplicate variants."
+    strategy: ProductOptionDeleteStrategy = DEFAULT
+  ): ProductOptionsDeletePayload
+  """
+
+  Reorders options and option values on a product, causing product variants to alter their position.
+
+  Options order take precedence over option values order. Depending on the existing product variants,
+  some input orders might not be achieved.
+
+  Example:
+  Existing product variants:
+  ["Red / Small", "Green / Medium", "Blue / Small"].
+
+  New order:
+  [
+  {
+  name: "Size", values: [{ name: "Small" }, { name: "Medium" }],
+  name: "Color", values: [{ name: "Green" }, { name: "Red" }, { name: "Blue" }]
+  }
+  ].
+
+  Description:
+  Variants with "Green" value are expected to appear before variants with "Red" and "Blue" values.
+  However, "Size" option appears before "Color".
+
+  Therefore, output will be:
+  ["Small / "Red", "Small / Blue", "Medium / Green"].
+  """
+  productOptionsReorder(
+    "Options to reorder on the product."
+    options: [OptionReorderInput!]!,
+    "The ID of the product to update."
+    productId: ID!
+  ): ProductOptionsReorderPayload
   "Publishes a product. Products that are sold exclusively on subscription (`requiresSellingPlan: true`) can only be published on online stores."
   productPublish(
     "Specifies the product to publish and the channels to publish it to."
@@ -17701,6 +18229,69 @@ type Mutation {
     "A list of moves to perform which will be evaluated in order."
     moves: [MoveInput!]!
   ): ProductReorderMediaPayload
+  """
+
+  Creates or updates a product in a single request.
+
+  Use this mutation when syncing information from an external data source into Shopify.
+
+  When using this mutation to update a product, specify that product's `id` in the input.
+
+  Any list field (e.g.
+  [collections](https://shopify.dev/api/admin-graphql/current/input-objects/ProductSetInput#field-productsetinput-collections),
+  [metafields](https://shopify.dev/api/admin-graphql/current/input-objects/ProductSetInput#field-productsetinput-metafields),
+  [variants](https://shopify.dev/api/admin-graphql/current/input-objects/ProductSetInput#field-productsetinput-variants))
+  will be updated so that all included entries are either created or updated, and all existing entries not
+  included will be deleted.
+
+  All other fields will be updated to the value passed. Omitted fields will not be updated.
+
+  When run in synchronous mode, the `productSet` mutation has an input limit of 100 variants. If you anticipate
+  any of your use cases requiring support for more than 100 variants, please use the mutation in asynchronous
+  mode (default).
+
+  When run in synchronous mode, you will get the product back in the response.
+
+  In asynchronous mode, you will instead get a
+  [ProductSetOperation](https://shopify.dev/api/admin-graphql/current/objects/ProductSetOperation)
+  object back. You can then use the
+  [productOperation](https://shopify.dev/api/admin-graphql/current/queries/productOperation) query to
+  retrieve the updated product data. This query uses the `ProductSetOperation` object to
+  check the status of the operation and to retrieve the details of the updated product and its variants.
+
+  If you need to update a subset of variants, use one of the bulk variant mutations:
+  - [productVariantsBulkCreate](https://shopify.dev/api/admin-graphql/current/mutations/productVariantsBulkCreate)
+  - [productVariantsBulkUpdate](https://shopify.dev/api/admin-graphql/current/mutations/productVariantsBulkUpdate)
+  - [productVariantsBulkDelete](https://shopify.dev/api/admin-graphql/current/mutations/productVariantsBulkDelete)
+
+  If you need to update options, use one of the product option mutations:
+  - [productOptionsCreate](https://shopify.dev/api/admin-graphql/current/mutations/productOptionsCreate)
+  - [productOptionUpdate](https://shopify.dev/api/admin-graphql/current/mutations/productOptionUpdate)
+  - [productOptionsDelete](https://shopify.dev/api/admin-graphql/current/mutations/productOptionsDelete)
+  - [productOptionsReorder](https://shopify.dev/api/admin-graphql/current/mutations/productOptionsReorder)
+
+  See our guide to
+  [sync product data from an external source](https://shopify.dev/api/admin/migrate/new-product-model/sync-data)
+  for more.
+  """
+  productSet(
+    "The properties of the new product."
+    input: ProductSetInput!,
+    """
+
+    Whether the mutation should be run synchronously or asynchronously.
+
+    To use this mutation with more than 100
+    variants in the `input`, the mutation must be run asynchronously.
+
+    If `true`, the mutation will return the updated `product`.
+
+    If `false`, the mutation will return a `productSetOperation`.
+
+    Defaults to `false`.
+    """
+    synchronous: Boolean = false
+  ): ProductSetPayload
   "Unpublishes a product."
   productUnpublish(
     "Specifies the product to unpublish and the channel to unpublish it from."
@@ -17792,6 +18383,8 @@ type Mutation {
     media: [CreateMediaInput!],
     "The ID of the product on which to create the variants."
     productId: ID!,
+    "The strategy defines which behavior the mutation should observe, such as whether to keep or delete the standalone variant (when product has only a single or default variant) when creating new variants in bulk."
+    strategy: ProductVariantsBulkCreateStrategy = DEFAULT,
     "An array of product variants to be created."
     variants: [ProductVariantsBulkInput!]!
   ): ProductVariantsBulkCreatePayload
@@ -18564,6 +19157,11 @@ type Mutation {
     "Configures whether the tax app is correctly configured and ready to be used."
     ready: Boolean!
   ): TaxAppConfigurePayload
+  "Trigger the voiding of an uncaptured authorization transaction."
+  transactionVoid(
+    "An uncaptured authorization transaction."
+    parentTransactionId: ID!
+  ): TransactionVoidPayload
   "Creates or updates translations."
   translationsRegister(
     "ID of the resource that is being translated."
@@ -19444,6 +20042,8 @@ type Order implements CommentEventSubject & HasEvents & HasLocalizationExtension
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ReturnConnection!
+  "The risk characteristics for the order."
+  risk: OrderRiskSummary!
   "The fraud risk level of the order."
   riskLevel: OrderRiskLevel! @deprecated(reason: "This field is deprecated in version 2024-04. Please use OrderRiskAssessment.riskLevel")
   "A list of risks associated with the order."
@@ -19463,6 +20063,8 @@ type Order implements CommentEventSubject & HasEvents & HasLocalizationExtension
     before: String,
     "Returns up to the first `n` elements from the list."
     first: Int,
+    "Whether results should contain removed shipping lines."
+    includeRemovals: Boolean = false,
     "Returns up to the last `n` elements from the list."
     last: Int,
     "Reverse the order of the underlying list."
@@ -19790,6 +20392,34 @@ type OrderEditAddLineItemDiscountPayload {
   userErrors: [UserError!]!
 }
 
+"Return type for `orderEditAddShippingLine` mutation."
+type OrderEditAddShippingLinePayload {
+  """
+
+  The [calculated order](https://shopify.dev/api/admin-graphql/latest/objects/calculatedorder)
+  with the edits applied but not saved.
+  """
+  calculatedOrder: CalculatedOrder
+  """
+
+  The [calculated shipping line](https://shopify.dev/api/admin-graphql/latest/objects/calculatedshippingline)
+  that's added during this order edit.
+  """
+  calculatedShippingLine: CalculatedShippingLine
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [OrderEditAddShippingLineUserError!]!
+}
+
+"An error that occurs during the execution of `OrderEditAddShippingLine`."
+type OrderEditAddShippingLineUserError implements DisplayableError {
+  "The error code."
+  code: OrderEditAddShippingLineUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
 "Return type for `orderEditAddVariant` mutation."
 type OrderEditAddVariantPayload {
   """
@@ -19879,6 +20509,28 @@ type OrderEditRemoveLineItemDiscountPayload {
   userErrors: [UserError!]!
 }
 
+"Return type for `orderEditRemoveShippingLine` mutation."
+type OrderEditRemoveShippingLinePayload {
+  """
+
+  The [calculated order](https://shopify.dev/api/admin-graphql/latest/objects/calculatedorder)
+  with the edits applied but not saved.
+  """
+  calculatedOrder: CalculatedOrder
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [OrderEditRemoveShippingLineUserError!]!
+}
+
+"An error that occurs during the execution of `OrderEditRemoveShippingLine`."
+type OrderEditRemoveShippingLineUserError implements DisplayableError {
+  "The error code."
+  code: OrderEditRemoveShippingLineUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
 "Return type for `orderEditSetQuantity` mutation."
 type OrderEditSetQuantityPayload {
   "The calculated line item with the edits applied but not saved."
@@ -19901,6 +20553,24 @@ type OrderEditUpdateDiscountPayload {
 type OrderEditUpdateDiscountUserError implements DisplayableError {
   "The error code."
   code: OrderEditUpdateDiscountUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
+"Return type for `orderEditUpdateShippingLine` mutation."
+type OrderEditUpdateShippingLinePayload {
+  "An order with the edits applied but not saved."
+  calculatedOrder: CalculatedOrder
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [OrderEditUpdateShippingLineUserError!]!
+}
+
+"An error that occurs during the execution of `OrderEditUpdateShippingLine`."
+type OrderEditUpdateShippingLineUserError implements DisplayableError {
+  "The error code."
+  code: OrderEditUpdateShippingLineUserErrorCode
   "The path to the input field that caused the error."
   field: [String!]
   "The error message."
@@ -19957,6 +20627,8 @@ type OrderPaymentStatus {
   paymentReferenceId: String!
   "The status of the payment."
   status: OrderPaymentStatusResult!
+  "The transaction associated with the payment."
+  transactions: [OrderTransaction!]!
   "A translated message describing an error during the asynchronous processing of a payment."
   translatedErrorMessage: String
 }
@@ -19979,6 +20651,46 @@ type OrderRisk {
   level: OrderRiskLevel @deprecated(reason: "This field is deprecated in version 2024-04. Please use OrderRiskAssessment.riskLevel")
   "The risk message that's shown to the merchant in the Shopify admin."
   message: String @deprecated(reason: "This field is deprecated in version 2024-04")
+}
+
+"The risk assessments for an order."
+type OrderRiskAssessment {
+  """
+
+  Optional facts used to describe the risk assessment. The values in here are specific to the provider.
+  See the [examples for the mutation orderRiskAssessmentCreate](https://shopify.dev/api/admin-graphql/unstable/mutations/orderRiskAssessmentCreate#section-examples).
+  """
+  facts: [RiskFact!]!
+  "The app that provided the assessment, `null` if the assessment was provided by Shopify."
+  provider: App
+  "The likelihood that the order is fraudulent, based on this risk assessment."
+  riskLevel: RiskAssessmentResult!
+}
+
+"Return type for `orderRiskAssessmentCreate` mutation."
+type OrderRiskAssessmentCreatePayload {
+  "The order risk assessment created."
+  orderRiskAssessment: OrderRiskAssessment
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [OrderRiskAssessmentCreateUserError!]!
+}
+
+"An error that occurs during the execution of `OrderRiskAssessmentCreate`."
+type OrderRiskAssessmentCreateUserError implements DisplayableError {
+  "The error code."
+  code: OrderRiskAssessmentCreateUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
+"Summary of risk characteristics for an order."
+type OrderRiskSummary {
+  "The list of risk assessments for the order."
+  assessments: [OrderRiskAssessment!]!
+  "The recommendation for the order based on the results of the risk assessments. This suggests the action the merchant should take with regards to its risk of fraud."
+  recommendation: OrderRiskRecommendationResult!
 }
 
 """
@@ -20089,6 +20801,15 @@ type OrderStagedChangeIncrementItem {
 
 """
 
+A shipping line removed during an order edit.
+"""
+type OrderStagedChangeRemoveShippingLine {
+  "The removed shipping line."
+  shippingLine: ShippingLine!
+}
+
+"""
+
 A payment transaction in the context of an order.
 """
 type OrderTransaction implements Node {
@@ -20154,12 +20875,6 @@ type OrderTransaction implements Node {
   paymentMethod: PaymentMethods @deprecated(reason: "Use `paymentIcon` instead.")
   "Date and time when the transaction was processed."
   processedAt: DateTime
-  """
-
-  The transaction receipt that the payment gateway attaches to the transaction.
-  The value of this field depends on which payment gateway processed the transaction.
-  """
-  receipt: String @deprecated(reason: "Use `receiptJson` instead.")
   """
 
   The transaction receipt that the payment gateway attaches to the transaction.
@@ -20987,7 +21702,7 @@ type PriceRule implements CommentEventSubject & HasEvents & LegacyInteroperabili
     sortKey: DiscountCodeSortKeys = ID
   ): PriceRuleDiscountCodeConnection!
   "How many discount codes associated with the price rule."
-  discountCodesCount: Int!
+  discountCodesCount: Count
   "The date and time when the price rule ends. For open-ended price rules, use `null`."
   endsAt: DateTime
   "Quantity of prerequisite items required for the price rule to be applicable,  compared to quantity of entitled items."
@@ -21522,7 +22237,7 @@ type PrivateMetafieldUpsertPayload {
 "The Product resource lets you manage products in a merchant’s store. You can use [ProductVariants](https://shopify.dev/api/admin-graphql/latest/objects/productvariant) to create or update different versions of the same product. You can also add or update product [Media](https://shopify.dev/api/admin-graphql/latest/interfaces/media). Products can be organized by grouping them into a [Collection](https://shopify.dev/api/admin-graphql/latest/objects/collection)."
 type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTranslations & LegacyInteroperability & Navigable & Node & OnlineStorePreviewable & Publishable {
   "The number of publications a resource is published to without feedback errors."
-  availablePublicationCount: Int!
+  availablePublicationsCount: Count
   "The description of the product, complete with HTML formatting."
   bodyHtml: String @deprecated(reason: "Use `descriptionHtml` instead.")
   "A list of the collections that include the product."
@@ -21638,13 +22353,22 @@ type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTr
     first: Int,
     "Returns up to the last `n` elements from the list."
     last: Int,
+    """
+
+    Apply one or multiple filters to the query.
+    | name | description | acceptable_values | default_value | example_use |
+    | ---- | ---- | ---- | ---- | ---- |
+    | media_type | | - `IMAGE`<br/> - `VIDEO`<br/> - `MODEL_3D`<br/> - `EXTERNAL_VIDEO` | | |
+    Refer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.
+    """
+    query: String,
     "Reverse the order of the underlying list."
     reverse: Boolean = false,
     "Sort the underlying list by the given key."
     sortKey: ProductMediaSortKeys = POSITION
   ): MediaConnection!
   "Total count of media belonging to a product."
-  mediaCount: Int!
+  mediaCount: Count
   "Returns a metafield by namespace and key that belongs to the resource."
   metafield(
     "The key for the metafield."
@@ -21762,7 +22486,7 @@ type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTr
   publicationCount(
     "Include only the resource's publications that are published. If false, then return all the resource's publications including future publications."
     onlyPublished: Boolean = true
-  ): Int!
+  ): Int! @deprecated(reason: "Use `resourcePublicationsCount` instead.")
   "A list of the channels where the product is published."
   publications(
     "Returns the elements that come after the specified cursor."
@@ -21824,6 +22548,11 @@ type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTr
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ResourcePublicationConnection!
+  "The number of publications a resource is published on."
+  resourcePublicationsCount(
+    "Include only the resource's publications that are published. If false, then return all the resource's publications including future publications."
+    onlyPublished: Boolean = true
+  ): Count
   "The list of resources that are either published or staged to be published to a publication."
   resourcePublicationsV2(
     "Returns the elements that come after the specified cursor."
@@ -21845,7 +22574,7 @@ type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTr
     reverse: Boolean = false
   ): ResourcePublicationV2Connection!
   "Count of selling plan groups associated with the product."
-  sellingPlanGroupCount: Int!
+  sellingPlanGroupCount: Int! @deprecated(reason: "Use `sellingPlanGroupsCount` instead.")
   "A list of all selling plan groups defined in the current shop associated with the product either directly or through any of its variants."
   sellingPlanGroups(
     "Returns the elements that come after the specified cursor."
@@ -21859,6 +22588,8 @@ type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTr
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): SellingPlanGroupConnection!
+  "Count of selling plan groups associated with the product."
+  sellingPlanGroupsCount: Count
   "SEO information of the product."
   seo: SEO!
   "The standardized product type in the Shopify product taxonomy."
@@ -21887,7 +22618,7 @@ type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTr
   "The quantity of inventory in stock."
   totalInventory: Int!
   "The number of variants that are associated with the product."
-  totalVariants: Int!
+  totalVariants: Int! @deprecated(reason: "Use `variantsCount` instead.")
   "Whether inventory tracking has been enabled for the product."
   tracksInventory: Boolean!
   "The translations associated with the resource."
@@ -21946,6 +22677,8 @@ type Product implements HasMetafieldDefinitions & HasMetafields & HasPublishedTr
     "Sort the underlying list by the given key."
     sortKey: ProductVariantSortKeys = POSITION
   ): ProductVariantConnection!
+  "The number of variants that are associated with the product."
+  variantsCount: Count
   "The name of the product's vendor."
   vendor: String!
 }
@@ -22095,16 +22828,6 @@ type ProductDeleteUserError implements DisplayableError {
   field: [String!]
   "The error message."
   message: String!
-}
-
-"Return type for `productDuplicateAsync` mutation."
-type ProductDuplicateAsyncPayload {
-  "The duplicated product ID."
-  duplicatedProductId: ID
-  "The asynchronous job for duplicating the products."
-  job: Job
-  "The list of errors that occurred from executing the mutation."
-  userErrors: [ProductDuplicateUserError!]!
 }
 
 "Return type for `productDuplicateAsyncV2` mutation."
@@ -22279,8 +23002,12 @@ The limit for each product property name is 255 characters.
 type ProductOption implements HasPublishedTranslations & Node {
   "A globally-unique ID."
   id: ID!
+  "The metafield identifier linked to this option."
+  linkedMetafield: LinkedMetafield
   "The product option’s name."
   name: String!
+  "Similar to values, option_values returns all the corresponding option value objects to the product option, including values not assigned to any variants."
+  optionValues: [ProductOptionValue!]!
   "The product option's position."
   position: Int!
   "The translations associated with the resource."
@@ -22292,6 +23019,112 @@ type ProductOption implements HasPublishedTranslations & Node {
   ): [Translation!]!
   "The corresponding value to the product option name."
   values: [String!]!
+}
+
+"Return type for `productOptionUpdate` mutation."
+type ProductOptionUpdatePayload {
+  "The product with which the option being updated is associated."
+  product: Product
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [ProductOptionUpdateUserError!]!
+}
+
+"Error codes for failed `ProductOptionUpdate` mutation."
+type ProductOptionUpdateUserError implements DisplayableError {
+  "The error code."
+  code: ProductOptionUpdateUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
+"""
+
+The product option value names. For example, "Red", "Blue", and "Green" for a "Color" option.
+"""
+type ProductOptionValue implements HasPublishedTranslations & Node {
+  "Whether the product option value has any linked variants."
+  hasVariants: Boolean!
+  "A globally-unique ID."
+  id: ID!
+  "The value of the linked metafield."
+  linkedMetafieldValue: String
+  "The name of the product option value."
+  name: String!
+  "The swatch associated with the product option value."
+  swatch: ProductOptionValueSwatch
+  "The translations associated with the resource."
+  translations(
+    "Filters translations locale."
+    locale: String!,
+    "Filters translations by market ID. Use this argument to retrieve content specific to a market."
+    marketId: ID
+  ): [Translation!]!
+}
+
+"A swatch associated with a product option value."
+type ProductOptionValueSwatch {
+  "The color representation of the swatch."
+  color: Color
+  "An image representation of the swatch."
+  image: MediaImage
+}
+
+"Return type for `productOptionsCreate` mutation."
+type ProductOptionsCreatePayload {
+  "The updated product object."
+  product: Product
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [ProductOptionsCreateUserError!]!
+}
+
+"Error codes for failed `ProductOptionsCreate` mutation."
+type ProductOptionsCreateUserError implements DisplayableError {
+  "The error code."
+  code: ProductOptionsCreateUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
+"Return type for `productOptionsDelete` mutation."
+type ProductOptionsDeletePayload {
+  "IDs of the options deleted."
+  deletedOptionsIds: [ID!]
+  "The updated product object."
+  product: Product
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [ProductOptionsDeleteUserError!]!
+}
+
+"Error codes for failed `ProductOptionsDelete` mutation."
+type ProductOptionsDeleteUserError implements DisplayableError {
+  "The error code."
+  code: ProductOptionsDeleteUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
+"Return type for `productOptionsReorder` mutation."
+type ProductOptionsReorderPayload {
+  "The updated product object."
+  product: Product
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [ProductOptionsReorderUserError!]!
+}
+
+"Error codes for failed `ProductOptionsReorder` mutation."
+type ProductOptionsReorderUserError implements DisplayableError {
+  "The error code."
+  code: ProductOptionsReorderUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
 }
 
 "The price range of the product."
@@ -22423,6 +23256,57 @@ type ProductSale implements Sale {
   totalTaxAmount: MoneyBag!
 }
 
+"""
+
+An entity that represents details of an asynchronous
+[ProductSet](https://shopify.dev/api/admin-graphql/current/mutations/productSet) mutation.
+
+By querying this entity with the
+[productOperation](https://shopify.dev/api/admin-graphql/current/queries/productOperation) query
+using the ID that was returned
+[when the product was created or updated](https://shopify.dev/api/admin/migrate/new-product-model/sync-data#create-a-product-with-variants-and-options-asynchronously),
+this can be used to check the status of an operation.
+
+The `status` field indicates whether the operation is `CREATED`, `ACTIVE`, or `COMPLETE`.
+
+The `product` field provides the details of the created or updated product.
+
+The `userErrors` field provides mutation errors that occurred during the operation.
+"""
+type ProductSetOperation implements Node & ProductOperation {
+  "A globally-unique ID."
+  id: ID!
+  "The product that's created or updated during this operation."
+  product: Product
+  "The status of this operation."
+  status: ProductOperationStatus!
+  "Returns mutation errors occurred during background mutation processing."
+  userErrors: [ProductSetUserError!]!
+}
+
+"Return type for `productSet` mutation."
+type ProductSetPayload {
+  "The product object."
+  product: Product
+  "The product set operation, returned when run in asynchronous mode."
+  productSetOperation: ProductSetOperation
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [ProductSetUserError!]!
+}
+
+"""
+
+Defines errors for ProductSet mutation.
+"""
+type ProductSetUserError implements DisplayableError {
+  "The error code."
+  code: ProductSetUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
 "Represents a [Shopify product taxonomy](https://help.shopify.com/txt/product_taxonomy/en.txt) node."
 type ProductTaxonomyNode implements Node {
   "The full name of the product taxonomy node. For example,  Animals & Pet Supplies > Pet Supplies > Dog Supplies > Dog Beds."
@@ -22504,7 +23388,7 @@ type ProductVariant implements HasMetafieldDefinitions & HasMetafields & HasPubl
   """
   fulfillmentService: FulfillmentService @deprecated(reason: "\nThe [relationship between a product variant and a fulfillment service was changed in the `2022-07` API version](/changelog/fulfillment-service-sku-sharing). A [ProductVariant](/api/admin-graphql/latest/objects/ProductVariant) can be stocked by multiple fulfillment services. As a result, we recommend that you use the [inventoryItem field](/api/admin-graphql/latest/objects/ProductVariant#field-productvariant-inventoryitem) if you need to determine where a product variant is stocked.\n\nIf you need to determine whether a product is a gift card, then you should continue to use this field until an alternative is available.\n\nLearn more about [managing inventory quantities and states](/apps/fulfillment/inventory-management-apps/quantities-states).\n")
   "Whether changes to the fulfillment service for the product variant are allowed."
-  fulfillmentServiceEditable: EditableProperty!
+  fulfillmentServiceEditable: EditableProperty! @deprecated(reason: "The [relationship between a product variant and a fulfillment service was changed in the `2022-07` API version](/changelog/fulfillment-service-sku-sharing). A [ProductVariant](/api/admin-graphql/latest/objects/ProductVariant) can be stocked by multiple fulfillment services. \nAs a result, the fulfillment_service is no longer directly editable on a ProductVariant and this field is no longer applicable.\n")
   "The Harmonized System Code (or HS Tariff Code) for the variant."
   harmonizedSystemCode: String @deprecated(reason: "Use `InventoryItem.harmonizedSystemCode` instead.")
   "A globally-unique ID."
@@ -22672,7 +23556,7 @@ type ProductVariant implements HasMetafieldDefinitions & HasMetafields & HasPubl
   """
   sellableOnlineQuantity: Int!
   "Count of selling plan groups associated with the product variant."
-  sellingPlanGroupCount: Int!
+  sellingPlanGroupCount: Int! @deprecated(reason: "Use `sellingPlanGroupsCount` instead.")
   "A list of all selling plan groups defined in the current shop associated with the product variant."
   sellingPlanGroups(
     "Returns the elements that come after the specified cursor."
@@ -22686,6 +23570,8 @@ type ProductVariant implements HasMetafieldDefinitions & HasMetafields & HasPubl
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): SellingPlanGroupConnection!
+  "Count of selling plan groups associated with the product variant."
+  sellingPlanGroupsCount: Count
   """
 
   A case-sensitive identifier for the product variant in the shop.
@@ -22718,12 +23604,12 @@ type ProductVariant implements HasMetafieldDefinitions & HasMetafields & HasPubl
   """
   updatedAt: DateTime!
   "The weight of the product variant in the unit system specified with weight_unit."
-  weight: Float
+  weight: Float @deprecated(reason: "Use InventoryItem.measurement.weight instead")
   """
 
   The unit of measurement that applies to the product variant's weight. If you don't specify a value for weight_unit, then the shop's default unit of measurement is applied. Valid values: `g`, `kg`, `oz`, `lb`.
   """
-  weightUnit: WeightUnit!
+  weightUnit: WeightUnit! @deprecated(reason: "Use InventoryItem.measurement.weight instead")
 }
 
 "Return type for `productVariantAppendMedia` mutation."
@@ -23590,6 +24476,45 @@ type QueryRoot {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): CartTransformConnection!
+  "Lookup a cash tracking session by ID."
+  cashTrackingSession(
+    "The ID of the CashTrackingSession to return."
+    id: ID!
+  ): CashTrackingSession
+  """
+
+  Returns a shop's cash tracking sessions for locations with a POS Pro subscription.
+
+  Tip: To query for cash tracking sessions in bulk, you can
+  [perform a bulk operation](https://shopify.dev/docs/api/usage/bulk-operations/queries).
+  """
+  cashTrackingSessions(
+    "Returns the elements that come after the specified cursor."
+    after: String,
+    "Returns the elements that come before the specified cursor."
+    before: String,
+    "Returns up to the first `n` elements from the list."
+    first: Int,
+    "Returns up to the last `n` elements from the list."
+    last: Int,
+    """
+
+    Apply one or multiple filters to the query.
+    | name | description | acceptable_values | default_value | example_use |
+    | ---- | ---- | ---- | ---- | ---- |
+    | closing_time |
+    | location_id |
+    | opening_time |
+    | point_of_sale_device_ids |
+    | status |
+    Refer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.
+    """
+    query: String,
+    "Reverse the order of the underlying list."
+    reverse: Boolean = false,
+    "Sort the underlying list by the given key."
+    sortKey: CashTrackingSessionsSortKeys = ID
+  ): CashTrackingSessionConnection!
   "Returns a Catalog resource by ID."
   catalog(
     "The ID of the Catalog to return."
@@ -23629,6 +24554,26 @@ type QueryRoot {
     "The type of the catalogs to be returned."
     type: CatalogType
   ): CatalogConnection!
+  "The count of catalogs belonging to the shop. Limited to a maximum of 10000."
+  catalogsCount(
+    """
+
+    Apply one or multiple filters to the query.
+    | name | description | acceptable_values | default_value | example_use |
+    | ---- | ---- | ---- | ---- | ---- |
+    | app_id |
+    | company_id |
+    | company_location_id |
+    | managed_country_id |
+    | market_id |
+    | status |
+    | title |
+    Refer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.
+    """
+    query: String,
+    "The type of the catalogs to be returned."
+    type: CatalogType
+  ): Count
   "Lookup a channel by ID."
   channel(
     "The ID of the Channel to return."
@@ -23849,6 +24794,8 @@ type QueryRoot {
     "Sort the underlying list by the given key."
     sortKey: CompanySortKeys = ID
   ): CompanyConnection!
+  "The number of companies for a shop."
+  companiesCount: Count
   "Returns a `Company` object by ID."
   company(
     "The ID of the Company to return."
@@ -23864,8 +24811,6 @@ type QueryRoot {
     "The ID of the CompanyContactRole to return."
     id: ID!
   ): CompanyContactRole
-  "The number of companies for a shop."
-  companyCount: Int!
   "Returns a `CompanyLocation` object by ID."
   companyLocation(
     "The ID of the CompanyLocation to return."
@@ -24081,14 +25026,17 @@ type QueryRoot {
   "Returns the shop-wide shipping settings."
   deliverySettings: DeliverySetting
   "The total number of discount codes for the shop."
-  discountCodeCount(
+  discountCodesCount(
     """
 
-    Supported filter parameters:
-    * times_used.
+    Apply one or multiple filters to the query.
+    | name | description | acceptable_values | default_value | example_use |
+    | ---- | ---- | ---- | ---- | ---- |
+    | times_used |
+    Refer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.
     """
     query: String
-  ): Int!
+  ): Count
   "Returns a discount resource by ID."
   discountNode(
     "The ID of the DiscountNode to return."
@@ -24386,11 +25334,30 @@ type QueryRoot {
     "Sort the underlying list by the given key."
     sortKey: GiftCardSortKeys = ID
   ): GiftCardConnection!
-  "The total number of gift cards issued for the shop."
+  "The total number of gift cards issued for the shop. Limited to a maximum of 10000."
   giftCardsCount(
-    "Whether to count enabled or disabled or all gift cards."
-    enabled: Boolean
-  ): UnsignedInt64!
+    """
+
+    Apply one or multiple filters to the query.
+    | name | description | acceptable_values | default_value | example_use |
+    | ---- | ---- | ---- | ---- | ---- |
+    | balance_status |
+    | created_at |
+    | expires_on |
+    | initial_value |
+    | source |
+    | status |
+    Refer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.
+    """
+    query: String,
+    """
+
+    The ID of an existing saved search.
+    The search’s query string is used as the query argument.
+    Refer to [SavedSearch](https://shopify.dev/api/admin-graphql/latest/objects/savedsearch).
+    """
+    savedSearchId: ID
+  ): Count
   """
 
   Returns an
@@ -24950,6 +25917,8 @@ type QueryRoot {
     "The payment terms type to filter the payment terms templates list."
     paymentTermsType: PaymentTermsType
   ): [PaymentTermsTemplate!]!
+  "The number of pendings orders. Limited to a maximum of 10000."
+  pendingOrdersCount: Count
   "Returns a price list resource by ID."
   priceList(
     "The ID of the `PriceList` to return."
@@ -25096,6 +26065,29 @@ type QueryRoot {
   ): ProductFeedConnection!
   """
 
+  Returns a ProductOperation resource by ID.
+
+  This can be used to query the
+  [ProductSetOperation](https://shopify.dev/api/admin-graphql/current/objects/ProductSetOperation), using
+  the ID that was returned
+  [when the product was created or updated](https://shopify.dev/api/admin/migrate/new-product-model/sync-data#create-a-product-with-variants-and-options-asynchronously)
+  by the
+  [ProductSet](https://shopify.dev/api/admin-graphql/current/mutations/productSet) mutation.
+
+  The `status` field indicates whether the operation is `CREATED`, `ACTIVE`, or `COMPLETE`.
+
+  The `product` field provides the details of the created or updated product.
+
+  For the
+  [ProductSetOperation](https://shopify.dev/api/admin-graphql/current/objects/ProductSetOperation), the
+  `userErrors` field provides mutation errors that occurred during the operation.
+  """
+  productOperation(
+    "The ID of the ProductOperation to return."
+    id: ID!
+  ): ProductOperation
+  """
+
   Returns the product resource feedback for the currently authenticated app.
   """
   productResourceFeedback(
@@ -25234,6 +26226,52 @@ type QueryRoot {
     "Sort the underlying list by the given key."
     sortKey: ProductSortKeys = ID
   ): ProductConnection!
+  "Count of products. Limited to a maximum of 10000."
+  productsCount(
+    "The upper bound on count value before returning a result."
+    limit: Int,
+    """
+
+    Apply one or multiple filters to the query.
+    | name | description | acceptable_values | default_value | example_use |
+    | ---- | ---- | ---- | ---- | ---- |
+    | barcode |
+    | bundles |
+    | created_at |
+    | delivery_profile_id |
+    | error_feedback |
+    | gift_card |
+    | has_only_composites |
+    | has_only_default_variant |
+    | has_variant_with_components |
+    | id |
+    | inventory_total |
+    | is_price_reduced |
+    | out_of_stock_somewhere |
+    | price |
+    | product_configuration_owner |
+    | product_publication_status |
+    | product_type |
+    | publishable_status |
+    | published_status |
+    | sku |
+    | status |
+    | tag |
+    | tag_not |
+    | title |
+    | updated_at |
+    | vendor |
+    Refer to the detailed [search syntax](https://shopify.dev/api/usage/search-syntax) for more information about using filters.
+    """
+    query: String,
+    """
+
+    The ID of an existing saved search.
+    The search’s query string is used as the query argument.
+    Refer to [SavedSearch](https://shopify.dev/api/admin-graphql/latest/objects/savedsearch).
+    """
+    savedSearchId: ID
+  ): Count
   "The list of publicly-accessible Admin API versions, including supported versions, the release candidate, and unstable versions."
   publicApiVersions: [ApiVersion!]!
   """
@@ -25259,6 +26297,11 @@ type QueryRoot {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): PublicationConnection!
+  "Count of publications."
+  publicationsCount(
+    "Filter publications by catalog type."
+    catalogType: CatalogType
+  ): Count
   "Returns a Refund resource by ID."
   refund(
     "The ID of the Refund to return."
@@ -25344,8 +26387,6 @@ type QueryRoot {
     "Find a segment by ID."
     id: ID!
   ): Segment
-  "The number of segments for a shop."
-  segmentCount: Int!
   "A list of filter suggestions associated with a segment. A segment is a group of members (commonly customers) that meet specific criteria."
   segmentFilterSuggestions(
     "Returns the elements that come after the specified cursor."
@@ -25420,6 +26461,8 @@ type QueryRoot {
     "Sort the underlying list by the given key."
     sortKey: SegmentSortKeys = CREATION_DATE
   ): SegmentConnection!
+  "The number of segments for a shop."
+  segmentsCount: Count
   "Returns a Selling Plan Group resource by ID."
   sellingPlanGroup(
     "The ID of the SellingPlanGroup to return."
@@ -25817,6 +26860,19 @@ type Refund implements LegacyInteroperability & Node {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): RefundLineItemConnection!
+  "The `RefundShippingLine` resources attached to the refund."
+  refundShippingLines(
+    "Returns the elements that come after the specified cursor."
+    after: String,
+    "Returns the elements that come before the specified cursor."
+    before: String,
+    "Returns up to the first `n` elements from the list."
+    first: Int,
+    "Returns up to the last `n` elements from the list."
+    last: Int,
+    "Reverse the order of the underlying list."
+    reverse: Boolean = false
+  ): RefundShippingLineConnection!
   "The return associated with the refund."
   return: Return
   "The staff member who created the refund."
@@ -25961,6 +27017,38 @@ type RefundLineItemEdge {
   cursor: String!
   "The item at the end of RefundLineItemEdge."
   node: RefundLineItem!
+}
+
+"A shipping line item that's included in a refund."
+type RefundShippingLine implements Node {
+  "A globally-unique ID."
+  id: ID!
+  "The `ShippingLine` resource associated to the refunded shipping line item."
+  shippingLine: ShippingLine!
+}
+
+"""
+
+An auto-generated type for paginating through multiple RefundShippingLines.
+"""
+type RefundShippingLineConnection {
+  "A list of edges."
+  edges: [RefundShippingLineEdge!]!
+  "A list of the nodes contained in RefundShippingLineEdge."
+  nodes: [RefundShippingLine!]!
+  "Information to aid in pagination."
+  pageInfo: PageInfo!
+}
+
+"""
+
+An auto-generated type which holds one RefundShippingLine and a cursor during pagination.
+"""
+type RefundShippingLineEdge {
+  "A cursor for use in pagination."
+  cursor: String!
+  "The item at the end of RefundShippingLineEdge."
+  node: RefundShippingLine!
 }
 
 """
@@ -26117,10 +27205,39 @@ type ResourcePublicationV2Edge {
   node: ResourcePublicationV2!
 }
 
+"""
+
+A restocking fee is a fee captured as part of a return to cover the costs of handling a return line item.
+Typically, this would cover the costs of inspecting, repackaging, and restocking the item.
+"""
+type RestockingFee implements Fee {
+  "The amount of the restocking fee, in shop and presentment currencies."
+  amountSet: MoneyBag!
+  "The unique ID for the Fee."
+  id: ID!
+  "The value of the fee as a percentage."
+  percentage: Float!
+}
+
 "Represents a return."
 type Return implements Node {
   "Additional information about the declined return."
   decline: ReturnDecline
+  "The exchange line items attached to the return."
+  exchangeLineItems(
+    "Returns the elements that come after the specified cursor."
+    after: String,
+    "Returns the elements that come before the specified cursor."
+    before: String,
+    "Returns up to the first `n` elements from the list."
+    first: Int,
+    "Include exchange line items that have been removed from the order by an order edit, return, etc. Items that have been removed have a zero ([LineItem.currentQuantity](https://shopify.dev/docs/api/admin-graphql/unstable/objects/LineItem#field-lineitem-currentquantity))."
+    includeRemovedItems: Boolean = false,
+    "Returns up to the last `n` elements from the list."
+    last: Int,
+    "Reverse the order of the underlying list."
+    reverse: Boolean = false
+  ): ExchangeLineItemConnection!
   "A globally-unique ID."
   id: ID!
   "The name of the return."
@@ -26153,6 +27270,8 @@ type Return implements Node {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ReturnLineItemConnection!
+  "The return shipping fees for the return."
+  returnShippingFees: [ReturnShippingFee!]!
   "The list of reverse fulfillment orders for the return."
   reverseFulfillmentOrders(
     "Returns the elements that come after the specified cursor."
@@ -26179,6 +27298,35 @@ type Return implements Node {
   ): SuggestedReturnRefund
   "The sum of all return line item quantities for the return."
   totalQuantity: Int!
+}
+
+"An agreement between the merchant and customer for a return."
+type ReturnAgreement implements SalesAgreement {
+  "The application that created the agreement."
+  app: App
+  "The date and time at which the agreement occured."
+  happenedAt: DateTime!
+  "The unique ID for the agreement."
+  id: ID!
+  "The reason the agremeent was created."
+  reason: OrderActionType!
+  "The return associated with the agreement."
+  return: Return!
+  "The sales associated with the agreement."
+  sales(
+    "Returns the elements that come after the specified cursor."
+    after: String,
+    "Returns the elements that come before the specified cursor."
+    before: String,
+    "Returns up to the first `n` elements from the list."
+    first: Int,
+    "Returns up to the last `n` elements from the list."
+    last: Int,
+    "Reverse the order of the underlying list."
+    reverse: Boolean = false
+  ): SaleConnection!
+  "The staff member associated with the agreement."
+  user: StaffMember
 }
 
 "Return type for `returnApproveRequest` mutation."
@@ -26271,6 +27419,8 @@ type ReturnLineItem implements Node {
   refundableQuantity: Int!
   "The quantity that was refunded."
   refundedQuantity: Int!
+  "The restocking fee for the return line item."
+  restockingFee: RestockingFee
   "The reason for returning the item."
   returnReason: ReturnReason!
   "Additional information about the reason for the return. Maximum length: 255 characters."
@@ -26327,6 +27477,17 @@ type ReturnRequestPayload {
   return: Return
   "The list of errors that occurred from executing the mutation."
   userErrors: [ReturnUserError!]!
+}
+
+"""
+
+A return shipping fee is a fee captured as part of a return to cover the costs of shipping the return.
+"""
+type ReturnShippingFee implements Fee {
+  "The amount of the return shipping fee, in shop and presentment currencies."
+  amountSet: MoneyBag!
+  "The unique ID for the Fee."
+  id: ID!
 }
 
 "An error that occurs during the execution of a return mutation."
@@ -26694,6 +27855,14 @@ type ReverseFulfillmentOrderLineItemEdge {
 type ReverseFulfillmentOrderThirdPartyConfirmation {
   "The status of the reverse fulfillment order third-party confirmation."
   status: ReverseFulfillmentOrderThirdPartyConfirmationStatus!
+}
+
+"A risk fact belongs to a single risk assessment and serves to provide additional context for an assessment. Risk facts are not necessarily tied to the result of the recommendation."
+type RiskFact {
+  "A description of the fact."
+  description: String!
+  "Indicates whether the fact is a negative, neutral or positive contributor with regards to risk."
+  sentiment: RiskFactSentiment!
 }
 
 "A row count represents rows on background operation."
@@ -27318,6 +28487,8 @@ Products can have multiple options, like different sizes or colors.
 type SelectedOption {
   "The product option’s name."
   name: String!
+  "The product option’s value object."
+  optionValue: ProductOptionValue!
   "The product option’s value."
   value: String!
 }
@@ -27542,13 +28713,6 @@ type SellingPlanGroup implements HasPublishedTranslations & Node {
   options: [String!]!
   "The relative position of the selling plan group for display."
   position: Int
-  "A count of products associated to the selling plan group."
-  productCount: Int!
-  "A count of product variants associated to the selling plan group."
-  productVariantCount(
-    "The ID of the product to scope the count to."
-    productId: ID
-  ): Int!
   "Product variants associated to the selling plan group."
   productVariants(
     "Returns the elements that come after the specified cursor."
@@ -27564,6 +28728,11 @@ type SellingPlanGroup implements HasPublishedTranslations & Node {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ProductVariantConnection!
+  "A count of product variants associated to the selling plan group."
+  productVariantsCount(
+    "The ID of the product to scope the count to."
+    productId: ID
+  ): Count
   "Products associated to the selling plan group."
   products(
     "Returns the elements that come after the specified cursor."
@@ -27577,6 +28746,8 @@ type SellingPlanGroup implements HasPublishedTranslations & Node {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): ProductConnection!
+  "A count of products associated to the selling plan group."
+  productsCount: Count
   "Selling plans associated to the selling plan group."
   sellingPlans(
     "Returns the elements that come after the specified cursor."
@@ -27814,6 +28985,8 @@ type ShippingLine {
   discountedPriceSet: MoneyBag!
   "A globally-unique ID."
   id: ID
+  "Whether the shipping line has been removed."
+  isRemoved: Boolean!
   "The pre-tax shipping price without any discounts applied."
   originalPrice: MoneyV2! @deprecated(reason: "Use `originalPriceSet` instead.")
   "The pre-tax shipping price without any discounts applied."
@@ -28019,8 +29192,6 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
   ): AppConnection!
   "The shop's billing address information."
   billingAddress: ShopAddress!
-  "Exposes the number of channels."
-  channelCount: Int! @deprecated(reason: "Use `publicationCount` instead.")
   "List of all channel definitions associated with a shop."
   channelDefinitionsForInstalledChannels: [AvailableChannelDefinitionsByChannel!]!
   "List of the shop's active sales channels."
@@ -28100,6 +29271,8 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
   contactEmail: String!
   "Countries that have been defined in shipping zones for the shop."
   countriesInShippingZones: CountriesInShippingZones!
+  "The date and time when the shop was created."
+  createdAt: DateTime!
   "The three letter code for the currency that the shop sells in."
   currencyCode: CurrencyCode!
   "How currencies are displayed on your store."
@@ -28311,7 +29484,7 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
   The number of pendings orders on the shop.
   Limited to a maximum of 10000.
   """
-  limitedPendingOrderCount: LimitedPendingOrderCount!
+  limitedPendingOrderCount: LimitedPendingOrderCount! @deprecated(reason: "Use `QueryRoot.pendingOrdersCount` instead.")
   "List of active locations of the shop."
   locations(
     "Returns the elements that come after the specified cursor."
@@ -28375,6 +29548,8 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
     "Sort the underlying list by the given key."
     sortKey: MarketingEventSortKeys = ID
   ): MarketingEventConnection! @deprecated(reason: "Use `QueryRoot.marketingEvents` instead.")
+  "Whether SMS marketing has been enabled on the shop's checkout configuration settings."
+  marketingSmsConsentEnabledAtCheckout: Boolean!
   "The approval signals for a shop to support onboarding to channel apps."
   merchantApprovalSignals: MerchantApprovalSignals
   "Returns a metafield by namespace and key that belongs to the resource."
@@ -28491,8 +29666,6 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
   ): OrderConnection! @deprecated(reason: "Use `QueryRoot.orders` instead.")
   "The shop's settings related to payments."
   paymentSettings: PaymentSettings!
-  "Number of pending orders on the shop."
-  pendingOrderCount: Int! @deprecated(reason: "Use `limitedPendingOrderCount` instead.")
   "The shop's billing plan."
   plan: ShopPlan!
   "List of the shop's price rule saved searches."
@@ -28590,7 +29763,7 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
     reverse: Boolean = false,
     "Sort the underlying list by the given key."
     sortKey: ProductImageSortKeys = CREATED_AT
-  ): ImageConnection!
+  ): ImageConnection! @deprecated(reason: "Use `files` instead. See [filesQuery](https://shopify.dev/docs/api/admin-graphql/latest/queries/files) and its [query](https://shopify.dev/docs/api/admin-graphql/2024-01/queries/files#argument-query) argument for more information.")
   "List of the shop's product saved searches."
   productSavedSearches(
     "Returns the elements that come after the specified cursor."
@@ -28727,7 +29900,7 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
     sortKey: ProductSortKeys = ID
   ): ProductConnection! @deprecated(reason: "Use `QueryRoot.products`.")
   "The number of publications for the shop."
-  publicationCount: Int!
+  publicationCount: Int! @deprecated(reason: "Use `QueryRoot.publicationsCount` instead.")
   "The shop's limits for specific resources. For example, the maximum number ofvariants allowed per product, or the maximum number of locations allowed."
   resourceLimits: ShopResourceLimits!
   "The URL of the rich text editor that can be used for mobile devices."
@@ -28800,6 +29973,8 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
   ): [Translation!]!
   "The shop's unit system for weights and measures."
   unitSystem: UnitSystem!
+  "The date and time when the shop was last updated."
+  updatedAt: DateTime!
   "Fetches a list of images uploaded to the shop by their IDs."
   uploadedImagesByIds(
     "The IDs of the uploaded images."
@@ -28811,7 +29986,7 @@ type Shop implements HasMetafields & HasPublishedTranslations & Node {
   weightUnit: WeightUnit!
 }
 
-"The shop's billing address."
+"An address for a shop."
 type ShopAddress implements Node {
   "The first line of the address. Typically the street address or PO Box number."
   address1: String
@@ -30355,7 +31530,7 @@ type SubscriptionBillingCycleEditedContract implements SubscriptionContractBase 
     reverse: Boolean = false
   ): SubscriptionManualDiscountConnection!
   "The number of lines associated with the subscription contract."
-  lineCount: Int!
+  lineCount: Int! @deprecated(reason: "Use `linesCount` instead.")
   "The list of subscription lines associated with the subscription contract."
   lines(
     "Returns the elements that come after the specified cursor."
@@ -30369,6 +31544,8 @@ type SubscriptionBillingCycleEditedContract implements SubscriptionContractBase 
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): SubscriptionLineConnection!
+  "The number of lines associated with the subscription contract."
+  linesCount: Count
   "The note field that will be applied to the generated orders."
   note: String
   "A list of the subscription contract's orders."
@@ -30522,7 +31699,7 @@ type SubscriptionContract implements Node & SubscriptionContractBase {
   "The current status of the last payment."
   lastPaymentStatus: SubscriptionContractLastPaymentStatus
   "The number of lines associated with the subscription contract."
-  lineCount: Int!
+  lineCount: Int! @deprecated(reason: "Use `linesCount` instead.")
   "The list of subscription lines associated with the subscription contract."
   lines(
     "Returns the elements that come after the specified cursor."
@@ -30536,6 +31713,8 @@ type SubscriptionContract implements Node & SubscriptionContractBase {
     "Reverse the order of the underlying list."
     reverse: Boolean = false
   ): SubscriptionLineConnection!
+  "The number of lines associated with the subscription contract."
+  linesCount: Count
   """
 
   The next billing date for the subscription contract. This field is managed by the apps.
@@ -31666,6 +32845,24 @@ type TransactionFee implements Node {
   type: String!
 }
 
+"Return type for `transactionVoid` mutation."
+type TransactionVoidPayload {
+  "The created void transaction."
+  transaction: OrderTransaction
+  "The list of errors that occurred from executing the mutation."
+  userErrors: [TransactionVoidUserError!]!
+}
+
+"An error that occurs during the execution of `TransactionVoid`."
+type TransactionVoidUserError implements DisplayableError {
+  "The error code."
+  code: TransactionVoidUserErrorCode
+  "The path to the input field that caused the error."
+  field: [String!]
+  "The error message."
+  message: String!
+}
+
 "Translatable content of a resource's field."
 type TranslatableContent {
   "Hash digest representation of the content value."
@@ -32492,6 +33689,20 @@ enum AbandonmentUpdateActivitiesDeliveryStatusesUserErrorCode {
   MARKETING_ACTIVITY_NOT_FOUND
 }
 
+"The set of valid sort keys for the Adjustments query."
+enum AdjustmentsSortKeys {
+  "Sort by the `id` value."
+  ID
+  """
+
+  Sort by relevance to the search terms when the `query` parameter is specified on the connection.
+  Don't use this sort key when no search query is specified.
+  """
+  RELEVANCE
+  "Sort by the `time` value."
+  TIME
+}
+
 "Possible types of app developer."
 enum AppDeveloperType {
   "Indicates the app developer works directly for a Merchant."
@@ -32893,6 +34104,16 @@ enum BusinessCustomerErrorCode {
   UNEXPECTED_TYPE
 }
 
+"Represents the staged status of a CalculatedShippingLine on a CalculatedOrder."
+enum CalculatedShippingLineStagedStatus {
+  "The shipping line was added as part of the current order edit."
+  ADDED
+  "The shipping line has no staged changes associated with it."
+  NONE
+  "The shipping line was removed as part of the current order edit."
+  REMOVED
+}
+
 "Possible error codes that can be returned by `CartTransformCreateUserError`."
 enum CartTransformCreateUserErrorCode {
   "A cart transform function already exists for the provided function_id."
@@ -32911,6 +34132,30 @@ enum CartTransformDeleteUserErrorCode {
   NOT_FOUND
   "Unauthorized app scope."
   UNAUTHORIZED_APP_SCOPE
+}
+
+"The set of valid sort keys for the CashTrackingSessions query."
+enum CashTrackingSessionsSortKeys {
+  "Sort by the `closing_time_asc` value."
+  CLOSING_TIME_ASC
+  "Sort by the `closing_time_desc` value."
+  CLOSING_TIME_DESC
+  "Sort by the `id` value."
+  ID
+  "Sort by the `opening_time_asc` value."
+  OPENING_TIME_ASC
+  "Sort by the `opening_time_desc` value."
+  OPENING_TIME_DESC
+  """
+
+  Sort by relevance to the search terms when the `query` parameter is specified on the connection.
+  Don't use this sort key when no search query is specified.
+  """
+  RELEVANCE
+  "Sort by the `total_discrepancy_asc` value."
+  TOTAL_DISCREPANCY_ASC
+  "Sort by the `total_discrepancy_desc` value."
+  TOTAL_DISCREPANCY_DESC
 }
 
 "The set of valid sort keys for the Catalog query."
@@ -33031,6 +34276,16 @@ enum CatalogUserErrorCode {
   UNSUPPORTED_CATALOG_ACTION
 }
 
+"The container background style."
+enum CheckoutBrandingBackground {
+  "The Base background style."
+  BASE
+  "The Subdued background style."
+  SUBDUED
+  "The Transparent background style."
+  TRANSPARENT
+}
+
 "Possible values for the background style."
 enum CheckoutBrandingBackgroundStyle {
   "The None background style."
@@ -33049,13 +34304,37 @@ enum CheckoutBrandingBorder {
   NONE
 }
 
+"The container border style."
+enum CheckoutBrandingBorderStyle {
+  "The Base border style."
+  BASE
+  "The Dashed border style."
+  DASHED
+  "The Dotted border style."
+  DOTTED
+}
+
+"The container border width."
+enum CheckoutBrandingBorderWidth {
+  "The Base border width."
+  BASE
+  "The Large 100 border width."
+  LARGE_100
+  "The Large 200 border width."
+  LARGE_200
+}
+
 "The possible color schemes."
 enum CheckoutBrandingColorSchemeSelection {
-  "Color Scheme1 color scheme selection."
+  "The COLOR_SCHEME1 color scheme selection."
   COLOR_SCHEME1
-  "Color Scheme2 color scheme selection."
+  "The COLOR_SCHEME2 color scheme selection."
   COLOR_SCHEME2
-  "Transparent color scheme selection."
+  "The COLOR_SCHEME3 color scheme selection."
+  COLOR_SCHEME3
+  "The COLOR_SCHEME4 color scheme selection."
+  COLOR_SCHEME4
+  "The TRANSPARENT color scheme selection."
   TRANSPARENT
 }
 
@@ -33114,6 +34393,14 @@ enum CheckoutBrandingFontLoadingStrategy {
   SWAP
 }
 
+"Possible values for the footer position."
+enum CheckoutBrandingFooterPosition {
+  "The End footer position."
+  END
+  "The Inline footer position."
+  INLINE
+}
+
 """
 
 Possible choices to override corner radius customizations on all applicable objects. Note that this selection
@@ -33153,6 +34440,20 @@ enum CheckoutBrandingLabelPosition {
   INSIDE
   "The Outside label position."
   OUTSIDE
+}
+
+"The container shadow."
+enum CheckoutBrandingShadow {
+  "The Base shadow."
+  BASE
+  "The Large 100 shadow."
+  LARGE_100
+  "The Large 200 shadow."
+  LARGE_200
+  "The Small 100 shadow."
+  SMALL_100
+  "The Small 200 shadow."
+  SMALL_200
 }
 
 "Possible values for the simple border."
@@ -33259,9 +34560,9 @@ enum CheckoutBrandingTypographySize {
   EXTRA_LARGE
   "The extra small font size. Example: 10px."
   EXTRA_SMALL
-  "The large font size. Example: 17px."
+  "The large font size. Example: 19px."
   LARGE
-  "The medium font size. Example: 15px."
+  "The medium font size. Example: 16px."
   MEDIUM
   "The small font size. Example: 12px."
   SMALL
@@ -33279,6 +34580,14 @@ enum CheckoutBrandingTypographyWeight {
 enum CheckoutBrandingUpsertUserErrorCode {
   "Unexpected internal error happened."
   INTERNAL_ERROR
+}
+
+"Possible visibility states."
+enum CheckoutBrandingVisibility {
+  "The Hidden visibility setting."
+  HIDDEN
+  "The Visible visibility setting."
+  VISIBLE
 }
 
 "The set of valid sort keys for the CheckoutProfile query."
@@ -33544,6 +34853,14 @@ enum CompanySortKeys {
   TOTAL_SPENT
   "Sort by the `updated_at` value."
   UPDATED_AT
+}
+
+"The precision of the value returned by a count field."
+enum CountPrecision {
+  "The count is at least the value. A limit was imposed and reached."
+  AT_LEAST
+  "The count is exactly the value."
+  EXACT
 }
 
 """
@@ -35250,7 +36567,7 @@ enum DiscountStatus {
   ACTIVE
   "The discount is expired."
   EXPIRED
-  "The discount is scheduled."
+  "The discount is scheduled when it has a start date in the future."
   SCHEDULED
 }
 
@@ -35291,7 +36608,8 @@ enum DisputeEvidenceUpdateUserErrorCode {
 "The possible statuses of a dispute."
 enum DisputeStatus {
   ACCEPTED
-  CHARGE_REFUNDED
+  "Status previously used by Stripe to indicate that a dispute led to a refund."
+  CHARGE_REFUNDED @deprecated(reason: "CHARGE_REFUNDED is no longer supported.")
   LOST
   NEEDS_RESPONSE
   UNDER_REVIEW
@@ -35542,6 +36860,8 @@ enum FilesErrorCode {
   NON_IMAGE_MEDIA_PER_SHOP_LIMIT_EXCEEDED
   "The file is not in the READY state."
   NON_READY_STATE
+  "Exceeded the limit of media per product."
+  PRODUCT_MEDIA_LIMIT_EXCEEDED
   "Specify one argument: search, IDs, or deleteAll."
   TOO_MANY_ARGUMENTS
   "The file type is not supported."
@@ -35716,6 +37036,8 @@ enum FulfillmentOrderAssignmentStatus {
   Fulfillment orders for which the merchant has requested fulfillment.
   """
   FULFILLMENT_REQUESTED
+  "Fulfillment orders for which the merchant hasn't yet requested fulfillment."
+  FULFILLMENT_UNSUBMITTED
 }
 
 "Possible error codes that can be returned by `FulfillmentOrderHoldUserError`."
@@ -35837,6 +37159,8 @@ enum FulfillmentOrderSortKeys {
   Don't use this sort key when no search query is specified.
   """
   RELEVANCE
+  "Sort by the `updated_at` value."
+  UPDATED_AT
 }
 
 "Possible error codes that can be returned by `FulfillmentOrderSplitUserError`."
@@ -36495,6 +37819,8 @@ enum LocationAddUserErrorCode {
   APP_NOT_AUTHORIZED
   "The input value is blank."
   BLANK
+  "The metafield violates a capability restriction."
+  CAPABILITY_VIOLATION
   "Owner type can't be used in this mutation."
   DISALLOWED_OWNER_TYPE
   "An error occurred while adding the location."
@@ -36583,6 +37909,8 @@ enum LocationEditUserErrorCode {
   CANNOT_DISABLE_ONLINE_ORDER_FULFILLMENT
   "Cannot modify the online order fulfillment preference for fulfillment service locations."
   CANNOT_MODIFY_ONLINE_ORDER_FULFILLMENT_FOR_FS_LOCATION
+  "The metafield violates a capability restriction."
+  CAPABILITY_VIOLATION
   "Owner type can't be used in this mutation."
   DISALLOWED_OWNER_TYPE
   "An error occurred while editing the location."
@@ -36859,7 +38187,7 @@ enum MarketingEventSortKeys {
   STARTED_AT
 }
 
-"The available types of marketing event."
+"The available types of tactics for a marketing activity."
 enum MarketingTactic {
   "An abandoned cart recovery email."
   ABANDONED_CART
@@ -36868,7 +38196,7 @@ enum MarketingTactic {
   "An affiliate link."
   AFFILIATE
   "A direct visit to the online store."
-  DIRECT
+  DIRECT @deprecated(reason: "`DIRECT` is deprecated. Use `LINK` instead.")
   "A display ad."
   DISPLAY @deprecated(reason: "`DISPLAY` is deprecated. Use `AD` instead.")
   "A follow-up email."
@@ -36892,7 +38220,7 @@ enum MarketingTactic {
   "Paid search."
   SEARCH @deprecated(reason: "`SEARCH` is deprecated. Use `AD` instead.")
   "Search engine optimization."
-  SEO
+  SEO @deprecated(reason: "`SEO` is deprecated. Use `AD` instead.")
   "A popup on the online store."
   STOREFRONT_APP
   "A transactional email."
@@ -37031,6 +38359,8 @@ enum MediaUserErrorCode {
   MEDIA_DOES_NOT_EXIST_ON_PRODUCT
   "The specified media is not attached to the specified variant."
   MEDIA_IS_NOT_ATTACHED_TO_VARIANT
+  "Missing arguments."
+  MISSING_ARGUMENTS
   "Model3d creation throttle was exceeded."
   MODEL3D_THROTTLE_EXCEEDED
   "Model validation failed."
@@ -37496,6 +38826,8 @@ enum OrderActionType {
   ORDER_EDIT
   "A refund on the order."
   REFUND
+  "A return on the order."
+  RETURN
   "An unknown agreement action. Represents new actions that may be added in future versions."
   UNKNOWN
 }
@@ -37574,14 +38906,32 @@ enum OrderDisplayFulfillmentStatus {
   UNFULFILLED
 }
 
+"Possible error codes that can be returned by `OrderEditAddShippingLineUserError`."
+enum OrderEditAddShippingLineUserErrorCode {
+  "The input value is invalid."
+  INVALID
+}
+
 "Possible error codes that can be returned by `OrderEditRemoveDiscountUserError`."
 enum OrderEditRemoveDiscountUserErrorCode {
   "The input value is invalid."
   INVALID
 }
 
+"Possible error codes that can be returned by `OrderEditRemoveShippingLineUserError`."
+enum OrderEditRemoveShippingLineUserErrorCode {
+  "The input value is invalid."
+  INVALID
+}
+
 "Possible error codes that can be returned by `OrderEditUpdateDiscountUserError`."
 enum OrderEditUpdateDiscountUserErrorCode {
+  "The input value is invalid."
+  INVALID
+}
+
+"Possible error codes that can be returned by `OrderEditUpdateShippingLineUserError`."
+enum OrderEditUpdateShippingLineUserErrorCode {
   "The input value is invalid."
   INVALID
 }
@@ -37643,6 +38993,18 @@ enum OrderReturnStatus {
   RETURN_REQUESTED
 }
 
+"Possible error codes that can be returned by `OrderRiskAssessmentCreateUserError`."
+enum OrderRiskAssessmentCreateUserErrorCode {
+  "The input value is invalid."
+  INVALID
+  "The record with the ID used as the input value couldn't be found."
+  NOT_FOUND
+  "The order is marked as fulfilled and can no longer accept new risk assessments."
+  ORDER_ALREADY_FULFILLED
+  "Too many facts were provided for the risk assessment."
+  TOO_MANY_FACTS
+}
+
 "The likelihood that an order is fraudulent."
 enum OrderRiskLevel {
   "There is a high level of risk that this order is fraudulent."
@@ -37651,6 +39013,18 @@ enum OrderRiskLevel {
   LOW
   "There is a medium level of risk that this order is fraudulent."
   MEDIUM
+}
+
+"List of possible values for an OrderRiskRecommendation recommendation."
+enum OrderRiskRecommendationResult {
+  "Recommends fulfilling the order."
+  ACCEPT
+  "Recommends cancelling the order."
+  CANCEL
+  "Recommends investigating the order by contacting buyers."
+  INVESTIGATE
+  "There is no recommended action for the order."
+  NONE
 }
 
 "The set of valid sort keys for the Order query."
@@ -38508,6 +39882,230 @@ enum ProductMediaSortKeys {
   RELEVANCE
 }
 
+"Represents the state of this product operation."
+enum ProductOperationStatus {
+  "Operation is currently running."
+  ACTIVE
+  "Operation is complete."
+  COMPLETE
+  "Operation has been created."
+  CREATED
+}
+
+"The set of strategies available for use on the `productOptionDelete` mutation."
+enum ProductOptionDeleteStrategy {
+  "The default strategy, the specified `Option` may only have one corresponding `value`."
+  DEFAULT
+  "An `Option` with multiple `values` can be deleted, but the operation only succeeds if no product variants get deleted."
+  NON_DESTRUCTIVE
+  "An `Option` with multiple `values` can be deleted. Remaining variants will be deleted, highest `position` first, in the event of duplicates being detected."
+  POSITION
+}
+
+"Possible error codes that can be returned by `ProductOptionUpdateUserError`."
+enum ProductOptionUpdateUserErrorCode {
+  "An option cannot have both metafield linked and nonlinked option values."
+  CANNOT_COMBINE_LINKED_AND_NONLINKED_OPTION_VALUES
+  "The number of variants will be above the limit after this operation."
+  CANNOT_CREATE_VARIANTS_ABOVE_LIMIT
+  "Deleting all option values of an option is not allowed."
+  CANNOT_DELETE_ALL_OPTION_VALUES_IN_OPTION
+  "An option cannot be left only with option values that are not linked to any variant."
+  CANNOT_LEAVE_OPTIONS_WITHOUT_VARIANTS
+  "Duplicated option value."
+  DUPLICATED_OPTION_VALUE
+  "Cannot link multiple options to the same metafield."
+  DUPLICATE_LINKED_OPTION
+  "Invalid metafield value for linked option."
+  INVALID_METAFIELD_VALUE_FOR_LINKED_OPTION
+  "The option name provided is not valid."
+  INVALID_NAME
+  "The option position provided is not valid."
+  INVALID_POSITION
+  "A key is missing in the input."
+  KEY_MISSING_IN_INPUT
+  "Linked options are currently not supported for this shop."
+  LINKED_OPTIONS_NOT_SUPPORTED_FOR_SHOP
+  "Updating the linked_metafield of an option requires a linked_metafield_value for each option value."
+  LINKED_OPTION_UPDATE_MISSING_VALUES
+  "On create, this key cannot be used."
+  NO_KEY_ON_CREATE
+  "Option already exists."
+  OPTION_ALREADY_EXISTS
+  "Option does not exist."
+  OPTION_DOES_NOT_EXIST
+  "An option linked to the provided metafield already exists."
+  OPTION_LINKED_METAFIELD_ALREADY_TAKEN
+  "Option name is too long."
+  OPTION_NAME_TOO_LONG
+  "Option values count is over the allowed limit."
+  OPTION_VALUES_OVER_LIMIT
+  "Option value already exists."
+  OPTION_VALUE_ALREADY_EXISTS
+  "Performing conflicting actions on an option value."
+  OPTION_VALUE_CONFLICTING_OPERATION
+  "Option value does not exist."
+  OPTION_VALUE_DOES_NOT_EXIST
+  "Option value with variants linked cannot be deleted."
+  OPTION_VALUE_HAS_VARIANTS
+  "Option value name is too long."
+  OPTION_VALUE_NAME_TOO_LONG
+  "Product does not exist."
+  PRODUCT_DOES_NOT_EXIST
+  "Product is suspended."
+  PRODUCT_SUSPENDED
+}
+
+"The set of variant strategies available for use in the `productOptionUpdate` mutation."
+enum ProductOptionUpdateVariantStrategy {
+  """
+
+  Variants are not created nor deleted in response to option values to add or delete.
+  In cases where deleting a variant would be necessary to complete the operation, an error will be returned.
+  """
+  LEAVE_AS_IS
+  """
+
+  Variants are created and deleted according to the option values to add and to delete.
+
+  If an option value is added, a new variant will be added for each existing option combination
+  available on the product. For example, if the existing options are `Size` and `Color`, with
+  values `S`/`XL` and `Red`/`Blue`, adding a new option value `Green` for the option `Color` will create
+  variants with the option value combinations `S`/`Green` and `XL`/`Green`.
+
+  If an option value is deleted, all variants referencing that option value will be deleted.
+  """
+  MANAGE
+}
+
+"Possible error codes that can be returned by `ProductOptionsCreateUserError`."
+enum ProductOptionsCreateUserErrorCode {
+  "Cannot combine linked metafield and option values."
+  CANNOT_COMBINE_LINKED_METAFIELD_AND_OPTION_VALUES
+  "Duplicated option name."
+  DUPLICATED_OPTION_NAME
+  "Duplicated option value."
+  DUPLICATED_OPTION_VALUE
+  "Cannot link multiple options to the same metafield."
+  DUPLICATE_LINKED_OPTION
+  "Invalid metafield value for linked option."
+  INVALID_METAFIELD_VALUE_FOR_LINKED_OPTION
+  "No valid metafield definition found for linked option."
+  LINKED_METAFIELD_DEFINITION_NOT_FOUND
+  "Linked options are currently not supported for this shop."
+  LINKED_OPTIONS_NOT_SUPPORTED_FOR_SHOP
+  "Missing metafield values for linked option."
+  MISSING_METAFIELD_VALUES_FOR_LINKED_OPTION
+  "Cannot create new options without values for all existing variants."
+  NEW_OPTION_WITHOUT_VALUE_FOR_EXISTING_VARIANTS
+  "Options count is over the allowed limit."
+  OPTIONS_OVER_LIMIT
+  "Option already exists."
+  OPTION_ALREADY_EXISTS
+  "An option linked to the provided metafield already exists."
+  OPTION_LINKED_METAFIELD_ALREADY_TAKEN
+  "Each option must have a name specified."
+  OPTION_NAME_MISSING
+  "If specified, position field must be present in all option inputs."
+  OPTION_POSITION_MISSING
+  "Each option must have at least one option value specified."
+  OPTION_VALUES_MISSING
+  "Option values count is over the allowed limit."
+  OPTION_VALUES_OVER_LIMIT
+  "Position must be between 1 and the maximum number of options per product."
+  POSITION_OUT_OF_BOUNDS
+  "Product does not exist."
+  PRODUCT_DOES_NOT_EXIST
+  "Product is suspended."
+  PRODUCT_SUSPENDED
+}
+
+"Possible error codes that can be returned by `ProductOptionsDeleteUserError`."
+enum ProductOptionsDeleteUserErrorCode {
+  "Can't delete option with multiple values."
+  CANNOT_DELETE_OPTION_WITH_MULTIPLE_VALUES
+  "Cannot delete options without deleting variants."
+  CANNOT_USE_NON_DESTRUCTIVE_STRATEGY
+  "Options do not belong to the same product."
+  OPTIONS_DO_NOT_BELONG_TO_THE_SAME_PRODUCT
+  "Option does not exist."
+  OPTION_DOES_NOT_EXIST
+  "Product does not exist."
+  PRODUCT_DOES_NOT_EXIST
+  "Product is suspended."
+  PRODUCT_SUSPENDED
+}
+
+"Possible error codes that can be returned by `ProductOptionsReorderUserError`."
+enum ProductOptionsReorderUserErrorCode {
+  "Duplicated option name."
+  DUPLICATED_OPTION_NAME
+  "Duplicated option value."
+  DUPLICATED_OPTION_VALUE
+  "Missing option name."
+  MISSING_OPTION_NAME
+  "Missing option value."
+  MISSING_OPTION_VALUE
+  "Cannot specify different options or option values using mixed id and name reference key."
+  MIXING_ID_AND_NAME_KEYS_IS_NOT_ALLOWED
+  "On reorder, this key cannot be used."
+  NO_KEY_ON_REORDER
+  "Option id does not exist."
+  OPTION_ID_DOES_NOT_EXIST
+  "Option name does not exist."
+  OPTION_NAME_DOES_NOT_EXIST
+  "Option value does not exist."
+  OPTION_VALUE_DOES_NOT_EXIST
+  "Option value id does not exist."
+  OPTION_VALUE_ID_DOES_NOT_EXIST
+  "Product does not exist."
+  PRODUCT_DOES_NOT_EXIST
+}
+
+"Possible error codes that can be returned by `ProductSetUserError`."
+enum ProductSetUserErrorCode {
+  "The metafield violates a capability restriction."
+  CAPABILITY_VIOLATION
+  "Duplicated option name."
+  DUPLICATED_OPTION_NAME
+  "Duplicated option value."
+  DUPLICATED_OPTION_VALUE
+  "Something went wrong, please try again."
+  GENERIC_ERROR
+  "Gift card products can only be created after they have been activated."
+  GIFT_CARDS_NOT_ACTIVATED
+  "The product gift_card attribute cannot be changed after creation."
+  GIFT_CARD_ATTRIBUTE_CANNOT_BE_CHANGED
+  "Input is not valid."
+  INVALID_INPUT
+  "Metafield is not valid."
+  INVALID_METAFIELD
+  "Product is not valid."
+  INVALID_PRODUCT
+  "Product variant is not valid."
+  INVALID_VARIANT
+  "Error processing request in the background job."
+  JOB_ERROR
+  "Options over limit."
+  OPTIONS_OVER_LIMIT
+  "Option does not exist."
+  OPTION_DOES_NOT_EXIST
+  "Each option must have at least one option value specified."
+  OPTION_VALUES_MISSING
+  "Option values over limit."
+  OPTION_VALUES_OVER_LIMIT
+  "Option value does not exist."
+  OPTION_VALUE_DOES_NOT_EXIST
+  "Product does not exist."
+  PRODUCT_DOES_NOT_EXIST
+  "Must specify product options when updating variants."
+  PRODUCT_OPTIONS_INPUT_MISSING
+  "Must specify variants when updating options."
+  VARIANTS_INPUT_MISSING
+  "Number of product variants exceeds shop limit."
+  VARIANTS_OVER_LIMIT
+}
+
 "The set of valid sort keys for the Product query."
 enum ProductSortKeys {
   "Sort by the `created_at` value."
@@ -38646,6 +40244,14 @@ enum ProductVariantSortKeys {
   TITLE
 }
 
+"The set of strategies available for use on the `productVariantsBulkCreate` mutation."
+enum ProductVariantsBulkCreateStrategy {
+  "The default strategy; keep the standalone variant (when product has only a single or default variant) when creating variants in bulk."
+  DEFAULT
+  "Delete the standalone variant (when product has only a single or default variant) when creating new variants in bulk."
+  REMOVE_STANDALONE_VARIANT
+}
+
 "Possible error codes that can be returned by `ProductVariantsBulkCreateUserError`."
 enum ProductVariantsBulkCreateUserErrorCode {
   "Variant price must be greater than or equal to zero."
@@ -38702,6 +40308,8 @@ enum ProductVariantsBulkReorderUserErrorCode {
 
 "Possible error codes that can be returned by `ProductVariantsBulkUpdateUserError`."
 enum ProductVariantsBulkUpdateUserErrorCode {
+  "Cannot set name for an option value linked to a metafield."
+  CANNOT_SET_NAME_FOR_LINKED_OPTION_VALUE
   "The price of the variant must be greater than or equal to zero."
   GREATER_THAN_OR_EQUAL_TO
   "Variant options are not enough."
@@ -38756,6 +40364,8 @@ enum ProfileItemSortKeys {
 enum PubSubWebhookSubscriptionCreateUserErrorCode {
   "Invalid parameters provided."
   INVALID_PARAMETERS
+  "Address for this topic has already been taken."
+  TAKEN
 }
 
 "Possible error codes that can be returned by `PubSubWebhookSubscriptionUpdateUserError`."
@@ -39141,6 +40751,30 @@ enum ReverseFulfillmentOrderThirdPartyConfirmationStatus {
   REJECTED
 }
 
+"List of possible values for a RiskAssessment result."
+enum RiskAssessmentResult {
+  "Indicates a high likelihood that the order is fraudulent."
+  HIGH
+  "Indicates a low likelihood that the order is fraudulent."
+  LOW
+  "Indicates a medium likelihood that the order is fraudulent."
+  MEDIUM
+  "Indicates that the risk assessment will not provide a recommendation for the order."
+  NONE
+  "Indicates that the risk assessment is still pending."
+  PENDING
+}
+
+"List of possible values for a RiskFact sentiment."
+enum RiskFactSentiment {
+  "A negative contributor that increases the risk."
+  NEGATIVE
+  "A neutral contributor with regards to risk."
+  NEUTRAL
+  "A positive contributor that lowers the risk."
+  POSITIVE
+}
+
 "The possible order action types for a sale."
 enum SaleActionType {
   "A purchase or charge."
@@ -39161,6 +40795,8 @@ enum SaleLineType {
   ADJUSTMENT
   "A duty charge."
   DUTY
+  "A fee charge."
+  FEE
   "A gift card."
   GIFT_CARD
   "A product purchased, returned or exchanged."
@@ -39974,6 +41610,8 @@ enum SubscriptionBillingAttemptErrorCode {
   AUTHENTICATION_ERROR
   "Payment method was canceled by buyer."
   BUYER_CANCELED_PAYMENT_METHOD
+  "Card number was incorrect."
+  CARD_NUMBER_INCORRECT
   "Customer is invalid."
   CUSTOMER_INVALID
   "Customer was not found."
@@ -39983,6 +41621,10 @@ enum SubscriptionBillingAttemptErrorCode {
   Payment method is expired.
   """
   EXPIRED_PAYMENT_METHOD
+  "Fraud was suspected."
+  FRAUD_SUSPECTED
+  "Insufficient funds."
+  INSUFFICIENT_FUNDS
   "The billing agreement ID or the transaction ID for the customer's payment method is invalid."
   INVALID_CUSTOMER_BILLING_AGREEMENT
   """
@@ -40013,6 +41655,10 @@ enum SubscriptionBillingAttemptErrorCode {
   Payment provider is not enabled.
   """
   PAYMENT_PROVIDER_IS_NOT_ENABLED
+  "Paypal Error General."
+  PAYPAL_ERROR_GENERAL
+  "Purchase Type is not supported."
+  PURCHASE_TYPE_NOT_SUPPORTED
   """
 
   Gateway is in test mode and attempted to bill a live payment method.
@@ -40205,6 +41851,8 @@ enum SubscriptionDraftErrorCode {
   CUSTOMER_DOES_NOT_EXIST
   "The payment method customer must be the same as the contract customer."
   CUSTOMER_MISMATCH
+  "Customer is scheduled for redaction or has been redacted."
+  CUSTOMER_REDACTED
   "The after cycle attribute must be unique between cycle discounts."
   CYCLE_DISCOUNTS_UNIQUE_AFTER_CYCLE
   "Billing cycle selector cannot select billing cycle outside of index range."
@@ -40439,6 +42087,18 @@ enum TaxPartnerState {
   READY
 }
 
+"Possible error codes that can be returned by `TransactionVoidUserError`."
+enum TransactionVoidUserErrorCode {
+  "Transaction must be a successful authorization."
+  AUTH_NOT_SUCCESSFUL
+  "Transaction must be voidable."
+  AUTH_NOT_VOIDABLE
+  "A generic error occurred while attempting to void the transaction."
+  GENERIC_ERROR
+  "Transaction does not exist."
+  TRANSACTION_NOT_FOUND
+}
+
 "Specifies the type of resources that are translatable."
 enum TranslatableResourceType {
   "A product collection. Translatable fields: `title`, `body_html`, `handle`, `meta_title`, `meta_description`."
@@ -40477,8 +42137,8 @@ enum TranslatableResourceType {
   Translatable fields: `name`.
   """
   PRODUCT_OPTION
-  "An online store product variant. Translatable fields: `option1`, `option2`, `option3`."
-  PRODUCT_VARIANT
+  "The product option value names. For example, \"Red\", \"Blue\", and \"Green\" for a \"Color\" option. Translatable fields: `name`."
+  PRODUCT_OPTION_VALUE
   "A selling plan. Translatable fields:`name`, `option1`, `option2`, `option3`, `description`."
   SELLING_PLAN
   "A selling plan group. Translatable fields: `name`, `option1`, `option2`, `option3`."
@@ -40618,6 +42278,8 @@ enum ValidationUserErrorCode {
   APP_NOT_AUTHORIZED
   "The input value is blank."
   BLANK
+  "The metafield violates a capability restriction."
+  CAPABILITY_VIOLATION
   "Shop must be on a Shopify Plus plan to activate functions from a custom app."
   CUSTOM_APP_FUNCTION_NOT_ELIGIBLE
   "Owner type can't be used in this mutation."
@@ -40934,6 +42596,16 @@ enum WebhookSubscriptionTopic {
   ORDERS_PAID
   "The webhook topic for `orders/partially_fulfilled` events. Occurs whenever an order is partially fulfilled. Requires at least one of the following scopes: read_orders, read_marketplace_orders."
   ORDERS_PARTIALLY_FULFILLED
+  """
+
+  The webhook topic for `orders/risk_assessment_changed` events. Triggers when a new risk assessment is available on the order.
+  This can be the first or a subsequent risk assessment.
+  New risk assessments can be provided until the order is marked as fulfilled.
+  Includes the risk level, risk facts and the provider. Does not include the risk recommendation for the order.
+  The order and shop are identified in the headers.
+  Requires the `read_orders` scope.
+  """
+  ORDERS_RISK_ASSESSMENT_CHANGED
   "The webhook topic for `orders/shopify_protect_eligibility_changed` events. Occurs whenever Shopify Protect's eligibility for an order is changed. Requires the `read_orders` scope."
   ORDERS_SHOPIFY_PROTECT_ELIGIBILITY_CHANGED
   "The webhook topic for `orders/updated` events. Occurs whenever an order is updated. Requires at least one of the following scopes: read_orders, read_marketplace_orders, read_buyer_membership_orders."
@@ -40996,6 +42668,8 @@ enum WebhookSubscriptionTopic {
   RETURNS_REOPEN
   "The webhook topic for `returns/request` events. Occurs whenever a return is requested. This means `Return.status` is `REQUESTED`. Requires at least one of the following scopes: read_returns, read_marketplace_returns, read_buyer_membership_orders."
   RETURNS_REQUEST
+  "The webhook topic for `returns/update` events. Occurs whenever a return is updated. Requires at least one of the following scopes: read_returns, read_marketplace_returns, read_buyer_membership_orders."
+  RETURNS_UPDATE
   """
 
   The webhook topic for `reverse_deliveries/attach_deliverable` events. Occurs whenever a deliverable is attached to a reverse delivery.
@@ -41105,6 +42779,14 @@ An Amazon Web Services Amazon Resource Name (ARN), including the Region and acco
 For more information, refer to [Amazon Resource Names](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
 """
 scalar ARN
+
+"""
+
+A string containing a hexadecimal representation of a color.
+
+For example, "#6A8D48".
+"""
+scalar Color
 
 """
 
@@ -41356,6 +43038,27 @@ input CheckoutBrandingButtonInput {
   typography: CheckoutBrandingTypographyStyleInput
 }
 
+"""
+
+The input fields for updating breadcrumb customizations, which represent the buyer's journey to checkout.
+"""
+input CheckoutBrandingBuyerJourneyInput {
+  """
+
+  The visibility customizations for updating breadcrumbs, which represent the buyer's journey to checkout.
+  """
+  visibility: CheckoutBrandingVisibility
+}
+
+"The input fields for updating the cart link customizations at checkout."
+input CheckoutBrandingCartLinkInput {
+  """
+
+  The input to update the visibility of cart links in checkout. This hides the cart icon on one-page and the cart link in the breadcrumbs/buyer journey on three-page checkout.
+  """
+  visibility: CheckoutBrandingVisibility
+}
+
 "The input fields used to update the checkboxes customizations."
 input CheckoutBrandingCheckboxInput {
   "The corner radius used for checkboxes."
@@ -41434,6 +43137,16 @@ input CheckoutBrandingColorSchemesInput {
   scheme1: CheckoutBrandingColorSchemeInput
   "The secondary scheme. By default, it’s used for secondary areas, like Checkout’s Order Summary."
   scheme2: CheckoutBrandingColorSchemeInput
+  """
+
+  An extra scheme available to customize more surfaces, components or specific states of the user interface.
+  """
+  scheme3: CheckoutBrandingColorSchemeInput
+  """
+
+  An extra scheme available to customize more surfaces, components or specific states of the user interface.
+  """
+  scheme4: CheckoutBrandingColorSchemeInput
 }
 
 "The input fields used to update the color settings for global colors and color schemes."
@@ -41523,14 +43236,25 @@ input CheckoutBrandingCustomFontInput {
 
 "The input fields used to update the components customizations."
 input CheckoutBrandingCustomizationsInput {
+  "The customizations for the breadcrumbs that represent a buyer's journey to the checkout."
+  buyerJourney: CheckoutBrandingBuyerJourneyInput
+  """
+
+  The input for checkout cart link customizations. For example, by setting the visibility field to `HIDDEN`, you can hide the cart icon in the header for one-page checkout, and the cart link in breadcrumbs in three-page checkout.
+  """
+  cartLink: CheckoutBrandingCartLinkInput
   "The checkboxes customizations."
   checkbox: CheckoutBrandingCheckboxInput
   "The choice list customizations."
   choiceList: CheckoutBrandingChoiceListInput
   "The form controls customizations."
   control: CheckoutBrandingControlInput
+  "The express checkout customizations."
+  expressCheckout: CheckoutBrandingExpressCheckoutInput
   "The favicon image (must be of PNG format)."
   favicon: CheckoutBrandingImageInput
+  "The footer customizations."
+  footer: CheckoutBrandingFooterInput
   "The global customizations."
   global: CheckoutBrandingGlobalInput
   "The header customizations."
@@ -41567,6 +43291,18 @@ input CheckoutBrandingDesignSystemInput {
   typography: CheckoutBrandingTypographyInput
 }
 
+"The input fields to use to update the express checkout customizations."
+input CheckoutBrandingExpressCheckoutButtonInput {
+  "The corner radius used for Express Checkout buttons."
+  cornerRadius: CheckoutBrandingCornerRadius
+}
+
+"The input fields to use to update the Express Checkout customizations."
+input CheckoutBrandingExpressCheckoutInput {
+  "The Express Checkout buttons customizations."
+  button: CheckoutBrandingExpressCheckoutButtonInput
+}
+
 """
 
 The input fields used to update a font group. To learn more about updating fonts, refer to the
@@ -41586,6 +43322,23 @@ input CheckoutBrandingFontSizeInput {
   base: Float
   "The scale ratio used to derive all font sizes such as small and large. Its value should be between 1.0 and 1.4."
   ratio: Float
+}
+
+"""
+
+The input fields for footer content customizations.
+"""
+input CheckoutBrandingFooterContentInput {
+  "The visibility settings for footer content."
+  visibility: CheckoutBrandingVisibility
+}
+
+"The input fields when mutating the checkout footer settings."
+input CheckoutBrandingFooterInput {
+  "The input field for setting the footer content customizations."
+  content: CheckoutBrandingFooterContentInput
+  "The input field for setting the footer position customizations."
+  position: CheckoutBrandingFooterPosition
 }
 
 "The input fields used to update the global customizations."
@@ -41643,6 +43396,8 @@ input CheckoutBrandingLogoInput {
   image: CheckoutBrandingImageInput
   "The maximum width of the logo."
   maxWidth: Int
+  "The visibility of the logo."
+  visibility: CheckoutBrandingVisibility
 }
 
 "The input fields used to update the main container customizations."
@@ -41651,6 +43406,28 @@ input CheckoutBrandingMainInput {
   backgroundImage: CheckoutBrandingImageInput
   "The selected color scheme for the main container of the checkout."
   colorScheme: CheckoutBrandingColorSchemeSelection
+  "The settings for the main sections."
+  section: CheckoutBrandingMainSectionInput
+}
+
+"The input fields used to update the main sections customizations."
+input CheckoutBrandingMainSectionInput {
+  "The background style of the main sections."
+  background: CheckoutBrandingBackground
+  "The border for the main sections."
+  border: CheckoutBrandingSimpleBorder
+  "The border style of the main sections."
+  borderStyle: CheckoutBrandingBorderStyle
+  "The border width of the main sections."
+  borderWidth: CheckoutBrandingBorderWidth
+  "The selected color scheme for the main sections."
+  colorScheme: CheckoutBrandingColorSchemeSelection
+  "The corner radius of the main sections."
+  cornerRadius: CheckoutBrandingCornerRadius
+  "The padding of the main sections."
+  padding: CheckoutBrandingSpacingKeyword
+  "The shadow of the main sections."
+  shadow: CheckoutBrandingShadow
 }
 
 "The input fields used to update the merchandise thumbnails customizations."
@@ -41667,6 +43444,28 @@ input CheckoutBrandingOrderSummaryInput {
   backgroundImage: CheckoutBrandingImageInput
   "The selected color scheme for the order summary container of the checkout."
   colorScheme: CheckoutBrandingColorSchemeSelection
+  "The settings for the order summary sections."
+  section: CheckoutBrandingOrderSummarySectionInput
+}
+
+"The input fields used to update the order summary sections customizations."
+input CheckoutBrandingOrderSummarySectionInput {
+  "The background style of the order summary sections."
+  background: CheckoutBrandingBackground
+  "The border for the order summary sections."
+  border: CheckoutBrandingSimpleBorder
+  "The border style of the order summary sections."
+  borderStyle: CheckoutBrandingBorderStyle
+  "The border width of the order summary sections."
+  borderWidth: CheckoutBrandingBorderWidth
+  "The selected color scheme for the order summary sections."
+  colorScheme: CheckoutBrandingColorSchemeSelection
+  "The corner radius of the order summary sections."
+  cornerRadius: CheckoutBrandingCornerRadius
+  "The padding of the order summary sections."
+  padding: CheckoutBrandingSpacingKeyword
+  "The shadow of the order summary sections."
+  shadow: CheckoutBrandingShadow
 }
 
 "The input fields used to update the selects customizations."
@@ -42878,7 +44677,7 @@ input DraftOrderInput {
   marketRegionCountryCode: CountryCode
   """
 
-  Metafields attached to the draft order.
+  Metafields attached to the draft order. An existing metafield can not be used when creating a draft order.
   """
   metafields: [MetafieldInput!]
   """
@@ -43440,14 +45239,6 @@ input IncomingRequestLineItemInput {
   message: String
 }
 
-"The input fields for items and their adjustments."
-input InventoryAdjustItemInput {
-  "The change applied to the `available` quantity of the item at the location."
-  availableDelta: Int!
-  "ID of the inventory item to adjust."
-  inventoryItemId: ID!
-}
-
 "The input fields required to adjust inventory quantities."
 input InventoryAdjustQuantitiesInput {
   "The quantity changes of items at locations to be made."
@@ -43466,14 +45257,6 @@ input InventoryAdjustQuantitiesInput {
   reason: String!
   "The reference document URI for the changes. Used to denote what's causing the change."
   referenceDocumentUri: String
-}
-
-"The input fields required to adjust the inventory quantity."
-input InventoryAdjustQuantityInput {
-  "The change applied to the `available` quantity of the item at the location."
-  availableDelta: Int!
-  "ID of the inventory level to adjust."
-  inventoryLevelId: ID!
 }
 
 """
@@ -43506,8 +45289,19 @@ input InventoryChangeInput {
 input InventoryItemInput {
   "Unit cost associated with the inventory item, the currency is the shop's default currency."
   cost: Decimal
+  "The harmonized system code of the inventory item."
+  harmonizedSystemCode: String
+  "The measurements of an inventory item."
+  measurement: InventoryItemMeasurementInput
+  requiresShipping: Boolean
   "Whether the inventory item is tracked."
   tracked: Boolean
+}
+
+"The input fields for an inventory item measurement."
+input InventoryItemMeasurementInput {
+  "The weight of the inventory item."
+  weight: WeightInput
 }
 
 "The input fields for an inventory item."
@@ -43640,6 +45434,30 @@ input InventorySetScheduledChangesInput {
   reason: String!
   "The reference document URI to indicate how the scheduled changes are related for auditing purposes."
   referenceDocumentUri: URL!
+}
+
+"The input fields required to link a product option to a metafield."
+input LinkedMetafieldCreateInput {
+  "The key of the metafield this option is linked to."
+  key: String!
+  """
+
+  The namespace of the metafield this option is linked to.
+  """
+  namespace: String!
+  "Values associated with the option."
+  values: [String!]
+}
+
+"The input fields required to link a product option to a metafield."
+input LinkedMetafieldUpdateInput {
+  "The key of the metafield this option is linked to."
+  key: String!
+  """
+
+  The namespace of the metafield this option is linked to.
+  """
+  namespace: String!
 }
 
 """
@@ -44343,6 +46161,19 @@ input MetafieldDeleteInput {
 
 """
 
+The input fields that identify metafields.
+"""
+input MetafieldIdentifierInput {
+  "The key of the metafield."
+  key: String!
+  "The namespace of the metafield."
+  namespace: String!
+  "The unique ID of the resource that the metafield is attached to."
+  ownerId: ID!
+}
+
+"""
+
 The input fields to use to create or update a metafield through a mutation on the owning resource.
 An alternative way to create or update a metafield is by using the
 [metafieldsSet](https://shopify.dev/api/admin-graphql/latest/mutations/metafieldsSet) mutation.
@@ -44735,6 +46566,86 @@ input ObjectDimensionsInput {
   width: Float!
 }
 
+"The input fields for creating a product option."
+input OptionCreateInput {
+  "Specifies the metafield the option is linked to."
+  linkedMetafield: LinkedMetafieldCreateInput
+  "Name of the option."
+  name: String
+  "Position of the option."
+  position: Int
+  "Values associated with the option."
+  values: [OptionValueCreateInput!]
+}
+
+"The input fields for reordering a product option and/or its values."
+input OptionReorderInput {
+  "Specifies the product option to reorder by ID."
+  id: ID
+  "Specifies the product option to reorder by name."
+  name: String
+  "Values associated with the option."
+  values: [OptionValueReorderInput!]
+}
+
+"The input fields for creating or updating a product option."
+input OptionSetInput {
+  "Specifies the product option to update."
+  id: ID
+  "Name of the option."
+  name: String
+  "Position of the option."
+  position: Int
+  "Value associated with an option."
+  values: [OptionValueSetInput!]
+}
+
+"The input fields for updating a product option."
+input OptionUpdateInput {
+  "Specifies the product option to update."
+  id: ID!
+  "Specifies the metafield the option is linked to."
+  linkedMetafield: LinkedMetafieldUpdateInput
+  "Name of the option."
+  name: String
+  "Position of the option."
+  position: Int
+}
+
+"The input fields required to create a product option value."
+input OptionValueCreateInput {
+  "Metafield value associated with an option."
+  linkedMetafieldValue: String
+  "Value associated with an option."
+  name: String
+}
+
+"The input fields for reordering a product option value."
+input OptionValueReorderInput {
+  "Specifies the product option value by ID."
+  id: ID
+  "Specifies the product option value by name."
+  name: String
+}
+
+"The input fields for creating or updating a product option value."
+input OptionValueSetInput {
+  "Specifies the product option value."
+  id: ID
+  "Value associated with an option."
+  name: String
+}
+
+"The input fields for updating a product option value."
+input OptionValueUpdateInput {
+  "Specifies the product option value."
+  id: ID!
+  "Metafield value associated with an option."
+  linkedMetafieldValue: String
+  "Value associated with an option."
+  name: String
+}
+
 "The input fields for the authorized transaction to capture and the total amount to capture from it."
 input OrderCaptureInput {
   "The amount to capture. The capture amount can't be greater than the amount of the authorized transaction."
@@ -44753,6 +46664,14 @@ input OrderCloseInput {
   id: ID!
 }
 
+"The input fields used to add a shipping line."
+input OrderEditAddShippingLineInput {
+  "The price of the shipping line."
+  price: MoneyInput!
+  "The title of the shipping line."
+  title: String!
+}
+
 "The input fields used to add a discount during an order edit."
 input OrderEditAppliedDiscountInput {
   "The description of the discount."
@@ -44761,6 +46680,14 @@ input OrderEditAppliedDiscountInput {
   fixedValue: MoneyInput
   "The value of the discount as a percentage."
   percentValue: Float
+}
+
+"The input fields used to update a shipping line."
+input OrderEditUpdateShippingLineInput {
+  "The price of the shipping line."
+  price: MoneyInput
+  "The title of the shipping line."
+  title: String
 }
 
 "The input fields for specifying the information to be updated on an order when using the orderUpdate mutation."
@@ -44795,6 +46722,24 @@ input OrderMarkAsPaidInput {
 input OrderOpenInput {
   "The ID of the order to open."
   id: ID!
+}
+
+"The input fields for an order risk assessment."
+input OrderRiskAssessmentCreateInput {
+  "The list of facts used to determine the fraud assessment."
+  facts: [OrderRiskAssessmentFactInput!]!
+  "The ID of the order receiving the fraud assessment."
+  orderId: ID!
+  "The risk level of the fraud assessment."
+  riskLevel: RiskAssessmentResult!
+}
+
+"The input fields to create a fact on an order risk assessment."
+input OrderRiskAssessmentFactInput {
+  "A description of the fact. Large values are truncated to 256 characters."
+  description: String!
+  "Indicates whether the fact is a negative, neutral or positive contributor with regards to risk."
+  sentiment: RiskFactSentiment!
 }
 
 "The input fields for the information needed to create an order transaction."
@@ -45234,10 +47179,14 @@ input ProductInput {
   id: ID
   "The metafields to associate with this product."
   metafields: [MetafieldInput!]
-  "List of custom product options (maximum of 3 per product)."
-  options: [String!]
   "The product category in the Shopify product taxonomy."
   productCategory: ProductCategoryInput
+  """
+
+  List of custom product options and option values (maximum of 3 per product).
+  Supported as input with the `productCreate` mutation only.
+  """
+  productOptions: [OptionCreateInput!]
   "The product type specified by the merchant."
   productType: String
   """
@@ -45260,11 +47209,6 @@ input ProductInput {
   templateSuffix: String
   "The title of the product."
   title: String
-  """
-
-  A list of variants associated with the product.
-  """
-  variants: [ProductVariantInput!]
   "The name of the product's vendor."
   vendor: String
 }
@@ -45305,6 +47249,67 @@ input ProductResourceFeedbackInput {
   productUpdatedAt: DateTime!
   "Whether the merchant needs to take action on the product."
   state: ResourceFeedbackState!
+}
+
+"The input fields required to create or update a product via ProductSet mutation."
+input ProductSetInput {
+  "Claim ownership of a product."
+  claimOwnership: ProductClaimOwnershipInput
+  "The IDs of collections that this product will be a member of."
+  collections: [ID!]
+  "The custom product type specified by the merchant."
+  customProductType: String
+  "The description of the product, complete with HTML formatting."
+  descriptionHtml: String
+  "Whether the product is a gift card."
+  giftCard: Boolean
+  "The theme template used when viewing the gift card in a store."
+  giftCardTemplateSuffix: String
+  """
+
+  A unique, human-friendly string for the product.
+  Automatically generated from the product's title unless otherwise specified.
+  """
+  handle: String
+  "Specifies the product to update. If absent, a new product is created."
+  id: ID
+  "The IDs of the media to associate with the product."
+  mediaIds: [ID!]
+  "The metafields to associate with this product."
+  metafields: [MetafieldInput!]
+  "The product category in the Shopify product taxonomy."
+  productCategory: ProductCategoryInput
+  "List of custom product options and option values (maximum of 3 per product)."
+  productOptions: [OptionSetInput!]!
+  "The product type specified by the merchant."
+  productType: String
+  """
+
+  Whether a redirect is required after a new handle has been provided.
+  If true, then the old handle is redirected to the new one automatically.
+  """
+  redirectNewHandle: Boolean
+  "Whether the product can only be purchased with a selling plan (subscription). Products that are sold exclusively on subscription can only be created on online stores. If set to `true` on an already existing product, then the product will be marked unavailable on channels that don't support subscriptions."
+  requiresSellingPlan: Boolean
+  "The SEO information associated with the product."
+  seo: SEOInput
+  "The standardized product type in the Shopify product taxonomy."
+  standardizedProductType: StandardizedProductTypeInput
+  "The status of the product."
+  status: ProductStatus
+  "A comma separated list of tags that have been added to the product."
+  tags: [String!]
+  "The theme template used when viewing the product in a store."
+  templateSuffix: String
+  "The title of the product."
+  title: String
+  """
+
+  A list of variants associated with the product.
+  """
+  variants: [ProductVariantSetInput!]!
+  "The name of the product's vendor."
+  vendor: String
 }
 
 """
@@ -45348,8 +47353,6 @@ input ProductVariantInput {
   barcode: String
   "The compare-at price of the variant."
   compareAtPrice: Money
-  "The Harmonized System code (or HS Tariff code) for the variant."
-  harmonizedSystemCode: String
   "Specifies the product variant to update or create a new variant if absent."
   id: ID
   "The inventory item associated with the variant. Used for unit cost."
@@ -45382,18 +47385,12 @@ input ProductVariantInput {
   from channels that don't support bundles.
   """
   requiresComponents: Boolean
-  "Whether the variant requires shipping."
-  requiresShipping: Boolean
   "The SKU for the variant. Case-sensitive string."
   sku: String
   "The tax code associated with the variant."
   taxCode: String
   "Whether the variant is taxable."
   taxable: Boolean
-  "The weight of the variant."
-  weight: Float
-  "The unit of weight that's used to measure the variant."
-  weightUnit: WeightUnit
 }
 
 "The input fields representing a product variant position."
@@ -45422,14 +47419,61 @@ input ProductVariantRelationshipUpdateInput {
   removeAllProductVariantRelationships: Boolean = false
 }
 
+"The input fields for specifying a product variant to create or update."
+input ProductVariantSetInput {
+  "The value of the barcode associated with the product."
+  barcode: String
+  "The compare-at price of the variant."
+  compareAtPrice: Money
+  "The Harmonized System code (or HS Tariff code) for the variant."
+  harmonizedSystemCode: String
+  "Specifies the product variant to update or create a new variant if absent."
+  id: ID
+  "Whether customers are allowed to place an order for the product variant when it's out of stock."
+  inventoryPolicy: ProductVariantInventoryPolicy
+  "The ID of the media to associate with the variant."
+  mediaId: ID
+  "Additional customizable information about the product variant."
+  metafields: [MetafieldInput!]
+  """
+
+  The custom properties that a shop owner uses to define product variants.
+  """
+  optionValues: [VariantOptionValueInput!]!
+  """
+
+  The order of the product variant in the list of product variants. The first position in the list is 1.
+  """
+  position: Int
+  "The price of the variant."
+  price: Money
+  """
+
+  Whether a product variant requires components. The default value is `false`.
+  If `true`, then the product variant can only be purchased as a parent bundle with components and it will be omitted
+  from channels that don't support bundles.
+  """
+  requiresComponents: Boolean
+  "Whether the variant requires shipping."
+  requiresShipping: Boolean
+  "The SKU for the variant. Case-sensitive string."
+  sku: String
+  "The tax code associated with the variant."
+  taxCode: String
+  "Whether the variant is taxable."
+  taxable: Boolean
+  "The weight of the variant."
+  weight: Float
+  "The unit of weight that's used to measure the variant."
+  weightUnit: WeightUnit
+}
+
 "The input fields for specifying a product variant to create as part of a variant bulk mutation."
 input ProductVariantsBulkInput {
   "The value of the barcode associated with the product variant."
   barcode: String
   "The compare-at price of the variant."
   compareAtPrice: Money
-  "The Harmonized System code (or HS Tariff code) for the variant."
-  harmonizedSystemCode: String
   "Specifies the product variant to update or delete."
   id: ID
   "The inventory item associated with the variant, used for unit cost."
@@ -45449,22 +47493,19 @@ input ProductVariantsBulkInput {
   mediaSrc: [String!]
   "The additional customizable information about the product variant."
   metafields: [MetafieldInput!]
-  "The custom properties that a shop owner uses to define product variants."
-  options: [String!]
+  """
+
+  The custom properties that a shop owner uses to define product variants.
+  """
+  optionValues: [VariantOptionValueInput!]
   "The price of the variant."
   price: Money
-  "Whether the variant requires shipping."
-  requiresShipping: Boolean
   "The SKU for the variant."
   sku: String
   "The tax code associated with the variant."
   taxCode: String
   "Whether the variant is taxable."
   taxable: Boolean
-  "The weight of the variant."
-  weight: Float
-  "The unit of weight that's used to measure the variant."
-  weightUnit: WeightUnit
 }
 
 """
@@ -46152,10 +48193,18 @@ input SellingPlanRecurringPricingPolicyInput {
   id: ID
 }
 
-"The input fields for specifying the shipping details for the order."
+"""
+
+The input fields for specifying the shipping details for the draft order.
+
+> Note:
+> A custom shipping line includes a title and price with `shippingRateHandle` set to `nil`. A shipping line with a carrier-provided shipping rate (currently set via the Shopify admin) includes the shipping rate handle.
+"""
 input ShippingLineInput {
   "Price of the shipping rate."
   price: Money
+  "Price of the shipping rate with currency. If provided, `price` will be ignored."
+  priceWithCurrency: MoneyInput
   "A unique identifier for the shipping rate."
   shippingRateHandle: String
   "Title of the shipping rate."
@@ -46756,6 +48805,8 @@ input ValidationCreateInput {
   functionId: String!
   "Additional metafields to associate to the validation."
   metafields: [MetafieldInput!] = []
+  "The title of the validation."
+  title: String
 }
 
 "The input fields required to update a validation."
@@ -46766,6 +48817,20 @@ input ValidationUpdateInput {
   enable: Boolean = false
   "Additional metafields to associate to the validation."
   metafields: [MetafieldInput!] = []
+  "The title of the validation."
+  title: String
+}
+
+"The input fields required to create or modify a product variant's option value."
+input VariantOptionValueInput {
+  "Specifies the product option value by ID."
+  id: ID
+  "Specifies the product option value by name."
+  name: String
+  "Specifies the product option by ID."
+  optionId: ID
+  "Specifies the product option by name."
+  optionName: String
 }
 
 "The input fields to use to update a web pixel."

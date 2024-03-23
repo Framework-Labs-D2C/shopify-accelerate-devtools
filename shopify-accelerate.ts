@@ -1,16 +1,17 @@
 #!/usr/bin/env ts-node-script
 console.log(process.cwd(), "shopify-theme-dev: process.cwd()");
-import fs from "fs";
 import path from "path";
 import toml from "toml";
+import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { init } from "./src";
+import { runTailwindCSSWatcher } from "./src/tailwind-watch";
+import { readFileSync } from "./utils/fs";
+import { JSONParse } from "./utils/json";
+
 const { Command } = require("commander");
 const program = new Command();
 require("dotenv").config();
-import { create } from "zustand";
-import { readFileSync } from "./utils/fs";
-import { JSONParse } from "./utils/json";
 
 const settings = JSONParse<{
   environments: {
@@ -35,6 +36,7 @@ const settings = JSONParse<{
 );
 
 export type GlobalsState = {
+  package_root: string;
   root: ReturnType<typeof process.cwd>;
   env: typeof process.env;
   shopify_settings: typeof settings;
@@ -45,6 +47,7 @@ export const useGlobals = create(
     /*Initial State*/
     return {
       env: process.env,
+      package_root: path.resolve(__dirname),
       root: process.cwd(),
       shopify_settings: settings,
     };
@@ -63,12 +66,12 @@ program
   .option(
     "-s, --store <store_id>",
     "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    process.env.SHOPIFY_STORE_ID ?? "accelerate-preview.myshopify.com"
+    process.env.SHOPIFY_STORE_ID
   )
   .option(
     "-t, --theme <theme_id>",
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/edit`",
-    process.env.SHOPIFY_THEME_ID ?? "1234567890"
+    process.env.SHOPIFY_THEME_ID
   )
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
@@ -81,7 +84,8 @@ program
     const limit = options.first ? 1 : undefined;
     console.log(useGlobals.getState());
     console.log(options);
-    // init();
+
+    runTailwindCSSWatcher();
   });
 
 program.parse(process.argv);

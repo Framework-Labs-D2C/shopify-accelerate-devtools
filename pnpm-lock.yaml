@@ -79,6 +79,9 @@ devDependencies:
   fx-style:
     specifier: ^3.0.3
     version: 3.0.3(typescript@5.3.3)
+  pnpm:
+    specifier: ^8.15.5
+    version: 8.15.5
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -3378,6 +3381,12 @@ packages:
   /picomatch@2.3.1:
     resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
     engines: {node: '>=8.6'}
+    dev: true
+
+  /pnpm@8.15.5:
+    resolution: {integrity: sha512-sFGjLH5pWDO4SSbTspuMylclS1ifBknYmcbp0O22cLkex+KkNFm65zdZu1zmGcMmbxFr+THOItHvF1mn5Fqpbw==}
+    engines: {node: '>=16.14'}
+    hasBin: true
     dev: true
 
   /prelude-ls@1.2.1:
