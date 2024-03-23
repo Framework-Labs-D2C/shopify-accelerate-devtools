@@ -7,8 +7,6 @@ import path from "path";
 const watch = require("node-watch");
 const toml = require("toml");
 
-require("dotenv").config();
-
 const program = new Command();
 
 program.version(require(path.join("./../", "package.json")).version).parse(process.argv);

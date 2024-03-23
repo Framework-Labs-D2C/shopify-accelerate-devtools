@@ -1,0 +1,9 @@
+[environments.development]
+theme = "154740490559"
+store = "accelerate-preview.myshopify.com"
+path = "./themes/production"
+
+[environments.production]
+theme = "154740490559"
+store = "accelerate-preview.myshopify.com"
+path = "./themes/production"

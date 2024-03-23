@@ -12,7 +12,7 @@ out
 .env.local
 .env.development
 .env.production
-
+!template/.env
 firebaseAdminKey.json
 .vercel
 
