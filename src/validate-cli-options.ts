@@ -75,8 +75,9 @@ export const validateCliOptions = async (
     prompts.push({
       type: "text",
       name: "theme_id",
-      message:
-        "Shopify theme id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/edit`",
+      message: `Shopify theme id. I.e. \`https://admin.shopify.com/store/${
+        currentEnvironment?.store ?? `<store_id>`
+      }/themes/${currentEnvironment?.store ? "current" : `<theme_id>`}/editor\``,
     });
   }
 

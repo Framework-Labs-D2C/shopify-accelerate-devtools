@@ -15,9 +15,9 @@ export const runTailwindCSSWatcher = () => {
     [
       "tailwindcss",
       "--config",
-      hasConfig ? "tailwind.config.js" : path.join(package_root, `tailwind`, `tailwind.config.js`),
+      hasConfig ? "tailwind.config.js" : path.join(package_root, `src/tailwind/tailwind.config.js`),
       "--postcss",
-      hasPostCss ? "postcss.config.js" : path.join(package_root, `tailwind`, `postcss.config.js`),
+      hasPostCss ? "postcss.config.js" : path.join(package_root, `src/tailwind/postcss.config.js`),
       "-i",
       path.join(process.cwd(), `assets`, `_tailwind.css`),
       "-o",
@@ -36,9 +36,9 @@ export const runTailwindCSSWatcher = () => {
     [
       "tailwindcss",
       "--config",
-      hasConfig ? "tailwind.config.js" : path.join(package_root, `tailwind`, `tailwind.config.js`),
+      hasConfig ? "tailwind.config.js" : path.join(package_root, `src/tailwind/tailwind.config.js`),
       "--postcss",
-      hasPostCss ? "postcss.config.js" : path.join(package_root, `tailwind`, `postcss.config.js`),
+      hasPostCss ? "postcss.config.js" : path.join(package_root, `src/tailwind/postcss.config.js`),
       "-i",
       path.join(process.cwd(), `assets`, `_reset.css`),
       "-o",
@@ -95,7 +95,7 @@ export const runTailwindCSSWatcher = () => {
       }
     });
 
-    fs.writeFileSync(path.join(process.cwd(), `assets`, `tailwind.css.liquid`), content);
+    fs.writeFileSync(path.join(process.cwd(), `assets/tailwind.css.liquid`), content);
     fs.writeFileSync(path.join(process.cwd(), ".tailwindorder"), classesInOrder.join("\n"));
   });
 };

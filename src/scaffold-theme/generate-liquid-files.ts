@@ -6,7 +6,7 @@ import { useGlobals } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
-export const generateThemeFiles = () => {
+export const generateLiquidFiles = () => {
   const {
     theme_path,
     folders,
@@ -17,6 +17,7 @@ export const generateThemeFiles = () => {
     delete_external_sections,
     delete_external_snippets,
   } = useGlobals.getState();
+
   const translations: any = {};
   const snippets = sources.snippets;
   const giftCards = sources.giftCards;

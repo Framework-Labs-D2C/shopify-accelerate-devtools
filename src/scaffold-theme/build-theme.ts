@@ -1,15 +1,16 @@
+import { generateAssetFiles } from "./generate-asset-files";
 import { generateBaseTypes } from "./generate-base-types";
+import { generateConfigFiles } from "./generate-config-files";
+import { generateLiquidFiles } from "./generate-liquid-files";
 import { generateSchemaLocales } from "./generate-schema-locales";
 import { generateSchemaVariables } from "./generate-schema-variables";
 import { generateSectionsTypes } from "./generate-section-types";
 import { generateSettingTypes } from "./generate-setting-types";
-import { generateThemeFiles } from "./generate-theme-files";
 import { getSources, getTargets } from "./parse-files";
 import { parseLocales } from "./parse-locales";
 
-export const buildTheme = async () => {
+export const buildTheme = () => {
   generateBaseTypes();
-
   getSources();
   getTargets();
   parseLocales();
@@ -17,5 +18,6 @@ export const buildTheme = async () => {
   generateSchemaLocales();
   generateSectionsTypes();
   generateSettingTypes();
-  generateThemeFiles();
+  generateLiquidFiles();
+  generateAssetFiles();
 };

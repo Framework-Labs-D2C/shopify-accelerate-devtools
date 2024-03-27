@@ -1,4 +1,5 @@
 import chalk from "chalk";
+import importFresh from "import-fresh";
 import path from "path";
 import { ShopifySection, ShopifySettings } from "../../@types/shopify";
 import { useGlobals } from "../../shopify-accelerate";
@@ -20,6 +21,7 @@ export const getSources = () => {
   ];
 
   const typeScriptSchema = [];
+
   const snippets = [];
   const layouts = [];
   const sectionsLiquid = [];
@@ -88,11 +90,96 @@ export const getSources = () => {
     state.sources.templates = templates;
     state.sources.customerTemplates = customerTemplates;
     state.sources.settingsFile = settingsFiles[0];
-    state.sources.settingsSchema = require(settingsFiles[0])?.settingsSchema as ShopifySettings;
+    state.sources.settingsSchema = (
+      importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
+    )?.settingsSchema;
     state.sources.sectionSchemas = sectionsSchemaFiles.reduce(
       (acc, file) => {
         try {
-          const data = require(file);
+          const data = importFresh(file);
+
+          return {
+            ...acc,
+            ...Object.entries(data).reduce((acc2, [key, val]) => {
+              // @ts-ignore
+              acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+              return acc2;
+            }, {}),
+          };
+        } catch (err) {
+          console.log(chalk.redBright(err.message));
+          return acc;
+        }
+      },
+      {} as { [T: string]: ShopifySection }
+    );
+  });
+};
+
+export const getSchemaSources = () => {
+  const { folders } = useGlobals.getState();
+
+  const sourceFiles = [...getAllFiles(folders.sections), ...getAllFiles(folders.config)];
+
+  const typeScriptSchema = [];
+
+  const snippets = [];
+  const layouts = [];
+  const sectionsLiquid = [];
+  const sectionsSchemaFiles = [];
+  const settingsFiles = [];
+  const blocks = [];
+  const giftCards = [];
+  const assets = [];
+
+  sourceFiles.forEach((filePath) => {
+    if (isTypeScriptSchema(filePath)) {
+      typeScriptSchema.push(filePath);
+    }
+    if (isSnippet(filePath)) {
+      snippets.push(filePath);
+    }
+    if (isBlock(filePath)) {
+      blocks.push(filePath);
+    }
+    if (isLayout(filePath)) {
+      layouts.push(filePath);
+    }
+    if (isSectionLiquid(filePath)) {
+      sectionsLiquid.push(filePath);
+    }
+    if (isSectionSchema(filePath)) {
+      sectionsSchemaFiles.push(filePath);
+    }
+    if (isAsset(filePath)) {
+      assets.push(filePath);
+    }
+    if (isSettingsSchema(filePath)) {
+      settingsFiles.push(filePath);
+    }
+  });
+
+  Object.keys(require.cache)?.forEach((file) => {
+    if (file.includes("@utils\\settings")) {
+      importFresh(file);
+    }
+  });
+
+  useGlobals.setState((state) => {
+    state.sources.snippets = snippets;
+    state.sources.layouts = layouts;
+    state.sources.sectionsLiquid = sectionsLiquid;
+    state.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+    state.sources.blocks = blocks;
+    state.sources.giftCards = giftCards;
+    state.sources.settingsFile = settingsFiles[0];
+    state.sources.settingsSchema = (
+      importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
+    )?.settingsSchema;
+    state.sources.sectionSchemas = sectionsSchemaFiles.reduce(
+      (acc, file) => {
+        try {
+          const data = importFresh(file);
 
           return {
             ...acc,
@@ -210,3 +297,6 @@ export const isCustomerTemplate = (name: string) =>
   /templates[\\/]customers[\\/][^\\/]*\.json$/gi.test(name);
 
 export const isGiftCard = (name: string) => /templates[\\/]gift_card\.liquid$/gi.test(name);
+
+export const isLiquid = (name: string) =>
+  isSectionLiquid(name) || isBlock(name) || isSnippet(name) || isLayout(name) || isGiftCard(name);

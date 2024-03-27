@@ -5,7 +5,6 @@ const { build } = require("esbuild");
 // import watch from "node-watch";
 const watch = require("node-watch");
 const fs = require("fs");
-console.log(process.cwd());
 
 const runEsBuild = () => {
   build({
@@ -39,9 +38,8 @@ const runEsBuild = () => {
 
 export const runEsbuild = () => {
   watch(process.cwd(), { recursive: true }, async (evt, name) => {
-    if (!name.match(/\.(ts)x?$/)) return;
+    if (!name.match(/\.(ts)x?$/) || /schema\.ts$/gi.test(name)) return;
 
-    console.log(name);
     try {
       runEsBuild();
     } catch (err) {
