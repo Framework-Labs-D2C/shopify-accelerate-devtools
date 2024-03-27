@@ -118,7 +118,10 @@ export const validateCliOptions = async (
 
   const { project_root, package_templates } = useGlobals.getState();
 
-  writeOnlyNew(path.join(project_root, ".env"), readFile(path.join(package_templates, ".env")));
+  writeOnlyNew(
+    path.join(project_root, ".env"),
+    readFile(path.join(package_templates, "/.env.template"))
+  );
 
   if (
     !currentEnvironment?.store ||

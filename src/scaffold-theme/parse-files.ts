@@ -257,46 +257,47 @@ export const getTargets = () => {
 };
 
 export const isTypeScriptSchema = (name: string) =>
-  /sections[\\/][^\\/]*[\\/]schema.ts$/gi.test(name) ||
-  /config[\\/]settings_schema\.ts$/gi.test(name) ||
-  /@utils[\\/]settings[\\/][^\\/]*\.ts$/gi.test(name);
+  /[\\/]sections[\\/][^\\/]*[\\/]schema.ts$/gi.test(name) ||
+  /[\\/]config[\\/]settings_schema\.ts$/gi.test(name) ||
+  /[\\/]@utils[\\/]settings[\\/][^\\/]*\.ts$/gi.test(name);
 
 export const isSectionLiquid = (name: string) =>
-  /sections[\\/][^\\/]*[\\/][^.]*\.liquid$/gi.test(name);
+  /[\\/]sections[\\/][^\\/]*[\\/][^.]*\.liquid$/gi.test(name);
 
 export const isSectionSchema = (name: string) =>
-  /sections([\\/])[^\\/]*([\\/])schema.ts$/gi.test(name);
+  /[\\/]sections([\\/])[^\\/]*([\\/])schema.ts$/gi.test(name);
 
-export const isSettingsSchema = (name: string) => /config[\\/]settings_schema\.ts$/gi.test(name);
+export const isSettingsSchema = (name: string) =>
+  /[\\/]config[\\/]settings_schema\.ts$/gi.test(name);
 
 export const isAsset = (name: string) =>
-  /assets[\\/][^\\/]*$/gi.test(name) ||
-  /snippets[\\/][^\\/]*.js$/gi.test(name) ||
-  /blocks[\\/][^\\/]*.js$/gi.test(name) ||
-  /sections[\\/][^\\/]*.js$/gi.test(name);
+  /[\\/]assets[\\/][^\\/]*$/gi.test(name) ||
+  /[\\/]snippets[\\/][^\\/]*.js$/gi.test(name) ||
+  /[\\/]blocks[\\/][^\\/]*.js$/gi.test(name) ||
+  /[\\/]sections[\\/][^\\/]*.js$/gi.test(name);
 
 export const isSnippet = (name: string) =>
-  /sections[\\/][^\\/]*[\\/][^.]*\.[^.]*\.liquid$/gi.test(name) ||
-  /blocks[\\/][^\\/]*\.liquid$/gi.test(name) ||
-  /snippets[\\/][^\\/]*\.liquid$/gi.test(name);
+  /[\\/]sections[\\/][^\\/]*[\\/][^.]*\.[^.]*\.liquid$/gi.test(name) ||
+  /[\\/]blocks[\\/][^\\/]*\.liquid$/gi.test(name) ||
+  /[\\/]snippets[\\/][^\\/]*\.liquid$/gi.test(name);
 
 export const isBlock = (name: string) => /blocks[\\/][^\\/]*\.liquid$/gi.test(name);
 
 export const isLayout = (name: string) => {
-  return /^layout[\\/][^\\/]*\.liquid$/gi.test(name);
+  return /[\\/]layout[\\/][^\\/]*\.liquid$/gi.test(name);
 };
 
 export const isSectionGroup = (name: string) =>
-  /templates[\\/]section-groups[\\/][^\\/]*\.json$/gi.test(name);
+  /[\\/]templates[\\/]section-groups[\\/][^\\/]*\.json$/gi.test(name);
 
-export const isConfig = (name: string) => /config[\\/][^\\/]*\.json$/gi.test(name);
+export const isConfig = (name: string) => /[\\/]config[\\/][^\\/]*\.json$/gi.test(name);
 
-export const isTemplate = (name: string) => /templates[\\/][^\\/]*\.json$/gi.test(name);
+export const isTemplate = (name: string) => /[\\/]templates[\\/][^\\/]*\.json$/gi.test(name);
 
 export const isCustomerTemplate = (name: string) =>
-  /templates[\\/]customers[\\/][^\\/]*\.json$/gi.test(name);
+  /[\\/]templates[\\/]customers[\\/][^\\/]*\.json$/gi.test(name);
 
-export const isGiftCard = (name: string) => /templates[\\/]gift_card\.liquid$/gi.test(name);
+export const isGiftCard = (name: string) => /[\\/]templates[\\/]gift_card\.liquid$/gi.test(name);
 
 export const isLiquid = (name: string) =>
   isSectionLiquid(name) || isBlock(name) || isSnippet(name) || isLayout(name) || isGiftCard(name);

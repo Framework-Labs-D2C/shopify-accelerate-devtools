@@ -1,6 +1,5 @@
 import { generateAssetFiles } from "./generate-asset-files";
 import { generateBaseTypes } from "./generate-base-types";
-import { generateConfigFiles } from "./generate-config-files";
 import { generateLiquidFiles } from "./generate-liquid-files";
 import { generateSchemaLocales } from "./generate-schema-locales";
 import { generateSchemaVariables } from "./generate-schema-variables";

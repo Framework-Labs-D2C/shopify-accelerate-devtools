@@ -41,7 +41,7 @@ export const watchTheme = () => {
       const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
 
       if (event !== "remove") {
-        const rawContent = fs.readFileSync(name);
+        const rawContent = fs.readFileSync(name, { encoding: "utf-8" });
 
         if (ignore_assets?.includes(targetPath.split(/[/\\]/)?.at(-1))) {
           console.log(

@@ -12,7 +12,7 @@ export const generateAssetFiles = () => {
     const fileName = file.split(/[\\/]/gi).at(-1);
     const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
 
-    const rawContent = fs.readFileSync(file);
+    const rawContent = fs.readFileSync(file, { encoding: "utf-8" });
 
     if (ignore_assets?.includes(targetPath.split(/[/\\]/)?.at(-1))) {
       console.log(
