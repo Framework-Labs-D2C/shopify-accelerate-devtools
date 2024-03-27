@@ -116,7 +116,7 @@ export const validateCliOptions = async (
     state.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   });
 
-  const { package_root, project_root, package_templates } = useGlobals.getState();
+  const { project_root, package_templates } = useGlobals.getState();
 
   writeOnlyNew(path.join(project_root, ".env"), readFile(path.join(package_templates, ".env")));
 

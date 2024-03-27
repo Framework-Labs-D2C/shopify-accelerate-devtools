@@ -1,5 +1,6 @@
 #!/usr/bin/env ts-node-script
 
+import fs from "fs";
 import path from "path";
 import toml from "toml";
 import { create } from "zustand";
@@ -19,27 +20,29 @@ const { Command } = require("commander");
 const program = new Command();
 require("dotenv").config();
 
-const shopify_toml = JSONParse<{
-  environments: {
-    [T: string]: {
-      theme: string;
-      store: string;
-      path: string;
-      ignore?: string[];
-      output?: "json";
-      live?: boolean;
-      "allow-live"?: boolean;
-    };
-  };
-}>(
-  JSON.stringify(
-    toml.parse(
+const tomlFile = fs.existsSync(path.join(process.cwd(), "shopify.theme.toml"))
+  ? toml.parse(
       readFile(path.join(process.cwd(), "shopify.theme.toml"), {
         encoding: "utf-8",
       })
     )
-  )
-);
+  : null;
+
+const shopify_toml = tomlFile
+  ? JSONParse<{
+      environments: {
+        [T: string]: {
+          theme: string;
+          store: string;
+          path: string;
+          ignore?: string[];
+          output?: "json";
+          live?: boolean;
+          "allow-live"?: boolean;
+        };
+      };
+    }>(JSON.stringify(tomlFile))
+  : { environments: {} };
 
 export type GlobalsState = {
   package_root: string;
@@ -181,9 +184,9 @@ export const useGlobals = create(
         };
         return acc;
       }, {}),
-      environment: shopify_toml?.environments["development"]
+      environment: shopify_toml?.environments?.["development"]
         ? "development"
-        : Object.keys(shopify_toml?.environments)[0] ?? "development",
+        : Object.keys(shopify_toml?.environments)?.[0] ?? "development",
       theme_id: +shopify_toml?.environments?.["development"]?.theme,
       theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
       store: shopify_toml?.environments?.["development"]?.store,
@@ -234,10 +237,9 @@ program
     useGlobals?.getState()?.theme_id
   )
   .action(async (options) => {
-    // Parse options and replace with correct defaults?
-    const limit = options.first ? 1 : undefined;
-
     await validateCliOptions(options);
+    buildTheme();
+    generateConfigFiles();
     runEsbuild();
     runTailwindCSSWatcher();
     watchTheme();
@@ -257,14 +259,27 @@ program
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
     useGlobals?.getState()?.theme_id
   )
-  .action((options) => {
+  .action(async (options) => {
+    await validateCliOptions(options);
     runTailwindCSSWatcher();
   });
 
 program
   .command("esbuild")
   .description("ESBuild Watcher")
-  .action((options) => {
+  .option("-e, --environment <environment_name>", "Development environment name", "development")
+  .option(
+    "-s, --store <store_id>",
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
+    useGlobals?.getState()?.store
+  )
+  .option(
+    "-t, --theme <theme_id>",
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
+    useGlobals?.getState()?.theme_id
+  )
+  .action(async (options) => {
+    await validateCliOptions(options);
     runEsbuild();
   });
 

@@ -12,9 +12,10 @@ out
 .env.local
 .env.development
 .env.production
-!template/.env
+!src/template/.env
 firebaseAdminKey.json
 .vercel
+graphql.config.yml
 
 #amplify
 amplify/\#current-cloud-backend
