@@ -217,13 +217,13 @@ export const getTargets = () => {
   const customerTemplates = [];
 
   targetFiles.forEach((file) => {
-    if (/sections[\\/][\\/]*\.liquid$/gi.test(file)) {
+    if (/[\\/]sections[\\/][^\\/]*\.liquid$/gi.test(file)) {
       sections.push(file);
     }
     if (isGiftCard(file)) {
       giftCards.push(file);
     }
-    if (/sections[\\/][\\/]*\.json$/gi.test(file)) {
+    if (/[\\/]sections[\\/][\\/]*\.json$/gi.test(file)) {
       sectionGroups.push(file);
     }
     if (isConfig(file)) {
