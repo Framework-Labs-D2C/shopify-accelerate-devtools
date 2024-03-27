@@ -24,6 +24,8 @@ export const generateLiquidFiles = () => {
   const layouts = sources.layouts;
   const sectionsSchemas = sources.sectionSchemas;
 
+  generateSettingsFile();
+
   for (const key in sectionsSchemas) {
     const section = sectionsSchemas[key];
     if (section.disabled) continue;
@@ -414,7 +416,7 @@ export const generateSectionFiles = ({
               ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
                 ? setting.content
                 : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
-                ? `t.all.${toLocaleFriendlySnakeCase(setting.content)}`
+                ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
                 : `${settingsBase}.paragraph__${paragraphCount++}.content`
               : undefined,
         };
@@ -427,7 +429,7 @@ export const generateSectionFiles = ({
               ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
                 ? setting.content
                 : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
-                ? `t.all.${toLocaleFriendlySnakeCase(setting.content)}`
+                ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
                 : `${settingsBase}.header__${headerCount++}.content`
               : undefined,
         };
@@ -436,28 +438,26 @@ export const generateSectionFiles = ({
         ...setting,
         label:
           "label" in setting
-            ? disabled_locales || (setting.label.length <= 8 && /^[^\w]/gi.test(setting.label))
+            ? disabled_locales
               ? setting.label
               : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
-              ? `t.all.${toLocaleFriendlySnakeCase(setting.label)}`
+              ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
               : `${settingsBase}.${setting.id}.label`
             : undefined,
         info:
           "info" in setting
-            ? (disabled_locales || (setting.info.length <= 8 && /^[^\w]/gi.test(setting.info))) &&
-              setting.info.length < 500
+            ? disabled_locales && setting.info.length < 500
               ? setting.info
               : localeDuplicates[toLocaleFriendlySnakeCase(setting.info)]?.length > 1
-              ? `t.all.${toLocaleFriendlySnakeCase(setting.info)}`
+              ? `t:all.${toLocaleFriendlySnakeCase(setting.info)}`
               : `${settingsBase}.${setting.id}.info`
             : undefined,
         placeholder:
           "placeholder" in setting && typeof setting.placeholder === "string"
-            ? disabled_locales ||
-              (setting.placeholder.length <= 8 && /^[^\w]/gi.test(setting.placeholder))
+            ? disabled_locales
               ? setting.placeholder
               : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
-              ? `t.all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
+              ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
               : `${settingsBase}.${setting.id}.placeholder`
             : undefined,
         options:
@@ -467,10 +467,8 @@ export const generateSectionFiles = ({
               : setting.options.map((option, index) => ({
                   ...option,
                   label:
-                    option.label.length <= 8 && /^[^\w]/gi.test(option.label)
-                      ? option.label
-                      : localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
-                      ? `t.all.${toLocaleFriendlySnakeCase(option.label)}`
+                    localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                      ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
                       : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
                 }))
             : undefined,
@@ -502,7 +500,7 @@ export const generateSectionFiles = ({
                     setting.content.length < 500
                     ? setting.content
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
-                    ? `t.all.${toLocaleFriendlySnakeCase(setting.content)}`
+                    ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
                     : `${settingsBase}.paragraph__${paragraphCount++}.content`
                   : undefined,
             };
@@ -517,7 +515,7 @@ export const generateSectionFiles = ({
                     setting.content.length < 500
                     ? setting.content
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
-                    ? `t.all.${toLocaleFriendlySnakeCase(setting.content)}`
+                    ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
                     : `${settingsBase}.header__${headerCount++}.content`
                   : undefined,
             };
@@ -526,29 +524,26 @@ export const generateSectionFiles = ({
             ...setting,
             label:
               "label" in setting
-                ? disabled_locales || (setting.label.length <= 8 && /^[^\w]/gi.test(setting.label))
+                ? disabled_locales
                   ? setting.label
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
-                  ? `t.all.${toLocaleFriendlySnakeCase(setting.label)}`
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
                   : `${settingsBase}.${setting.id}.label`
                 : undefined,
             info:
               "info" in setting
-                ? (disabled_locales ||
-                    (setting.info.length <= 8 && /^[^\w]/gi.test(setting.info))) &&
-                  setting.info.length < 500
+                ? disabled_locales && setting.info.length < 500
                   ? setting.info
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.info)]?.length > 1
-                  ? `t.all.${toLocaleFriendlySnakeCase(setting.info)}`
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.info)}`
                   : `${settingsBase}.${setting.id}.info`
                 : undefined,
             placeholder:
               "placeholder" in setting && typeof setting.placeholder === "string"
-                ? disabled_locales ||
-                  (setting.placeholder.length <= 8 && /^[^\w]/gi.test(setting.placeholder))
+                ? disabled_locales
                   ? setting.placeholder
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
-                  ? `t.all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
                   : `${settingsBase}.${setting.id}.placeholder`
                 : undefined,
             options:
@@ -558,10 +553,8 @@ export const generateSectionFiles = ({
                   : setting.options.map((option, index) => ({
                       ...option,
                       label:
-                        option.label.length <= 8 && /^[^\w]/gi.test(option.label)
-                          ? option.label
-                          : localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
-                          ? `t.all.${toLocaleFriendlySnakeCase(option.label)}`
+                        localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                          ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
                           : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
                     }))
                 : undefined,
@@ -608,7 +601,7 @@ export const generateSettingsFile = () => {
                 ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
                   ? setting.content
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
-                  ? `t.all.${toLocaleFriendlySnakeCase(setting.content)}`
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
                   : `${settingsBase}.paragraph__${paragraphCount++}.content`
                 : undefined,
           };
@@ -621,37 +614,36 @@ export const generateSettingsFile = () => {
                 ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
                   ? setting.content
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
-                  ? `t.all.${toLocaleFriendlySnakeCase(setting.content)}`
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
                   : `${settingsBase}.header__${headerCount++}.content`
                 : undefined,
           };
         }
+
         return {
           ...setting,
           label:
             "label" in setting
-              ? disabled_locales || (setting.label.length <= 8 && /^[^\w]/gi.test(setting.label))
+              ? disabled_locales
                 ? setting.label
                 : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
-                ? `t.all.${toLocaleFriendlySnakeCase(setting.label)}`
+                ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
                 : `${settingsBase}.${setting.id}.label`
               : undefined,
           info:
             "info" in setting
-              ? (disabled_locales || (setting.info.length <= 8 && /^[^\w]/gi.test(setting.info))) &&
-                setting.info.length < 500
+              ? disabled_locales && setting.info.length < 500
                 ? setting.info
                 : localeDuplicates[toLocaleFriendlySnakeCase(setting.info)]?.length > 1
-                ? `t.all.${toLocaleFriendlySnakeCase(setting.info)}`
+                ? `t:all.${toLocaleFriendlySnakeCase(setting.info)}`
                 : `${settingsBase}.${setting.id}.info`
               : undefined,
           placeholder:
             "placeholder" in setting && typeof setting.placeholder === "string"
-              ? disabled_locales ||
-                (setting.placeholder.length <= 8 && /^[^\w]/gi.test(setting.placeholder))
+              ? disabled_locales
                 ? setting.placeholder
                 : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
-                ? `t.all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
+                ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
                 : `${settingsBase}.${setting.id}.placeholder`
               : undefined,
           options:
@@ -661,10 +653,8 @@ export const generateSettingsFile = () => {
                 : setting.options.map((option, index) => ({
                     ...option,
                     label:
-                      option.label.length <= 8 && /^[^\w]/gi.test(option.label)
-                        ? option.label
-                        : localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
-                        ? `t.all.${toLocaleFriendlySnakeCase(option.label)}`
+                      localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                        ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
                         : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
                   }))
               : undefined,
