@@ -70,6 +70,7 @@ export const watchTheme = () => {
     }
 
     if (isLiquid(name)) {
+      getSources();
       generateLiquidFiles();
       console.log(
         `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(
