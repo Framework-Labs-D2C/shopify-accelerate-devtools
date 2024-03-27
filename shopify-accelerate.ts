@@ -4,33 +4,35 @@ import path from "path";
 import toml from "toml";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { runEsbuild } from "./esbuild/esbuild";
-import { init } from "./src";
-import { runTailwindCSSWatcher } from "./tailwind/tailwind-watch";
-
-import { readFileSync } from "./utils/fs";
-import { JSONParse } from "./utils/json";
+import { ShopifySection, ShopifySettings } from "./@types/shopify";
+import { runEsbuild } from "./src/esbuild/esbuild";
+import { buildTheme } from "./src/scaffold-theme/build-theme";
+import { shopifyCliPull } from "./src/shopify-cli/pull";
+import { runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
+import { readFile } from "./src/utils/fs";
+import { JSONParse } from "./src/utils/json";
+import { validateCliOptions } from "./src/validate-cli-options";
 
 const { Command } = require("commander");
 const program = new Command();
 require("dotenv").config();
 
-const settings = JSONParse<{
+const shopify_toml = JSONParse<{
   environments: {
     [T: string]: {
       theme: string;
       store: string;
       path: string;
       ignore?: string[];
-      output: "json";
+      output?: "json";
       live?: boolean;
-      "allow-live": boolean;
+      "allow-live"?: boolean;
     };
   };
 }>(
   JSON.stringify(
     toml.parse(
-      readFileSync(path.join(process.cwd(), "template", "shopify.theme.toml"), {
+      readFile(path.join(process.cwd(), "shopify.theme.toml"), {
         encoding: "utf-8",
       })
     )
@@ -39,19 +41,148 @@ const settings = JSONParse<{
 
 export type GlobalsState = {
   package_root: string;
-  root: ReturnType<typeof process.cwd>;
-  env: typeof process.env;
-  shopify_settings: typeof settings;
+  package_templates: string;
+  package_types: string;
+  project_root: ReturnType<typeof process.cwd>;
+
+  theme_id: number;
+  theme_path: string;
+  store: string;
+  environment: keyof (typeof shopify_toml)["environments"];
+  environments: (typeof shopify_toml)["environments"];
+  ignore_blocks: string[];
+  ignore_snippets: string[];
+  ignore_layouts: string[];
+  ignore_sections: string[];
+  ignore_assets: string[];
+  delete_external_layouts?: boolean;
+  delete_external_sections?: boolean;
+  delete_external_snippets?: boolean;
+  delete_external_blocks?: boolean;
+  disabled_locales?: boolean;
+  sources: {
+    snippets: string[];
+    layouts: string[];
+    sectionsLiquid: string[];
+    sectionsSchemaFiles: string[];
+    blocks: string[];
+    assets: string[];
+    giftCards: string[];
+    configs: string[];
+    sectionGroups: string[];
+    templates: string[];
+    customerTemplates: string[];
+    settingsFile: string[];
+    locale_duplicates: { [T: string]: string[] };
+    settingsSchema: ShopifySettings;
+    sectionSchemas: { [T: string]: ShopifySection & { path: string; folder: string } };
+  };
+  targets: {
+    assets: string[];
+    blocks: string[];
+    layout: string[];
+    locales: string[];
+    snippets: string[];
+    sections: string[];
+    settings: string;
+    giftCards: string[];
+    sectionGroups: string[];
+    configs: string[];
+    templates: string[];
+    customerTemplates: string[];
+  };
+  folders: {
+    types: string;
+    utils: string;
+    sections: string;
+    layout: string;
+    blocks: string;
+    snippets: string;
+    templates: string;
+    assets: string;
+    config: string;
+  };
 };
 
 export const useGlobals = create(
   immer<GlobalsState>((set, get) => {
     /*Initial State*/
+
     return {
-      env: process.env,
+      ignore_blocks:
+        process.env.SHOPIFY_ACCELERATE_IGNORE_BLOCKS?.split(",").map((str) => str.trim()) ?? [],
+      ignore_snippets:
+        process.env.SHOPIFY_ACCELERATE_IGNORE_SNIPPETS?.split(",").map((str) => str.trim()) ?? [],
+      ignore_layouts:
+        process.env.SHOPIFY_ACCELERATE_IGNORE_LAYOUTS?.split(",").map((str) => str.trim()) ?? [],
+      ignore_sections:
+        process.env.SHOPIFY_ACCELERATE_IGNORE_SECTIONS?.split(",").map((str) => str.trim()) ?? [],
+      ignore_assets:
+        process.env.SHOPIFY_ACCELERATE_IGNORE_ASSETS?.split(",").map((str) => str.trim()) ?? [],
+      delete_external_layouts: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_LAYOUTS === "true",
+      delete_external_sections: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SECTIONS === "true",
+      delete_external_snippets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SNIPPETS === "true",
+      delete_external_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS === "true",
+      disabled_locales: process.env.SHOPIFY_ACCELERATE_DISABLED_LOCALES === "true",
       package_root: path.resolve(__dirname),
-      root: process.cwd(),
-      shopify_settings: settings,
+      project_root: process.cwd(),
+      package_templates: path.join(path.resolve(__dirname), "./src/templates"),
+      package_types: path.join(path.resolve(__dirname), "./@types"),
+      sources: {
+        snippets: [],
+        layouts: [],
+        sectionsLiquid: [],
+        sectionsSchemaFiles: [],
+        blocks: [],
+        assets: [],
+        giftCards: [],
+        configs: [],
+        sectionGroups: [],
+        templates: [],
+        customerTemplates: [],
+        settingsFile: [],
+        locale_duplicates: {},
+        settingsSchema: null,
+        sectionSchemas: {},
+      },
+      targets: {
+        assets: [],
+        blocks: [],
+        layout: [],
+        locales: [],
+        snippets: [],
+        sections: [],
+        settings: null,
+        giftCards: [],
+        sectionGroups: [],
+        configs: [],
+        templates: [],
+        customerTemplates: [],
+      },
+      folders: {
+        types: path.join(process.cwd(), "@types"),
+        utils: path.join(process.cwd(), "@utils"),
+        sections: path.join(process.cwd(), "sections"),
+        layout: path.join(process.cwd(), "layout"),
+        blocks: path.join(process.cwd(), "blocks"),
+        snippets: path.join(process.cwd(), "snippets"),
+        templates: path.join(process.cwd(), "templates"),
+        assets: path.join(process.cwd(), "assets"),
+        config: path.join(process.cwd(), "config"),
+      },
+      environments: Object.entries(shopify_toml?.environments ?? {})?.reduce((acc, [key, val]) => {
+        acc[key] = {
+          ...val,
+          store: val?.store?.replace(/\.myshopify\.com/gi, ""),
+        };
+        return acc;
+      }, {}),
+      environment: shopify_toml?.environments["development"]
+        ? "development"
+        : Object.keys(shopify_toml?.environments)[0] ?? "development",
+      theme_id: +shopify_toml?.environments?.["development"]?.theme,
+      theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
+      store: shopify_toml?.environments?.["development"]?.store,
     };
   })
 );
@@ -65,27 +196,23 @@ program
   .command("init")
   .description("Initialize a local development environment from an existing Shopify theme")
   // .argument("<string>", "string to split")
+  .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
     "-s, --store <store_id>",
     "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    process.env.SHOPIFY_STORE_ID
+    useGlobals?.getState()?.environments?.["development"]?.store ??
+      "accelerate-preview.myshopify.com"
   )
   .option(
     "-t, --theme <theme_id>",
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/edit`",
-    process.env.SHOPIFY_THEME_ID
+    useGlobals?.getState()?.environments?.["development"]?.theme
   )
-  .option("-e, --environment <environment_name>", "Development environment name", "development")
-  .option(
-    "--path <pathname>",
-    "Shopify themes path. Uses as root folder for each development environment. I.e <pathname>/<environment_name>",
-    process.env.SHOPIFY_THEMES_PATH ?? "./themes"
-  )
-  .action((options) => {
-    // Parse options and replace with correct defaults?
-    const limit = options.first ? 1 : undefined;
-    console.log(useGlobals.getState());
-    console.log(options);
+
+  .action(async (options) => {
+    await validateCliOptions(options);
+    await buildTheme();
+    await shopifyCliPull();
   });
 
 program
@@ -104,11 +231,6 @@ program
   )
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
-    "--path <pathname>",
-    "Shopify themes path. Uses as root folder for each development environment. I.e <pathname>/<environment_name>",
-    process.env.SHOPIFY_THEMES_PATH ?? "./themes"
-  )
-  .option(
     "--delete",
     "Delete files that are not generated by the Development tools (Excludes config `.json` files)",
     false
@@ -118,12 +240,13 @@ program
     "Disable the translation engine for Shopify Section & Theme settings",
     false
   )
-  .action((options) => {
+  .action(async (options) => {
     // Parse options and replace with correct defaults?
     const limit = options.first ? 1 : undefined;
     console.log(useGlobals.getState());
     console.log(options);
 
+    runEsbuild();
     runTailwindCSSWatcher();
   });
 

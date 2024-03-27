@@ -1,0 +1,212 @@
+import chalk from "chalk";
+import path from "path";
+import { ShopifySection, ShopifySettings } from "../../@types/shopify";
+import { useGlobals } from "../../shopify-accelerate";
+import { getAllFiles } from "../utils/fs";
+
+export const getSources = () => {
+  const { folders } = useGlobals.getState();
+
+  const sourceFiles = [
+    ...getAllFiles(folders.sections),
+    ...getAllFiles(folders.snippets),
+    ...getAllFiles(folders.config),
+    ...getAllFiles(folders.templates),
+    ...getAllFiles(folders.assets),
+    ...getAllFiles(folders.layout),
+    ...getAllFiles(folders.utils),
+    ...getAllFiles(folders.types),
+    ...getAllFiles(folders.blocks),
+  ];
+
+  const typeScriptSchema = [];
+  const snippets = [];
+  const layouts = [];
+  const sectionsLiquid = [];
+  const sectionsSchemaFiles = [];
+  const settingsFiles = [];
+  const blocks = [];
+  const giftCards = [];
+  const sectionGroups = [];
+  const configs = [];
+  const templates = [];
+  const customerTemplates = [];
+  const assets = [];
+
+  sourceFiles.forEach((filePath) => {
+    if (isTypeScriptSchema(filePath)) {
+      typeScriptSchema.push(filePath);
+    }
+    if (isSnippet(filePath)) {
+      snippets.push(filePath);
+    }
+    if (isBlock(filePath)) {
+      blocks.push(filePath);
+    }
+    if (isLayout(filePath)) {
+      layouts.push(filePath);
+    }
+    if (isSectionLiquid(filePath)) {
+      sectionsLiquid.push(filePath);
+    }
+    if (isSectionSchema(filePath)) {
+      sectionsSchemaFiles.push(filePath);
+    }
+    if (isGiftCard(filePath)) {
+      giftCards.push(filePath);
+    }
+    if (isSectionGroup(filePath)) {
+      sectionGroups.push(filePath);
+    }
+    if (isConfig(filePath)) {
+      configs.push(filePath);
+    }
+    if (isTemplate(filePath)) {
+      templates.push(filePath);
+    }
+    if (isCustomerTemplate(filePath)) {
+      customerTemplates.push(filePath);
+    }
+    if (isAsset(filePath)) {
+      assets.push(filePath);
+    }
+    if (isSettingsSchema(filePath)) {
+      settingsFiles.push(filePath);
+    }
+  });
+
+  useGlobals.setState((state) => {
+    state.sources.snippets = snippets;
+    state.sources.layouts = layouts;
+    state.sources.sectionsLiquid = sectionsLiquid;
+    state.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+    state.sources.blocks = blocks;
+    state.sources.assets = assets;
+    state.sources.giftCards = giftCards;
+    state.sources.configs = configs;
+    state.sources.sectionGroups = sectionGroups;
+    state.sources.templates = templates;
+    state.sources.customerTemplates = customerTemplates;
+    state.sources.settingsFile = settingsFiles[0];
+    state.sources.settingsSchema = require(settingsFiles[0])?.settingsSchema as ShopifySettings;
+    state.sources.sectionSchemas = sectionsSchemaFiles.reduce(
+      (acc, file) => {
+        try {
+          const data = require(file);
+
+          return {
+            ...acc,
+            ...Object.entries(data).reduce((acc2, [key, val]) => {
+              // @ts-ignore
+              acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+              return acc2;
+            }, {}),
+          };
+        } catch (err) {
+          console.log(chalk.redBright(err.message));
+          return acc;
+        }
+      },
+      {} as { [T: string]: ShopifySection }
+    );
+  });
+};
+
+export const getTargets = () => {
+  const { theme_path } = useGlobals.getState();
+
+  const targetFiles = [
+    ...getAllFiles(path.join(theme_path, "sections")),
+    ...getAllFiles(path.join(theme_path, "config")),
+    ...getAllFiles(path.join(theme_path, "templates")),
+  ];
+
+  const sections = [];
+  const settings = [];
+  const giftCards = [];
+  const sectionGroups = [];
+  const configs = [];
+  const templates = [];
+  const customerTemplates = [];
+
+  targetFiles.forEach((file) => {
+    if (/sections[\\/][\\/]*\.liquid$/gi.test(file)) {
+      sections.push(file);
+    }
+    if (isGiftCard(file)) {
+      giftCards.push(file);
+    }
+    if (/sections[\\/][\\/]*\.json$/gi.test(file)) {
+      sectionGroups.push(file);
+    }
+    if (isConfig(file)) {
+      configs.push(file);
+    }
+    if (isTemplate(file)) {
+      templates.push(file);
+    }
+    if (isCustomerTemplate(file)) {
+      customerTemplates.push(file);
+    }
+    if (isSettingsSchema(file)) {
+      settings.push(file);
+    }
+  });
+
+  useGlobals.setState((state) => {
+    state.targets.assets = getAllFiles(path.join(theme_path, "assets"));
+    state.targets.blocks = getAllFiles(path.join(theme_path, "blocks"));
+    state.targets.layout = getAllFiles(path.join(theme_path, "layout"));
+    state.targets.locales = getAllFiles(path.join(theme_path, "locales"));
+    state.targets.snippets = getAllFiles(path.join(theme_path, "snippets"));
+    state.targets.sections = sections;
+    state.targets.settings = settings[0];
+    state.targets.giftCards = giftCards;
+    state.targets.sectionGroups = sectionGroups;
+    state.targets.configs = configs;
+    state.targets.templates = templates;
+    state.targets.customerTemplates = customerTemplates;
+  });
+};
+
+export const isTypeScriptSchema = (name: string) =>
+  /sections[\\/][^\\/]*[\\/]schema.ts$/gi.test(name) ||
+  /config[\\/]settings_schema\.ts$/gi.test(name) ||
+  /@utils[\\/]settings[\\/][^\\/]*\.ts$/gi.test(name);
+
+export const isSectionLiquid = (name: string) =>
+  /sections[\\/][^\\/]*[\\/][^.]*\.liquid$/gi.test(name);
+
+export const isSectionSchema = (name: string) =>
+  /sections([\\/])[^\\/]*([\\/])schema.ts$/gi.test(name);
+
+export const isSettingsSchema = (name: string) => /config[\\/]settings_schema\.ts$/gi.test(name);
+
+export const isAsset = (name: string) =>
+  /assets[\\/][^\\/]*$/gi.test(name) ||
+  /snippets[\\/][^\\/]*.js$/gi.test(name) ||
+  /blocks[\\/][^\\/]*.js$/gi.test(name) ||
+  /sections[\\/][^\\/]*.js$/gi.test(name);
+
+export const isSnippet = (name: string) =>
+  /sections[\\/][^\\/]*[\\/][^.]*\.[^.]*\.liquid$/gi.test(name) ||
+  /blocks[\\/][^\\/]*\.liquid$/gi.test(name) ||
+  /snippets[\\/][^\\/]*\.liquid$/gi.test(name);
+
+export const isBlock = (name: string) => /blocks[\\/][^\\/]*\.liquid$/gi.test(name);
+
+export const isLayout = (name: string) => {
+  return /^layout[\\/][^\\/]*\.liquid$/gi.test(name);
+};
+
+export const isSectionGroup = (name: string) =>
+  /templates[\\/]section-groups[\\/][^\\/]*\.json$/gi.test(name);
+
+export const isConfig = (name: string) => /config[\\/][^\\/]*\.json$/gi.test(name);
+
+export const isTemplate = (name: string) => /templates[\\/][^\\/]*\.json$/gi.test(name);
+
+export const isCustomerTemplate = (name: string) =>
+  /templates[\\/]customers[\\/][^\\/]*\.json$/gi.test(name);
+
+export const isGiftCard = (name: string) => /templates[\\/]gift_card\.liquid$/gi.test(name);

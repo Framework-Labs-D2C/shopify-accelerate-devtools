@@ -1,7 +1,7 @@
 import child_process from "child_process";
 import fs from "fs";
 import path from "path";
-import { useGlobals } from "../shopify-accelerate";
+import { useGlobals } from "../../shopify-accelerate";
 const watch = require("node-watch");
 
 export const runTailwindCSSWatcher = () => {

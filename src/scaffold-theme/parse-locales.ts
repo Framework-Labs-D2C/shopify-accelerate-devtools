@@ -1,0 +1,91 @@
+import { ShopifyHeader, ShopifyParagraph, ShopifySection, ShopifySettings, ShopifySettingsInput } from "../../@types/shopify";
+import { useGlobals } from "../../shopify-accelerate";
+import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
+
+export function parseLocales() {
+  const { sources } = useGlobals.getState();
+  const sections = sources.sectionSchemas;
+  const settings = sources.settingsSchema;
+  const entries: { [T: string]: string[] } = {};
+
+  const mapSettings = (settings: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[]) => {
+    settings?.forEach((setting) => {
+      if (setting.type === "paragraph" || setting.type === "header") {
+        if (setting.content.split(" ").length > 4) {
+          return;
+        }
+        const [key, value] = [toLocaleFriendlySnakeCase(setting.content), setting.content];
+        if (entries[key]) {
+          entries[key].push(value);
+        } else {
+          entries[key] = [value];
+        }
+        return;
+      }
+
+      if (setting?.id) {
+        if (setting.type === "color_scheme_group") {
+          return;
+        }
+        if (setting.type === "select" || setting.type === "radio") {
+          setting.options.forEach((option, index) => {
+            const [key, value] = [toLocaleFriendlySnakeCase(option.label), option.label];
+            if (entries[key]) {
+              entries[key].push(value);
+            } else {
+              entries[key] = [value];
+            }
+          });
+        }
+        if (setting.label) {
+          const [key, value] = [toLocaleFriendlySnakeCase(setting.label), setting.label];
+          if (entries[key]) {
+            entries[key].push(value);
+          } else {
+            entries[key] = [value];
+          }
+        }
+
+        if (setting.info) {
+          if (setting.info.split(" ").length <= 4) {
+            const [key, value] = [toLocaleFriendlySnakeCase(setting.info), setting.info];
+            if (entries[key]) {
+              entries[key].push(value);
+            } else {
+              entries[key] = [value];
+            }
+          }
+        }
+        if ("placeholder" in setting && typeof setting.placeholder === "string") {
+          const [key, value] = [
+            toLocaleFriendlySnakeCase(setting.placeholder),
+            setting.placeholder,
+          ];
+          if (entries[key]) {
+            entries[key].push(value);
+          } else {
+            entries[key] = [value];
+          }
+        }
+      }
+    });
+  };
+
+  Object.values(sections).forEach((section) => {
+    const blocks = section.blocks?.filter((block) => block.type !== "@app") ?? [];
+    mapSettings(section.settings);
+    blocks.forEach((block) => mapSettings(block.settings));
+  });
+
+  settings.forEach((settingsSection) => {
+    if (!("settings" in settingsSection)) return;
+    mapSettings(settingsSection.settings);
+  });
+  /*  fs.writeFileSync(path.join(process.cwd(), "/test.json"), JSON.stringify(entries, null, 2), {
+    encoding: "utf-8",
+  });*/
+
+  useGlobals.setState((state) => {
+    state.sources.locale_duplicates = entries;
+  });
+}
