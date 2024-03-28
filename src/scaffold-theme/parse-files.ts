@@ -278,7 +278,7 @@ export const isAsset = (name: string) =>
 
 export const isSnippet = (name: string) =>
   /[\\/]sections[\\/][^\\/]*[\\/][^.]*\.[^.]*\.liquid$/gi.test(name) ||
-  /[\\/]blocks[\\/][^\\/]*\.liquid$/gi.test(name) ||
+  // /[\\/]blocks[\\/][^\\/]*\.liquid$/gi.test(name) ||
   /[\\/]snippets[\\/][^\\/]*\.liquid$/gi.test(name);
 
 export const isBlock = (name: string) => /blocks[\\/][^\\/]*\.liquid$/gi.test(name);
