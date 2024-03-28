@@ -37,14 +37,17 @@ const runEsBuild = () => {
 };
 
 export const runEsbuild = () => {
+  let running = false;
   watch(process.cwd(), { recursive: true }, async (evt, name) => {
+    if (running) return;
     if (!name.match(/\.(ts)x?$/) || /schema\.ts$/gi.test(name)) return;
-
+    running = true;
     try {
       runEsBuild();
     } catch (err) {
       console.log(err);
     }
+    running = false;
   });
 
   runEsBuild();

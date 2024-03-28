@@ -17,9 +17,11 @@ import { writeCompareFile, writeOnlyNew } from "../utils/fs";
 export const watchTheme = () => {
   const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
 
+  let running = false;
   watch(Object.values(folders), { recursive: true }, (event, name) => {
+    if (running) return;
     const startTime = Date.now();
-
+    running = true;
     if (event === "remove") {
       getSources();
       getTargets();
@@ -82,5 +84,6 @@ export const watchTheme = () => {
         )}] ${chalk.cyan(`File modified: ${name.replace(process.cwd(), "")}`)}`
       );
     }
+    running = false;
   });
 };
