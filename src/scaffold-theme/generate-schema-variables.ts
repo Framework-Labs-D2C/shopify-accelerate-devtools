@@ -2,10 +2,11 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import { ShopifySection } from "../../@types/shopify";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
+import { getSources } from "./parse-files";
 
 export const generateSchemaVariables = () => {
-  const { folders, sources } = useGlobals.getState();
+  const { folders, sources } = config;
 
   const sections = sources.sectionSchemas as {
     [T: string]: ShopifySection<{ blocks: any; settings: any }> & { path: string; folder: string };
@@ -44,6 +45,9 @@ export const generateSchemaVariables = () => {
         )}`
       );
       fs.writeFileSync(sectionLiquid, section.settings ? variables.join("\n") : "");
+      config.sources.sectionsLiquid = [
+        ...new Set([...config.sources.sectionsLiquid, sectionLiquid]),
+      ];
     }
 
     if (fs.existsSync(sectionLiquid)) {
@@ -125,6 +129,7 @@ export const generateSchemaVariables = () => {
           )}`
         );
         fs.writeFileSync(blockPath, block?.settings ? blockVariables.join("\n") : "");
+        config.sources.snippets = [...new Set([...config.sources.snippets, blockPath])];
       }
 
       if (fs.existsSync(blockPath)) {

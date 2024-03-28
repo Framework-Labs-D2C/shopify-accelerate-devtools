@@ -1,9 +1,9 @@
 import path from "path";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const generateBaseTypes = () => {
-  const { folders, package_types } = useGlobals.getState();
+  const { folders, package_types } = config;
   writeCompareFile(
     path.join(folders.types, "shopify.ts"),
     readFile(path.join(package_types, "shopify.ts"))

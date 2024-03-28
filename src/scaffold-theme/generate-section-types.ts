@@ -1,12 +1,12 @@
 import path from "path";
 import { ShopifySection, ShopifySettingsInput } from "../../@types/shopify";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { capitalize } from "../utils/capitalize";
 import { writeCompareFile } from "../utils/fs";
 import { toPascalCase } from "../utils/to-pascal-case";
 
 export const generateSectionsTypes = () => {
-  const { folders, sources } = useGlobals.getState();
+  const { folders, sources } = config;
   const sections = sources.sectionSchemas;
 
   const sectionTypesPath = path.join(folders.types, "sections.ts");

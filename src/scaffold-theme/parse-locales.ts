@@ -1,9 +1,9 @@
 import { ShopifyHeader, ShopifyParagraph, ShopifySection, ShopifySettings, ShopifySettingsInput } from "../../@types/shopify";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
 export function parseLocales() {
-  const { sources } = useGlobals.getState();
+  const { sources } = config;
   const sections = sources.sectionSchemas;
   const settings = sources.settingsSchema;
   const entries: { [T: string]: string[] } = {};
@@ -85,7 +85,5 @@ export function parseLocales() {
     encoding: "utf-8",
   });*/
 
-  useGlobals.setState((state) => {
-    state.sources.locale_duplicates = entries;
-  });
+  config.sources.locale_duplicates = entries;
 }

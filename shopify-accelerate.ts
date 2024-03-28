@@ -110,89 +110,83 @@ export type GlobalsState = {
   };
 };
 
-export const useGlobals = create(
-  immer<GlobalsState>((set, get) => {
-    /*Initial State*/
-
-    return {
-      ignore_blocks:
-        process.env.SHOPIFY_ACCELERATE_IGNORE_BLOCKS?.split(",").map((str) => str.trim()) ?? [],
-      ignore_snippets:
-        process.env.SHOPIFY_ACCELERATE_IGNORE_SNIPPETS?.split(",").map((str) => str.trim()) ?? [],
-      ignore_layouts:
-        process.env.SHOPIFY_ACCELERATE_IGNORE_LAYOUTS?.split(",").map((str) => str.trim()) ?? [],
-      ignore_sections:
-        process.env.SHOPIFY_ACCELERATE_IGNORE_SECTIONS?.split(",").map((str) => str.trim()) ?? [],
-      ignore_assets:
-        process.env.SHOPIFY_ACCELERATE_IGNORE_ASSETS?.split(",").map((str) => str.trim()) ?? [],
-      delete_external_layouts: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_LAYOUTS === "true",
-      delete_external_sections: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SECTIONS === "true",
-      delete_external_snippets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SNIPPETS === "true",
-      delete_external_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS === "true",
-      delete_external_assets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_ASSETS === "true",
-      disabled_locales: process.env.SHOPIFY_ACCELERATE_DISABLED_LOCALES === "true",
-      package_root: path.resolve(__dirname),
-      project_root: process.cwd(),
-      package_templates: path.join(path.resolve(__dirname), "./src/templates"),
-      package_types: path.join(path.resolve(__dirname), "./@types"),
-      sources: {
-        snippets: [],
-        layouts: [],
-        sectionsLiquid: [],
-        sectionsSchemaFiles: [],
-        blocks: [],
-        assets: [],
-        giftCards: [],
-        configs: [],
-        sectionGroups: [],
-        templates: [],
-        customerTemplates: [],
-        settingsFile: [],
-        locale_duplicates: {},
-        settingsSchema: null,
-        sectionSchemas: {},
-      },
-      targets: {
-        assets: [],
-        blocks: [],
-        layout: [],
-        locales: [],
-        snippets: [],
-        sections: [],
-        settings: null,
-        giftCards: [],
-        sectionGroups: [],
-        configs: [],
-        templates: [],
-        customerTemplates: [],
-      },
-      folders: {
-        types: path.join(process.cwd(), "@types"),
-        utils: path.join(process.cwd(), "@utils"),
-        sections: path.join(process.cwd(), "sections"),
-        layout: path.join(process.cwd(), "layout"),
-        blocks: path.join(process.cwd(), "blocks"),
-        snippets: path.join(process.cwd(), "snippets"),
-        templates: path.join(process.cwd(), "templates"),
-        assets: path.join(process.cwd(), "assets"),
-        config: path.join(process.cwd(), "config"),
-      },
-      environments: Object.entries(shopify_toml?.environments ?? {})?.reduce((acc, [key, val]) => {
-        acc[key] = {
-          ...val,
-          store: val?.store?.replace(/\.myshopify\.com/gi, ""),
-        };
-        return acc;
-      }, {}),
-      environment: shopify_toml?.environments?.["development"]
-        ? "development"
-        : Object.keys(shopify_toml?.environments)?.[0] ?? "development",
-      theme_id: +shopify_toml?.environments?.["development"]?.theme,
-      theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
-      store: shopify_toml?.environments?.["development"]?.store,
+export const config: GlobalsState = {
+  ignore_blocks:
+    process.env.SHOPIFY_ACCELERATE_IGNORE_BLOCKS?.split(",").map((str) => str.trim()) ?? [],
+  ignore_snippets:
+    process.env.SHOPIFY_ACCELERATE_IGNORE_SNIPPETS?.split(",").map((str) => str.trim()) ?? [],
+  ignore_layouts:
+    process.env.SHOPIFY_ACCELERATE_IGNORE_LAYOUTS?.split(",").map((str) => str.trim()) ?? [],
+  ignore_sections:
+    process.env.SHOPIFY_ACCELERATE_IGNORE_SECTIONS?.split(",").map((str) => str.trim()) ?? [],
+  ignore_assets:
+    process.env.SHOPIFY_ACCELERATE_IGNORE_ASSETS?.split(",").map((str) => str.trim()) ?? [],
+  delete_external_layouts: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_LAYOUTS === "true",
+  delete_external_sections: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SECTIONS === "true",
+  delete_external_snippets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SNIPPETS === "true",
+  delete_external_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS === "true",
+  delete_external_assets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_ASSETS === "true",
+  disabled_locales: process.env.SHOPIFY_ACCELERATE_DISABLED_LOCALES === "true",
+  package_root: path.resolve(__dirname),
+  project_root: process.cwd(),
+  package_templates: path.join(path.resolve(__dirname), "./src/templates"),
+  package_types: path.join(path.resolve(__dirname), "./@types"),
+  sources: {
+    snippets: [],
+    layouts: [],
+    sectionsLiquid: [],
+    sectionsSchemaFiles: [],
+    blocks: [],
+    assets: [],
+    giftCards: [],
+    configs: [],
+    sectionGroups: [],
+    templates: [],
+    customerTemplates: [],
+    settingsFile: [],
+    locale_duplicates: {},
+    settingsSchema: null,
+    sectionSchemas: {},
+  },
+  targets: {
+    assets: [],
+    blocks: [],
+    layout: [],
+    locales: [],
+    snippets: [],
+    sections: [],
+    settings: null,
+    giftCards: [],
+    sectionGroups: [],
+    configs: [],
+    templates: [],
+    customerTemplates: [],
+  },
+  folders: {
+    types: path.join(process.cwd(), "@types"),
+    utils: path.join(process.cwd(), "@utils"),
+    sections: path.join(process.cwd(), "sections"),
+    layout: path.join(process.cwd(), "layout"),
+    blocks: path.join(process.cwd(), "blocks"),
+    snippets: path.join(process.cwd(), "snippets"),
+    templates: path.join(process.cwd(), "templates"),
+    assets: path.join(process.cwd(), "assets"),
+    config: path.join(process.cwd(), "config"),
+  },
+  environments: Object.entries(shopify_toml?.environments ?? {})?.reduce((acc, [key, val]) => {
+    acc[key] = {
+      ...val,
+      store: val?.store?.replace(/\.myshopify\.com/gi, ""),
     };
-  })
-);
+    return acc;
+  }, {}),
+  environment: shopify_toml?.environments?.["development"]
+    ? "development"
+    : Object.keys(shopify_toml?.environments)?.[0] ?? "development",
+  theme_id: +shopify_toml?.environments?.["development"]?.theme,
+  theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
+  store: shopify_toml?.environments?.["development"]?.store,
+};
 
 program
   .name("shopify-accelerate")
@@ -207,12 +201,12 @@ program
   .option(
     "-s, --store <store_id>",
     "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    useGlobals?.getState()?.store
+    config?.store
   )
   .option(
     "-t, --theme <theme_id>",
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    useGlobals?.getState()?.theme_id
+    config?.theme_id
   )
   .action(async (options) => {
     await validateCliOptions(options);
@@ -229,12 +223,12 @@ program
   .option(
     "-s, --store <store_id>",
     "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    useGlobals?.getState()?.store
+    config?.store
   )
   .option(
     "-t, --theme <theme_id>",
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    useGlobals?.getState()?.theme_id
+    config?.theme_id
   )
   .action(async (options) => {
     await validateCliOptions(options);
@@ -252,12 +246,12 @@ program
   .option(
     "-s, --store <store_id>",
     "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    useGlobals?.getState()?.store
+    config?.store
   )
   .option(
     "-t, --theme <theme_id>",
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    useGlobals?.getState()?.theme_id
+    config?.theme_id
   )
   .action(async (options) => {
     await validateCliOptions(options);
@@ -271,12 +265,12 @@ program
   .option(
     "-s, --store <store_id>",
     "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    useGlobals?.getState()?.store
+    config?.store
   )
   .option(
     "-t, --theme <theme_id>",
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    useGlobals?.getState()?.theme_id
+    config?.theme_id
   )
   .action(async (options) => {
     await validateCliOptions(options);

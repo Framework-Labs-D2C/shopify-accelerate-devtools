@@ -2,10 +2,10 @@ import chalk from "chalk";
 import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 
 export const shopifyCliPull = async () => {
-  const { store, theme_id, environment, theme_path } = useGlobals.getState();
+  const { store, theme_id, environment, theme_path } = config;
   const cleanThemePath = theme_path?.replace(/^\.\//gi, "")?.replace(/\\/gi, "/");
   await new Promise((resolve, reject) => {
     const interval = setInterval(() => {

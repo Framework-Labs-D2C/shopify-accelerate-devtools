@@ -2,7 +2,7 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import { ShopifySection, ShopifySettings } from "../../@types/shopify";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
@@ -16,7 +16,7 @@ export const generateLiquidFiles = () => {
     delete_external_layouts,
     delete_external_sections,
     delete_external_snippets,
-  } = useGlobals.getState();
+  } = config;
 
   const translations: any = {};
   const snippets = sources.snippets;
@@ -364,6 +364,7 @@ declare global {
         sourcePath.split(/[\\/]/gi).at(-1).includes(fileName)
       );
       if (!targetFile) {
+        console.log(sources.layouts);
         console.log(
           `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file}`)}`
         );
@@ -398,7 +399,7 @@ export const generateSectionFiles = ({
   ...section
 }: ShopifySection & { path: string; folder: string }) => {
   const sectionName = toLocaleFriendlySnakeCase(name);
-  const { sources, disabled_locales } = useGlobals.getState();
+  const { sources, disabled_locales } = config;
   const localeDuplicates = sources.locale_duplicates;
   let paragraphCount = 1;
   let headerCount = 1;
@@ -579,7 +580,7 @@ ${JSON.stringify(localizedSection, undefined, 2)}
 };
 
 export const generateSettingsFile = () => {
-  const { theme_path, sources, disabled_locales } = useGlobals.getState();
+  const { theme_path, sources, disabled_locales } = config;
   const localeDuplicates = sources.locale_duplicates;
   const settingsSchema = sources.settingsSchema;
   const localizedSettings = settingsSchema.map(({ name, ...settingsBlock }) => {

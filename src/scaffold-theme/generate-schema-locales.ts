@@ -1,11 +1,11 @@
 import { produce } from "immer";
 import path from "path";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
 export const generateSchemaLocales = () => {
-  const { theme_path, sources } = useGlobals.getState();
+  const { theme_path, sources } = config;
   const sections = sources.sectionSchemas;
   const settings = sources.settingsSchema;
   const localesDuplicates = sources.locale_duplicates;

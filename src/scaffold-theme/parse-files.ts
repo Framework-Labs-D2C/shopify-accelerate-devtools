@@ -2,11 +2,11 @@ import chalk from "chalk";
 import importFresh from "import-fresh";
 import path from "path";
 import { ShopifySection, ShopifySettings } from "../../@types/shopify";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { getAllFiles } from "../utils/fs";
 
 export const getSources = () => {
-  const { folders } = useGlobals.getState();
+  const { folders } = config;
 
   const sourceFiles = [
     ...getAllFiles(folders.sections),
@@ -77,49 +77,53 @@ export const getSources = () => {
     }
   });
 
-  useGlobals.setState((state) => {
-    state.sources.snippets = snippets;
-    state.sources.layouts = layouts;
-    state.sources.sectionsLiquid = sectionsLiquid;
-    state.sources.sectionsSchemaFiles = sectionsSchemaFiles;
-    state.sources.blocks = blocks;
-    state.sources.assets = assets;
-    state.sources.giftCards = giftCards;
-    state.sources.configs = configs;
-    state.sources.sectionGroups = sectionGroups;
-    state.sources.templates = templates;
-    state.sources.customerTemplates = customerTemplates;
-    state.sources.settingsFile = settingsFiles[0];
-    state.sources.settingsSchema = (
-      importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
-    )?.settingsSchema;
-    state.sources.sectionSchemas = sectionsSchemaFiles.reduce(
-      (acc, file) => {
-        try {
-          const data = importFresh(file);
+  config.sources.snippets = snippets;
+  config.sources.layouts = layouts;
+  config.sources.sectionsLiquid = sectionsLiquid;
+  config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+  config.sources.blocks = blocks;
+  config.sources.assets = assets;
+  config.sources.giftCards = giftCards;
+  config.sources.configs = configs;
+  config.sources.sectionGroups = sectionGroups;
+  config.sources.templates = templates;
+  config.sources.customerTemplates = customerTemplates;
+  config.sources.settingsFile = settingsFiles[0];
+  config.sources.settingsSchema = (
+    importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
+  )?.settingsSchema;
+  config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
 
-          return {
-            ...acc,
-            ...Object.entries(data).reduce((acc2, [key, val]) => {
-              // @ts-ignore
-              acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
-              return acc2;
-            }, {}),
-          };
-        } catch (err) {
-          console.log(chalk.redBright(err.message));
-          return acc;
-        }
-      },
-      {} as { [T: string]: ShopifySection }
-    );
-  });
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifySection }
+  );
 };
 
 export const getSchemaSources = () => {
-  const { folders } = useGlobals.getState();
+  const { folders } = config;
 
-  const sourceFiles = [...getAllFiles(folders.sections), ...getAllFiles(folders.config)];
+  const sourceFiles = [
+    ...getAllFiles(folders.layout),
+    ...getAllFiles(folders.snippets),
+    ...getAllFiles(folders.blocks),
+    ...getAllFiles(folders.sections),
+    ...getAllFiles(folders.config),
+  ];
 
   const typeScriptSchema = [];
 
@@ -165,42 +169,40 @@ export const getSchemaSources = () => {
     }
   });
 
-  useGlobals.setState((state) => {
-    state.sources.snippets = snippets;
-    state.sources.layouts = layouts;
-    state.sources.sectionsLiquid = sectionsLiquid;
-    state.sources.sectionsSchemaFiles = sectionsSchemaFiles;
-    state.sources.blocks = blocks;
-    state.sources.giftCards = giftCards;
-    state.sources.settingsFile = settingsFiles[0];
-    state.sources.settingsSchema = (
-      importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
-    )?.settingsSchema;
-    state.sources.sectionSchemas = sectionsSchemaFiles.reduce(
-      (acc, file) => {
-        try {
-          const data = importFresh(file);
+  config.sources.snippets = snippets;
+  config.sources.layouts = layouts;
+  config.sources.sectionsLiquid = sectionsLiquid;
+  config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+  config.sources.blocks = blocks;
+  config.sources.giftCards = giftCards;
+  config.sources.settingsFile = settingsFiles[0];
+  config.sources.settingsSchema = (
+    importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
+  )?.settingsSchema;
+  config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
 
-          return {
-            ...acc,
-            ...Object.entries(data).reduce((acc2, [key, val]) => {
-              // @ts-ignore
-              acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
-              return acc2;
-            }, {}),
-          };
-        } catch (err) {
-          console.log(chalk.redBright(err.message));
-          return acc;
-        }
-      },
-      {} as { [T: string]: ShopifySection }
-    );
-  });
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifySection }
+  );
 };
 
 export const getTargets = () => {
-  const { theme_path } = useGlobals.getState();
+  const { theme_path } = config;
 
   const targetFiles = [
     ...getAllFiles(path.join(theme_path, "sections")),
@@ -240,20 +242,18 @@ export const getTargets = () => {
     }
   });
 
-  useGlobals.setState((state) => {
-    state.targets.assets = getAllFiles(path.join(theme_path, "assets"));
-    state.targets.blocks = getAllFiles(path.join(theme_path, "blocks"));
-    state.targets.layout = getAllFiles(path.join(theme_path, "layout"));
-    state.targets.locales = getAllFiles(path.join(theme_path, "locales"));
-    state.targets.snippets = getAllFiles(path.join(theme_path, "snippets"));
-    state.targets.sections = sections;
-    state.targets.settings = settings[0];
-    state.targets.giftCards = giftCards;
-    state.targets.sectionGroups = sectionGroups;
-    state.targets.configs = configs;
-    state.targets.templates = templates;
-    state.targets.customerTemplates = customerTemplates;
-  });
+  config.targets.assets = getAllFiles(path.join(theme_path, "assets"));
+  config.targets.blocks = getAllFiles(path.join(theme_path, "blocks"));
+  config.targets.layout = getAllFiles(path.join(theme_path, "layout"));
+  config.targets.locales = getAllFiles(path.join(theme_path, "locales"));
+  config.targets.snippets = getAllFiles(path.join(theme_path, "snippets"));
+  config.targets.sections = sections;
+  config.targets.settings = settings[0];
+  config.targets.giftCards = giftCards;
+  config.targets.sectionGroups = sectionGroups;
+  config.targets.configs = configs;
+  config.targets.templates = templates;
+  config.targets.customerTemplates = customerTemplates;
 };
 
 export const isTypeScriptSchema = (name: string) =>

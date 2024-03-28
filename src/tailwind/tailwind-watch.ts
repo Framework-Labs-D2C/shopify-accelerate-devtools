@@ -1,11 +1,11 @@
 import child_process from "child_process";
 import fs from "fs";
 import path from "path";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 const watch = require("node-watch");
 
 export const runTailwindCSSWatcher = () => {
-  const { package_root } = useGlobals.getState();
+  const { package_root } = config;
   const hasConfig = fs.existsSync(path.join(process.cwd(), "tailwind.config.js"));
   const hasPostCss = fs.existsSync(path.join(process.cwd(), "postcss.config.js"));
 

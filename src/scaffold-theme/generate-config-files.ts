@@ -1,10 +1,10 @@
 import fs from "fs";
 import path from "path";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { writeOnlyNew } from "../utils/fs";
 
 export const generateConfigFiles = () => {
-  const { theme_path, sources } = useGlobals.getState();
+  const { theme_path, sources } = config;
 
   sources.sectionGroups.forEach((file) => {
     const fileName = file.split(/[\\/]/gi).at(-1);

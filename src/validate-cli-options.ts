@@ -4,7 +4,7 @@ import fs from "fs";
 import json2toml from "json2toml";
 import path from "path";
 import userInput from "prompts";
-import { useGlobals } from "../shopify-accelerate";
+import { config } from "../shopify-accelerate";
 import { readFile, writeCompareFile, writeOnlyNew } from "./utils/fs";
 
 export const validateCliOptions = async (
@@ -18,7 +18,7 @@ export const validateCliOptions = async (
     environment?: string;
   } = { environment: "development", store: undefined, theme_id: undefined }
 ) => {
-  const { environments } = useGlobals.getState();
+  const { environments } = config;
   const { ...currentEnvironment } = environments[environment] ?? {
     store: store?.replace(/\.myshopify\.com/gi, ""),
     theme: theme_id,
@@ -108,15 +108,13 @@ export const validateCliOptions = async (
       currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   }
 
-  useGlobals.setState((state) => {
-    state.environments[environment] = currentEnvironment;
-    state.environment = environment;
-    state.theme_path = currentEnvironment?.path;
-    state.theme_id = +currentEnvironment?.theme;
-    state.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
-  });
+  config.environments[environment] = currentEnvironment;
+  config.environment = environment;
+  config.theme_path = currentEnvironment?.path;
+  config.theme_id = +currentEnvironment?.theme;
+  config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
 
-  const { project_root, package_templates } = useGlobals.getState();
+  const { project_root, package_templates } = config;
 
   writeOnlyNew(
     path.join(project_root, ".env"),
@@ -134,6 +132,6 @@ export const validateCliOptions = async (
 
   writeCompareFile(
     path.join(process.cwd(), "shopify.theme.toml"),
-    json2toml({ environments: useGlobals.getState().environments }, { newlineAfterSection: true })
+    json2toml({ environments: config.environments }, { newlineAfterSection: true })
   );
 };

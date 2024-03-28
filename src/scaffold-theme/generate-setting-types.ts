@@ -1,11 +1,11 @@
 import path from "path";
 import { ShopifySettings, ShopifySettingsInput } from "../../@types/shopify";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
 import { getSettingsType } from "./generate-section-types";
 
 export const generateSettingTypes = () => {
-  const { sources } = useGlobals.getState();
+  const { sources } = config;
   const settings = sources?.settingsSchema?.reduce((acc: ShopifySettingsInput[], group) => {
     if (!("settings" in group)) return acc;
 

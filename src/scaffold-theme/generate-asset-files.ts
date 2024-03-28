@@ -1,12 +1,11 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const generateAssetFiles = () => {
-  const { theme_path, sources, targets, delete_external_assets, ignore_assets } =
-    useGlobals.getState();
+  const { theme_path, sources, targets, delete_external_assets, ignore_assets } = config;
 
   sources.assets.forEach((file) => {
     const fileName = file.split(/[\\/]/gi).at(-1);

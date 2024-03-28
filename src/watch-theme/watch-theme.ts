@@ -3,7 +3,7 @@ import fs from "fs";
 import { is } from "immer/src/utils/common";
 import watch from "node-watch";
 import path from "path";
-import { useGlobals } from "../../shopify-accelerate";
+import { config } from "../../shopify-accelerate";
 import { buildTheme } from "../scaffold-theme/build-theme";
 import { generateLiquidFiles } from "../scaffold-theme/generate-liquid-files";
 import { generateSchemaLocales } from "../scaffold-theme/generate-schema-locales";
@@ -15,12 +15,15 @@ import { parseLocales } from "../scaffold-theme/parse-locales";
 import { writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const watchTheme = () => {
-  const { folders, theme_path, ignore_assets, delete_external_assets, targets } =
-    useGlobals.getState();
+  const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
 
   watch(Object.values(folders), { recursive: true }, (event, name) => {
     const startTime = Date.now();
 
+    if (event === "remove") {
+      getSources();
+      getTargets();
+    }
     if (isTypeScriptSchema(name)) {
       getSchemaSources();
       parseLocales();
@@ -71,6 +74,7 @@ export const watchTheme = () => {
 
     if (isLiquid(name)) {
       getSources();
+      generateSchemaVariables();
       generateLiquidFiles();
       console.log(
         `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(
