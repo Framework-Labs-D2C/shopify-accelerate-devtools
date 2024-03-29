@@ -1,36 +1,36 @@
 import path from "path";
-import { ShopifySection, ShopifySettingsInput } from "../../@types/shopify";
+import { ShopifyBlock, ShopifySection, ShopifySettingsInput } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { capitalize } from "../utils/capitalize";
 import { writeCompareFile } from "../utils/fs";
 import { toPascalCase } from "../utils/to-pascal-case";
 
-export const generateSectionsTypes = () => {
+export const generateBlocksTypes = () => {
   const { folders, sources } = config;
-  const sections = sources.sectionSchemas;
+  const sections = sources.blockSchemas;
 
-  const sectionTypesPath = path.join(folders.types, "sections.ts");
+  const blockTypesPath = path.join(folders.types, "blocks.ts");
 
   const imports = getImports(sections);
-  let sectionUnionType = "export type Sections =";
+  let sectionUnionType = "export type ThemeBlocks =";
   let typeContent = "";
   for (const key in sections) {
-    const schema = sections[key] as ShopifySection;
+    const schema = sections[key] as ShopifyBlock;
 
-    typeContent += `${sectionToTypes(schema, key)}\n`;
-    sectionUnionType += `\n  | ${capitalize(key)}Section`;
+    typeContent += `${blockToTypes(schema, key)}\n`;
+    sectionUnionType += `\n  | ${capitalize(key)}Block`;
   }
 
   if (!typeContent) return;
 
   const finalContent = `${imports + typeContent + sectionUnionType};\n`;
 
-  writeCompareFile(sectionTypesPath, finalContent);
+  writeCompareFile(blockTypesPath, finalContent);
 };
 
-export const getImports = (sections: { [T: string]: ShopifySection }) => {
+export const getImports = (sections: { [T: string]: ShopifyBlock }) => {
   const localTypes = [];
-  let themeBlocks = false;
+
   const analyseSetting = (setting) => {
     if (setting.type === "richtext") {
       if (localTypes.includes("_BlockTag")) return;
@@ -94,46 +94,27 @@ export const getImports = (sections: { [T: string]: ShopifySection }) => {
     const schema = sections[key];
 
     schema.settings?.forEach(analyseSetting, localTypes);
-    if (schema.blocks?.some((block) => block.type === "@theme")) {
-      themeBlocks = true;
-    }
     schema.blocks?.forEach((block) => {
       block?.settings?.forEach(analyseSetting, localTypes);
     });
   }
 
-  const returnArr = [];
-
   if (localTypes.length) {
-    returnArr.push(`import { ${localTypes.join(", ")} } from "./shopify";`);
+    return `import { ${localTypes.join(", ")} } from "./shopify";\n\n`;
   }
-
-  if (themeBlocks) {
-    returnArr.push(`import { ThemeBlocks } from "./blocks";`);
-  }
-  returnArr.push(``);
-  return returnArr.join("\n");
+  return ``;
 };
 
-export const sectionToTypes = (section, key) => {
+export const blockToTypes = (section, key) => {
   const filename = section.folder;
   const arr = [];
   const settings: ShopifySettingsInput[] = section.settings
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
     .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
-  const hasNonThemeBlocks = section.blocks?.filter((b) => b.type !== "@app" && b.type !== "@theme")
-    ?.length;
-  const hasThemeBlocks = section.blocks?.some((block) => block.type === "@theme");
 
-  arr.push(`export type ${capitalize(key)}Section = {`);
-  if (hasNonThemeBlocks && !hasThemeBlocks) {
-    arr.push(`  blocks: ${capitalize(key)}Blocks[];`);
-  }
-  if (!hasNonThemeBlocks && hasThemeBlocks) {
+  arr.push(`export type ${capitalize(key)}Block = {`);
+  if (section.blocks?.some((block) => block.type === "@theme")) {
     arr.push(`  blocks: ThemeBlocks[];`);
-  }
-  if (hasNonThemeBlocks && hasThemeBlocks) {
-    arr.push(`  blocks: (${capitalize(key)}Blocks | ThemeBlocks)[];`);
   }
   arr.push(`  id: string;`);
   if (settings?.length) {
@@ -169,75 +150,6 @@ export const sectionToTypes = (section, key) => {
   arr.push(`  type: "${filename}";`);
   arr.push(`};`);
 
-  if (section.blocks?.length) {
-    section.blocks?.forEach((block) => {
-      const blockSettings: ShopifySettingsInput[] = block?.settings
-        ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
-        .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
-
-      arr.push("");
-      arr.push(
-        `export type ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))} = {`
-      );
-      arr.push("  id: string;");
-
-      if (blockSettings?.length) {
-        arr.push(`  settings: {`);
-        arr.push(
-          blockSettings
-            .map(
-              (setting) =>
-                `    /** Input type: ${setting.type} */\n    ` +
-                `${
-                  /[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`
-                }${getSettingsType(setting)};`
-            )
-            .sort((a, b) => {
-              const aX = a.split("\n")[1];
-              const bX = b.split("\n")[1];
-              if (aX.includes("?") && !bX.includes("?")) {
-                return 1;
-              } else if (!aX.includes("?") && bX.includes("?")) {
-                return -1;
-              } else if (aX > bX) {
-                return 1;
-              } else if (aX < bX) {
-                return -1;
-              } else {
-                return 0;
-              }
-            })
-            .join("\n")
-        );
-        arr.push(`  };`);
-      }
-
-      arr.push(`  type: "${block.type}";`);
-      arr.push(`};`);
-    });
-  }
-
-  if (section.blocks?.length && section.blocks?.length === 1) {
-    arr.push("");
-    arr.push(
-      `export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(
-        section.blocks[0].type.replace("@", "")
-      )};`
-    );
-  }
-
-  if (section.blocks?.length && section.blocks?.length > 1) {
-    arr.push("");
-    arr.push(`export type ${capitalize(key)}Blocks =`);
-
-    section.blocks?.forEach((block, i) => {
-      if (section.blocks?.length - 1 === i) {
-        arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
-      } else {
-        arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))}`);
-      }
-    });
-  }
   arr.push("");
   return arr.join("\n");
 };

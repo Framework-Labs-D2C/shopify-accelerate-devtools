@@ -1,5 +1,6 @@
 import { generateAssetFiles } from "./generate-asset-files";
 import { generateBaseTypes } from "./generate-base-types";
+import { generateBlocksTypes } from "./generate-blocks-types";
 import { generateLiquidFiles } from "./generate-liquid-files";
 import { generateSchemaLocales } from "./generate-schema-locales";
 import { generateSchemaVariables } from "./generate-schema-variables";
@@ -16,6 +17,7 @@ export const buildTheme = () => {
   generateSchemaVariables();
   generateSchemaLocales();
   generateSectionsTypes();
+  generateBlocksTypes();
   generateSettingTypes();
   generateLiquidFiles();
   generateAssetFiles();

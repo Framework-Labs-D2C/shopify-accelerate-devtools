@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { ShopifySection, ShopifySettings } from "../../@types/shopify";
+import { ShopifyBlock, ShopifySection } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
@@ -23,19 +23,20 @@ export const generateLiquidFiles = () => {
   const giftCards = sources.giftCards;
   const layouts = sources.layouts;
   const sectionsSchemas = sources.sectionSchemas;
+  const blockSchemas = sources.blockSchemas;
 
   generateSettingsFile();
 
   for (const key in sectionsSchemas) {
-    const section = sectionsSchemas[key];
-    if (section.disabled) continue;
+    const schema = sectionsSchemas[key];
+    if (schema.disabled) continue;
 
-    const sectionName = `${section.folder}.liquid`;
+    const sectionName = `${schema.folder}.liquid`;
     const sectionPath = path.join(process.cwd(), theme_path, "sections", sectionName);
 
     const translationArray = [];
 
-    const rawContent = fs.readFileSync(path.join(folders.sections, section.folder, sectionName), {
+    const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, sectionName), {
       encoding: "utf-8",
     });
 
@@ -43,7 +44,7 @@ export const generateLiquidFiles = () => {
       const translatedContent = rawContent.replace(
         /<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi,
         (str, group1, group2) => {
-          const group = toLocaleFriendlySnakeCase(section.folder);
+          const group = toLocaleFriendlySnakeCase(schema.folder);
           const content = toLocaleFriendlySnakeCase(
             group2?.split(" ")?.slice(0, 2)?.join("_") ?? ""
           ).trim();
@@ -85,7 +86,71 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
-    translationArray.push(generateSectionFiles(section));
+    translationArray.push(generateSectionFiles(schema));
+
+    writeCompareFile(sectionPath, translationArray.join("\n"));
+  }
+
+  for (const key in blockSchemas) {
+    const schema = blockSchemas[key];
+    if (schema.disabled) continue;
+
+    const sectionName = `${schema.folder}.liquid`;
+    const sectionPath = path.join(process.cwd(), theme_path, "blocks", sectionName);
+
+    const translationArray = [];
+
+    const rawContent = fs.readFileSync(path.join(folders.blocks, schema.folder, sectionName), {
+      encoding: "utf-8",
+    });
+
+    if (rawContent) {
+      const translatedContent = rawContent.replace(
+        /<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi,
+        (str, group1, group2) => {
+          const group = toLocaleFriendlySnakeCase(schema.folder);
+          const content = toLocaleFriendlySnakeCase(
+            group2?.split(" ")?.slice(0, 2)?.join("_") ?? ""
+          ).trim();
+          const backupContent = toLocaleFriendlySnakeCase(group2).trim();
+          const id = toLocaleFriendlySnakeCase(group1?.replace(/id="(.*)"/gi, "$1") ?? "").trim();
+
+          if (!(group in translations)) {
+            translations[group] = {};
+          }
+
+          if (id && !(id in translations[group])) {
+            translations[group][id] = group2;
+            return `{{ "${group}.${id}" | t }}`;
+          }
+
+          if (!(content in translations[group])) {
+            translations[group][content] = group2;
+            return `{{ "${group}.${content}" | t }}`;
+          }
+
+          if (translations[group][content] !== group2) {
+            if (!(backupContent in translations[group])) {
+              translations[group][backupContent] = group2;
+              return `{{ "${group}.${backupContent}" | t }}`;
+            }
+            if (translations[group][backupContent] !== group2) {
+              translations[group][`${content}_2`] = group2;
+              return `{{ "${group}.${content}_2" | t }}`;
+            }
+          }
+
+          if (translations[group][content] === group2) {
+            return `{{ "${group}.${content}" | t }}`;
+          }
+
+          return group2;
+        }
+      );
+      translationArray.push(translatedContent);
+    }
+
+    translationArray.push(generateBlockFiles(schema));
 
     writeCompareFile(sectionPath, translationArray.join("\n"));
   }
@@ -376,7 +441,7 @@ declare global {
   if (delete_external_blocks) {
     targets.blocks.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
-      const targetFile = sources.blocks.find((sourcePath) =>
+      const targetFile = sources.blocksLiquid.find((sourcePath) =>
         sourcePath.split(/[\\/]/gi).at(-1).includes(fileName)
       );
       if (!targetFile) {
@@ -391,7 +456,6 @@ declare global {
 
 export const generateSectionFiles = ({
   name,
-  disabled_block_files,
   generate_block_files,
   disabled,
   path,
@@ -480,6 +544,7 @@ export const generateSectionFiles = ({
       let headerCount = 1;
 
       if (block.type === "@app") return { name, ...block };
+      if (block.type === "@theme") return { name, ...block };
 
       return {
         name: disabled_locales
@@ -568,6 +633,196 @@ export const generateSectionFiles = ({
         name: disabled_locales
           ? name
           : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+        ...preset,
+      };
+    }),
+  };
+
+  return `{% schema %}
+${JSON.stringify(localizedSection, undefined, 2)}
+{% endschema %}
+`;
+};
+
+export const generateBlockFiles = ({
+  name,
+  type,
+  disabled,
+  path,
+  folder,
+  ...section
+}: ShopifyBlock & { path: string; folder: string }) => {
+  const sectionName = toLocaleFriendlySnakeCase(name);
+  const { sources, disabled_locales } = config;
+  const localeDuplicates = sources.locale_duplicates;
+  let paragraphCount = 1;
+  let headerCount = 1;
+
+  const localizedSection = {
+    name: disabled_locales ? name : `t:blocks.${sectionName}.name`,
+    ...section,
+    settings: section?.settings?.map((setting) => {
+      const settingsBase = `t:blocks.${sectionName}.settings`;
+      if (setting.type === "paragraph") {
+        return {
+          ...setting,
+          content:
+            "content" in setting
+              ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
+                ? setting.content
+                : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
+                ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
+                : `${settingsBase}.paragraph__${paragraphCount++}.content`
+              : undefined,
+        };
+      }
+      if (setting.type === "header") {
+        return {
+          ...setting,
+          content:
+            "content" in setting
+              ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
+                ? setting.content
+                : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
+                ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
+                : `${settingsBase}.header__${headerCount++}.content`
+              : undefined,
+        };
+      }
+      return {
+        ...setting,
+        label:
+          "label" in setting
+            ? disabled_locales
+              ? setting.label
+              : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
+              ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
+              : `${settingsBase}.${setting.id}.label`
+            : undefined,
+        info:
+          "info" in setting
+            ? disabled_locales && setting.info.length < 500
+              ? setting.info
+              : localeDuplicates[toLocaleFriendlySnakeCase(setting.info)]?.length > 1
+              ? `t:all.${toLocaleFriendlySnakeCase(setting.info)}`
+              : `${settingsBase}.${setting.id}.info`
+            : undefined,
+        placeholder:
+          "placeholder" in setting && typeof setting.placeholder === "string"
+            ? disabled_locales
+              ? setting.placeholder
+              : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
+              ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
+              : `${settingsBase}.${setting.id}.placeholder`
+            : undefined,
+        options:
+          "options" in setting
+            ? disabled_locales
+              ? setting.options
+              : setting.options.map((option, index) => ({
+                  ...option,
+                  label:
+                    localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                      ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
+                      : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
+                }))
+            : undefined,
+      };
+    }),
+    blocks: section.blocks?.map(({ name, ...block }) => {
+      let paragraphCount = 1;
+      let headerCount = 1;
+
+      if (block.type === "@app") return { name, ...block };
+      if (block.type === "@theme") return { name, ...block };
+
+      return {
+        name: disabled_locales
+          ? name
+          : `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
+        ...block,
+        settings: block?.settings?.map((setting) => {
+          const settingsBase = `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(
+            name
+          )}.settings`;
+
+          if (setting.type === "paragraph") {
+            return {
+              ...setting,
+              content:
+                "content" in setting
+                  ? disabled_locales &&
+                    !setting.content.includes(" ") &&
+                    setting.content.length < 500
+                    ? setting.content
+                    : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
+                    ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
+                    : `${settingsBase}.paragraph__${paragraphCount++}.content`
+                  : undefined,
+            };
+          }
+          if (setting.type === "header") {
+            return {
+              ...setting,
+              content:
+                "content" in setting
+                  ? disabled_locales &&
+                    !setting.content.includes(" ") &&
+                    setting.content.length < 500
+                    ? setting.content
+                    : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
+                    ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
+                    : `${settingsBase}.header__${headerCount++}.content`
+                  : undefined,
+            };
+          }
+          return {
+            ...setting,
+            label:
+              "label" in setting
+                ? disabled_locales
+                  ? setting.label
+                  : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
+                  : `${settingsBase}.${setting.id}.label`
+                : undefined,
+            info:
+              "info" in setting
+                ? disabled_locales && setting.info.length < 500
+                  ? setting.info
+                  : localeDuplicates[toLocaleFriendlySnakeCase(setting.info)]?.length > 1
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.info)}`
+                  : `${settingsBase}.${setting.id}.info`
+                : undefined,
+            placeholder:
+              "placeholder" in setting && typeof setting.placeholder === "string"
+                ? disabled_locales
+                  ? setting.placeholder
+                  : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
+                  ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
+                  : `${settingsBase}.${setting.id}.placeholder`
+                : undefined,
+            options:
+              "options" in setting
+                ? disabled_locales
+                  ? setting.options
+                  : setting.options.map((option, index) => ({
+                      ...option,
+                      label:
+                        localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                          ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
+                          : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
+                    }))
+                : undefined,
+          };
+        }),
+      };
+    }),
+    presets: section.presets?.map(({ name, ...preset }) => {
+      return {
+        name: disabled_locales
+          ? name
+          : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
         ...preset,
       };
     }),

@@ -13,6 +13,7 @@ declare global {
       SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS?: string;
       SHOPIFY_ACCELERATE_DELETE_EXTERNAL_ASSETS?: string;
       SHOPIFY_ACCELERATE_DISABLED_LOCALES?: string;
+      SHOPIFY_ACCELERATE_DISABLE_THEME_BLOCKS?: string;
     }
     interface Process {
       cwd?: () => string;

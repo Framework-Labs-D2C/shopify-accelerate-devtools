@@ -7,12 +7,14 @@ import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 export const generateSchemaLocales = () => {
   const { theme_path, sources } = config;
   const sections = sources.sectionSchemas;
+  const blocks = sources.blockSchemas;
   const settings = sources.settingsSchema;
   const localesDuplicates = sources.locale_duplicates;
 
   let returnObject = {
     settings_schema: {},
     sections: {},
+    blocks: {},
     all: {},
   };
 
@@ -26,7 +28,8 @@ export const generateSchemaLocales = () => {
 
   Object.values(sections).forEach((section) => {
     returnObject = produce(returnObject, (current) => {
-      const blocks = section.blocks?.filter((block) => block.type !== "@app") ?? [];
+      const blocks =
+        section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
 
       current.sections[toLocaleFriendlySnakeCase(section.name)] = {
         name: section.name,
@@ -41,6 +44,33 @@ export const generateSchemaLocales = () => {
             }, {})
           : undefined,
         presets: section.presets?.reduce((acc, preset) => {
+          acc[toLocaleFriendlySnakeCase(preset.name)] = {
+            name: preset.name,
+          };
+          return acc;
+        }, {}),
+      };
+    });
+  });
+
+  Object.values(blocks).forEach((schema) => {
+    returnObject = produce(returnObject, (current) => {
+      const blocks =
+        schema.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
+
+      current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
+        name: schema.name,
+        settings: generateSectionSettings(schema.settings, localesDuplicates),
+        blocks: blocks.length
+          ? blocks?.reduce((acc, block) => {
+              acc[toLocaleFriendlySnakeCase(block.name)] = {
+                name: block.name,
+                settings: generateSectionSettings(block.settings, localesDuplicates),
+              };
+              return acc;
+            }, {})
+          : undefined,
+        presets: schema.presets?.reduce((acc, preset) => {
           acc[toLocaleFriendlySnakeCase(preset.name)] = {
             name: preset.name,
           };

@@ -5,6 +5,7 @@ import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 export function parseLocales() {
   const { sources } = config;
   const sections = sources.sectionSchemas;
+  const blocks = sources.blockSchemas;
   const settings = sources.settingsSchema;
   const entries: { [T: string]: string[] } = {};
 
@@ -72,7 +73,15 @@ export function parseLocales() {
   };
 
   Object.values(sections).forEach((section) => {
-    const blocks = section.blocks?.filter((block) => block.type !== "@app") ?? [];
+    const blocks =
+      section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
+    mapSettings(section.settings);
+    blocks.forEach((block) => mapSettings(block.settings));
+  });
+
+  Object.values(blocks).forEach((section) => {
+    const blocks =
+      section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
     mapSettings(section.settings);
     blocks.forEach((block) => mapSettings(block.settings));
   });

@@ -5,7 +5,7 @@ import path from "path";
 import toml from "toml";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { ShopifySection, ShopifySettings } from "./@types/shopify";
+import { ShopifyBlock, ShopifySection, ShopifySettings } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { generateConfigFiles } from "./src/scaffold-theme/generate-config-files";
@@ -66,12 +66,15 @@ export type GlobalsState = {
   delete_external_blocks?: boolean;
   delete_external_assets?: boolean;
   disabled_locales?: boolean;
+  disabled_theme_blocks?: boolean;
   sources: {
     snippets: string[];
     layouts: string[];
     sectionsLiquid: string[];
     sectionsSchemaFiles: string[];
-    blocks: string[];
+    blocksLiquid: string[];
+    blocksSchemaFiles: string[];
+    blockSchemas: { [T: string]: ShopifyBlock & { path: string; folder: string } };
     assets: string[];
     giftCards: string[];
     configs: string[];
@@ -127,6 +130,7 @@ export const config: GlobalsState = {
   delete_external_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS === "true",
   delete_external_assets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_ASSETS === "true",
   disabled_locales: process.env.SHOPIFY_ACCELERATE_DISABLED_LOCALES === "true",
+  disabled_theme_blocks: process.env.SHOPIFY_ACCELERATE_DISABLE_THEME_BLOCKS === "true",
   package_root: path.resolve(__dirname),
   project_root: process.cwd(),
   package_templates: path.join(path.resolve(__dirname), "./src/templates"),
@@ -136,7 +140,8 @@ export const config: GlobalsState = {
     layouts: [],
     sectionsLiquid: [],
     sectionsSchemaFiles: [],
-    blocks: [],
+    blocksLiquid: [],
+    blocksSchemaFiles: [],
     assets: [],
     giftCards: [],
     configs: [],
@@ -147,6 +152,7 @@ export const config: GlobalsState = {
     locale_duplicates: {},
     settingsSchema: null,
     sectionSchemas: {},
+    blockSchemas: {},
   },
   targets: {
     assets: [],

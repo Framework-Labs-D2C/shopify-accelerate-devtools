@@ -458,13 +458,19 @@ type ShopifySectionPreset<T = unknown> = {
 };
 
 export type ShopifySectionBlock =
-  | {
-      name: string;
-      type: string;
-      limit?: number;
-      settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
-    }
-  | { type: "@app"; limit?: never; name?: never; settings?: never };
+  | (
+      | {
+          name: string;
+          type: string;
+          limit?: number;
+          settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+        }
+      | { type: "@app"; limit?: never; name?: never; settings?: never }
+    )
+  | (
+      | { type: "@theme"; limit?: never; name?: never; settings?: never }
+      | { type: "@app"; limit?: never; name?: never; settings?: never }
+    );
 
 export type ShopifyTemplateTypes =
   | "404"
@@ -493,7 +499,6 @@ export type ShopifySection<T = never> = {
   class?: string;
   default?: ShopifySectionDefault<T>;
   disabled?: boolean;
-  disabled_block_files?: boolean;
   generate_block_files?: T extends { blocks: any } ? T["blocks"][number]["type"][] : string[];
   limit?: number;
   locales?: {
@@ -519,6 +524,16 @@ export type ShopifySection<T = never> = {
       };
     }
 );
+export type ShopifyBlock<T = never> = {
+  name: string;
+  type: string;
+  blocks?: ShopifySectionBlock[];
+  class?: string;
+  disabled?: boolean;
+  presets?: ShopifySectionPreset<T>[];
+  settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+  tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
+};
 
 type ShopifyAppBlockDefault<T = never> = {
   settings?: T extends never
