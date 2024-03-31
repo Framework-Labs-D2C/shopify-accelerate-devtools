@@ -313,6 +313,7 @@ export const getTargets = () => {
 
 export const isTypeScriptSchema = (name: string) =>
   /[\\/]sections[\\/][^\\/]*[\\/]schema.ts$/gi.test(name) ||
+  /[\\/]blocks[\\/][^\\/]*[\\/]schema.ts$/gi.test(name) ||
   /[\\/]config[\\/]settings_schema\.ts$/gi.test(name) ||
   /[\\/]@utils[\\/]settings[\\/][^\\/]*\.ts$/gi.test(name);
 

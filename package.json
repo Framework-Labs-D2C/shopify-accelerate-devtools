@@ -1,6 +1,6 @@
 {
   "name": "shopify-accelerate",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Shopify Theme development with full Typescript Support",
   "author": "Felix Tellmann",
   "license": "MIT",
@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "tsc --watch",
     "build": "tsc",
-    "publish": "npm publish",
+    "publish:default": "npm publish",
     "prepublish": "npm run build",
     "publish:alpha": "npm publish --tag alpha",
     "publish:beta": "npm publish --tag beta"
