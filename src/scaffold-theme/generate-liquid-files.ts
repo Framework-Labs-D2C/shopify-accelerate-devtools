@@ -95,6 +95,7 @@ export const generateLiquidFiles = () => {
             arr.push(`${match}  for block in section.blocks`);
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
+              if (schema.disabled) continue;
               arr.push(`${match}    if block.type == "${key}"`);
               arr.push(`${match}      render "_blocks.${key}", block: block, forloop: forloop`);
               arr.push(`${match}    endif`);
