@@ -6,7 +6,7 @@ import { config } from "../../shopify-accelerate";
 import { getAllFiles } from "../utils/fs";
 
 export const getSources = () => {
-  const { folders } = config;
+  const { folders, disabled_theme_blocks } = config;
 
   const sourceFiles = [
     ...getAllFiles(folders.sections),
@@ -54,6 +54,9 @@ export const getSources = () => {
     }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
+      if (disabled_theme_blocks) {
+        snippets.push(filePath);
+      }
     }
     if (isBlockSchema(filePath)) {
       blocksSchemaFiles.push(filePath);
@@ -139,7 +142,7 @@ export const getSources = () => {
 };
 
 export const getSchemaSources = () => {
-  const { folders } = config;
+  const { folders, disabled_theme_blocks } = config;
 
   const sourceFiles = [
     ...getAllFiles(folders.layout),
@@ -180,6 +183,9 @@ export const getSchemaSources = () => {
     }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
+      if (disabled_theme_blocks) {
+        snippets.push(filePath);
+      }
     }
     if (isBlockSchema(filePath)) {
       blocksSchemaFiles.push(filePath);
@@ -325,10 +331,13 @@ export const isAsset = (name: string) =>
   /[\\/]blocks[\\/][^\\/]*.js$/gi.test(name) ||
   /[\\/]sections[\\/][^\\/]*.js$/gi.test(name);
 
-export const isSnippet = (name: string) =>
-  /[\\/]sections[\\/][^\\/]*[\\/][^.]*\.[^.]*\.liquid$/gi.test(name) ||
-  // /[\\/]blocks[\\/][^\\/]*\.liquid$/gi.test(name) ||
-  /[\\/]snippets[\\/][^\\/]*\.liquid$/gi.test(name);
+export const isSnippet = (name: string) => {
+  return (
+    /[\\/]sections[\\/][^\\/]*[\\/][^.]*\.[^.]*\.liquid$/gi.test(name) ||
+    /[\\/]blocks[\\/][^\\/]*[\\/][^.]*\.[^.]*\.liquid$/gi.test(name) ||
+    /[\\/]snippets[\\/][^\\/]*\.liquid$/gi.test(name)
+  );
+};
 
 export const isBlockLiquid = (name: string) =>
   /[\\/]blocks[\\/][^\\/]*[\\/][^.]*\.liquid$/gi.test(name);

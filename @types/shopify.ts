@@ -526,7 +526,6 @@ export type ShopifySection<T = never> = {
 );
 export type ShopifyBlock<T = never> = {
   name: string;
-  type: string;
   blocks?: ShopifySectionBlock[];
   class?: string;
   disabled?: boolean;
