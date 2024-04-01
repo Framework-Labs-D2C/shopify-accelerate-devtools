@@ -1,13 +1,13 @@
 // eslint-disable-next-line node/no-unpublished-require
 const plugin = require("tailwindcss/plugin");
+require("dotenv").config();
+console.log(process.env.THEME_PATH);
 
 module.exports = {
   content: [
-    "./sections/**/*",
-    "./snippets/**/*",
-    "./assets/**/theme.js",
-    "./assets/**/editor.js",
-    "./@utils/**/*",
+    `${process.env.THEME_PATH}/**/*{html,liquid,js,json}`,
+    `!${process.env.THEME_PATH}/**/*.css.liquid`,
+    `!${process.env.THEME_PATH}/**/*.css`,
   ],
   darkMode: "class", // or 'media' or 'class'
   // mode: process.env.NODE_ENV ? "jit" : undefined,

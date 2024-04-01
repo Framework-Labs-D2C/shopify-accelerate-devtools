@@ -452,7 +452,6 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        console.log(sources.layouts);
         console.log(
           `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file}`)}`
         );

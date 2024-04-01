@@ -1,10 +1,8 @@
 import chalk from "chalk";
 import fs from "fs";
-import { is } from "immer/src/utils/common";
 import watch from "node-watch";
 import path from "path";
 import { config } from "../../shopify-accelerate";
-import { buildTheme } from "../scaffold-theme/build-theme";
 import { generateBlocksTypes } from "../scaffold-theme/generate-blocks-types";
 import { generateLiquidFiles } from "../scaffold-theme/generate-liquid-files";
 import { generateSchemaLocales } from "../scaffold-theme/generate-schema-locales";

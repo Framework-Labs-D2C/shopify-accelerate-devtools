@@ -130,6 +130,7 @@ export const validateCliOptions = async (
     throw new Error("Missing information to initialize the theme environment");
   }
 
+  process.env.THEME_PATH = currentEnvironment?.path;
   writeCompareFile(
     path.join(process.cwd(), "shopify.theme.toml"),
     json2toml({ environments: config.environments }, { newlineAfterSection: true })
