@@ -347,7 +347,7 @@ export const isBlockSchema = (name: string) =>
   /[\\/]blocks([\\/])[^\\/]*([\\/])schema.ts$/gi.test(name);
 
 export const isLayout = (name: string) => {
-  return /[\\/]layout[\\/][^\\/]*\.liquid$/gi.test(name);
+  return /(?<![\\/](blocks|sections|snippets))[\\/]layout[\\/][^\\/]*\.liquid$/gi.test(name);
 };
 
 export const isSectionGroup = (name: string) =>
