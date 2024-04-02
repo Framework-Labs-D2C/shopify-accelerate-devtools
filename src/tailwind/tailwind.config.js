@@ -1,7 +1,6 @@
 // eslint-disable-next-line node/no-unpublished-require
 const plugin = require("tailwindcss/plugin");
 require("dotenv").config();
-console.log(process.env.THEME_PATH);
 
 module.exports = {
   content: [
