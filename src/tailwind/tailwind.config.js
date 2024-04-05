@@ -17,11 +17,14 @@ module.exports = {
       screens: {
         xs: "427px" /*smaller than iphone pro max*/,
       },
+      fontSize: {
+        9: ["9px", "1.5"],
+        10: ["10px", "1.5"],
+        11: ["11px", "1.5"],
+        12: ["12px", "1.5"],
+        13: ["13px", "1.5"],
+      },
       padding: {
-        sm: "var(--layout-padding-sm)",
-        md: "var(--layout-padding-md)",
-        lg: "var(--layout-padding-lg)",
-        xl: "var(--layout-padding-xl)",
         gutter: "var(--layout-container-gutter)",
       },
       maxWidth: {
