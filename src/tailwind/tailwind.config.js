@@ -53,16 +53,7 @@ module.exports = {
           "text-hex": "var(--color-text-hex)",
           "overlay-text": "rgb(var(--color-overlay-text) / <alpha-value>)",
           "overlay-text-hex": "var(--color-overlay-text-hex)",
-        },
-        primary: {
-          text: "rgb(var(--color-primary-text) / <alpha-value>)",
-          bg: "rgb(var(--color-primary-bg) / <alpha-value>)",
-          outline: "rgb(var(--color-primary-outline) / <alpha-value>)",
-        },
-        secondary: {
-          text: "rgb(var(--color-secondary-text) / <alpha-value>)",
-          bg: "rgb(var(--color-secondary-bg) / <alpha-value>)",
-          outline: "rgb(var(--color-secondary-outline) / <alpha-value>)",
+          accent: "rgb(var(--color-accent) / <alpha-value>)",
         },
         error: "rgb(var(--color-error) / <alpha-value>)",
         warning: "rgb(var(--color-warning) / <alpha-value>)",
@@ -82,7 +73,7 @@ module.exports = {
         },
       },
       ringColor: {
-        DEFAULT: `rgb(var(--color-primary-bg))`,
+        DEFAULT: `rgb(var(--color-accent))`,
       },
       boxShadow: {
         "invert-sm": "0 -1px 2px 0 rgb(0 0 0 / 0.05)",
