@@ -119,8 +119,9 @@ module.exports = {
     plugin(({ addVariant, addUtilities, matchUtilities, theme }) => {
       addVariant("svg", ["& svg"]);
       addVariant("hfa", ["&:hover", "&:focus", "&:active"]);
-      addVariant("hfwa", ["&:hover", "&:focus", "&:focus-within", "&:active"]);
-      addVariant("hfwaa", ["&:hover", "&:focus", "&:focus-within", "&:active", "&.active"]);
+      addVariant("hfw", ["&:hover", "&:focus-visible", "&:focus-within"]);
+      addVariant("hfwa", ["&:hover", "&:focus-visible", "&:focus-within", "&:active"]);
+      addVariant("hfwaa", ["&:hover", "&:focus-visible", "&:focus-within", "&:active", "&.active"]);
       addVariant("hfva", ["&:hover", "&:focus", "&:focus-visible", "&:active"]);
       addVariant("ha", ["&:hover", "&:active"]);
       addVariant("hf", ["&:hover", "&:focus-visible"]);
@@ -139,21 +140,21 @@ module.exports = {
       addVariant("group-hf", [".group:hover &", ".group:focus &"]);
       addVariant("group-ac", [".group.active &"]);
 
-      addVariant("group-hfva", [
-        ".group:hover &",
-        ".group:focus &",
-        ".group:focus-visible &",
-        ".group:active &",
-      ]);
+      addVariant("group-hfva", [".group:hover &", ".group:focus-visible &", ".group:active &"]);
       addVariant("group-hfwa", [
         ".group:hover &",
-        ".group:focus &",
+        ".group:focus-visible &",
         ".group:focus-within &",
         ".group:active &",
       ]);
+      addVariant("group-hfw", [
+        ".group:hover &",
+        ".group:focus-visible &",
+        ".group:focus-within &",
+      ]);
       addVariant("peer-hfwa", [
         ".peer:hover ~ &",
-        ".peer:focus ~ &",
+        ".peer:focus-visible ~ &",
         ".peer:focus-within ~ &",
         ".peer:active ~ &",
       ]);
