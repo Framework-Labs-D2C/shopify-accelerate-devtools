@@ -26,9 +26,11 @@ export const getSources = () => {
   const layouts = [];
   const sectionsLiquid = [];
   const sectionsSchemaFiles = [];
+  const sectionsJs = [];
   const settingsFiles = [];
   const blocksLiquid = [];
   const blocksSchemaFiles = [];
+  const blocksJs = [];
   const giftCards = [];
   const sectionGroups = [];
   const configs = [];
@@ -52,6 +54,9 @@ export const getSources = () => {
     if (isSectionSchema(filePath)) {
       sectionsSchemaFiles.push(filePath);
     }
+    if (isSectionTs(filePath)) {
+      sectionsJs.push(filePath);
+    }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
       if (disabled_theme_blocks) {
@@ -60,6 +65,9 @@ export const getSources = () => {
     }
     if (isBlockSchema(filePath)) {
       blocksSchemaFiles.push(filePath);
+    }
+    if (isBlockTs(filePath)) {
+      blocksJs.push(filePath);
     }
     if (isGiftCard(filePath)) {
       giftCards.push(filePath);
@@ -88,6 +96,10 @@ export const getSources = () => {
   config.sources.layouts = layouts;
   config.sources.sectionsLiquid = sectionsLiquid;
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+  config.sources.sectionsJs = sectionsJs;
+  config.sources.blocksLiquid = blocksLiquid;
+  config.sources.blocksSchemaFiles = blocksSchemaFiles;
+  config.sources.blocksJs = blocksJs;
   config.sources.assets = assets;
   config.sources.giftCards = giftCards;
   config.sources.configs = configs;
@@ -98,6 +110,7 @@ export const getSources = () => {
   config.sources.settingsSchema = (
     importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
   )?.settingsSchema;
+
   config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
     (acc, file) => {
       try {
@@ -118,7 +131,7 @@ export const getSources = () => {
     },
     {} as { [T: string]: ShopifySection }
   );
-  config.sources.blocksLiquid = blocksLiquid;
+
   config.sources.blockSchemas = blocksSchemaFiles.reduce(
     (acc, file) => {
       try {
@@ -260,13 +273,16 @@ export const getTargets = () => {
   const { theme_path } = config;
 
   const targetFiles = [
+    ...getAllFiles(path.join(theme_path, "assets")),
     ...getAllFiles(path.join(theme_path, "sections")),
     ...getAllFiles(path.join(theme_path, "config")),
     ...getAllFiles(path.join(theme_path, "templates")),
   ];
 
+  const assets = [];
   const sections = [];
   const settings = [];
+  const dynamicJs = [];
   const giftCards = [];
   const sectionGroups = [];
   const configs = [];
@@ -274,6 +290,12 @@ export const getTargets = () => {
   const customerTemplates = [];
 
   targetFiles.forEach((file) => {
+    if (isTargetDynamicJs(file)) {
+      dynamicJs.push(file);
+    }
+    if (!isTargetDynamicJs(file) && /[\\/]assets[\\/][^\\/]*$/gi.test(file)) {
+      assets.push(file);
+    }
     if (/[\\/]sections[\\/][^\\/]*\.liquid$/gi.test(file)) {
       sections.push(file);
     }
@@ -297,11 +319,12 @@ export const getTargets = () => {
     }
   });
 
-  config.targets.assets = getAllFiles(path.join(theme_path, "assets"));
   config.targets.blocks = getAllFiles(path.join(theme_path, "blocks"));
   config.targets.layout = getAllFiles(path.join(theme_path, "layout"));
   config.targets.locales = getAllFiles(path.join(theme_path, "locales"));
   config.targets.snippets = getAllFiles(path.join(theme_path, "snippets"));
+  config.targets.assets = assets;
+  config.targets.dynamicJs = dynamicJs;
   config.targets.sections = sections;
   config.targets.settings = settings[0];
   config.targets.giftCards = giftCards;
@@ -321,7 +344,10 @@ export const isSectionLiquid = (name: string) =>
   /[\\/]sections[\\/][^\\/]*[\\/][^.]*\.liquid$/gi.test(name);
 
 export const isSectionSchema = (name: string) =>
-  /[\\/]sections([\\/])[^\\/]*([\\/])schema.ts$/gi.test(name);
+  /[\\/]sections([\\/])[^\\/]*([\\/])schema\.ts$/gi.test(name);
+
+export const isSectionTs = (name: string) =>
+  !isSectionSchema(name) && /[\\/]sections([\\/])[^\\/]*([\\/])[^\\/]*\.ts$/gi.test(name);
 
 export const isSettingsSchema = (name: string) =>
   /[\\/]config[\\/]settings_schema\.ts$/gi.test(name);
@@ -346,6 +372,9 @@ export const isBlockLiquid = (name: string) =>
 export const isBlockSchema = (name: string) =>
   /[\\/]blocks([\\/])[^\\/]*([\\/])schema.ts$/gi.test(name);
 
+export const isBlockTs = (name: string) =>
+  !isBlockSchema(name) && /[\\/]blocks([\\/])[^\\/]*([\\/])[^\\/]*?\.ts$/gi.test(name);
+
 export const isLayout = (name: string) => {
   return /(?<![\\/](blocks|sections|snippets))[\\/]layout[\\/][^\\/]*\.liquid$/gi.test(name);
 };
@@ -361,6 +390,9 @@ export const isCustomerTemplate = (name: string) =>
   /[\\/]templates[\\/]customers[\\/][^\\/]*\.json$/gi.test(name);
 
 export const isGiftCard = (name: string) => /[\\/]templates[\\/]gift_card\.liquid$/gi.test(name);
+
+export const isTargetDynamicJs = (name: string) =>
+  /[\\/]assets[\\/](__section--|__block--)[^\\/]*$/gi.test(name);
 
 export const isLiquid = (name: string) =>
   isSectionLiquid(name) ||

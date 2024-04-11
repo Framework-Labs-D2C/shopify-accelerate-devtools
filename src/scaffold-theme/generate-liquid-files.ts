@@ -410,6 +410,116 @@ declare global {
   );
   writeCompareFile(path.join(folders.types, "translations.ts"), translationTypes);
 
+  const dynamicJsImports = [];
+
+  sources.sectionsJs.forEach((name) => {
+    const filename = name.split(/[\\/]/gi).at(-1);
+    const section = Object.values(sectionsSchemas).find((section) =>
+      section.path.includes(name.replace(filename, ""))
+    );
+    const targetName = `__section--${filename.replace(/\.(ts)x?$/gi, ".js")}`;
+    const targetFile = targets.dynamicJs.find((file) => file.includes(targetName));
+
+    if (section && !section.disabled) {
+      dynamicJsImports.push(
+        `<link rel="preload" as="script" href="{{ '${targetName}' | asset_url }}">`
+      );
+      dynamicJsImports.push(
+        `<script type="module" src="{{ '${targetName}' | asset_url }}" defer></script>`
+      );
+    } else if (targetFile) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
+          `Deleted: ${targetFile}`
+        )}`
+      );
+      fs.unlinkSync(path.join(process.cwd(), targetFile));
+      config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== targetFile);
+    }
+  });
+
+  sources.blocksJs.forEach((name) => {
+    const filename = name.split(/[\\/]/gi).at(-1);
+    const block = Object.values(blockSchemas).find((section) =>
+      section.path.includes(name.replace(filename, ""))
+    );
+    const targetName = `__block--${filename.replace(/\.(ts)x?$/gi, ".js")}`;
+    const targetFile = targets.dynamicJs.find((file) => file.includes(targetName));
+
+    if (block && !block.disabled) {
+      dynamicJsImports.push(
+        `<link rel="preload" as="script" href="{{ '${targetName}' | asset_url }}">`
+      );
+      dynamicJsImports.push(
+        `<script type="module" src="{{ '${targetName}' | asset_url }}" defer></script>`
+      );
+    } else if (targetFile) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
+          `Deleted: ${targetFile}`
+        )}`
+      );
+      fs.unlinkSync(path.join(process.cwd(), targetFile));
+      config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== targetFile);
+    }
+  });
+
+  targets.dynamicJs.forEach((name) => {
+    const targetName = name.split(/[\\/]/gi).at(-1).replace(/\.js$/gi, "");
+
+    const sectionFile = sources.sectionsJs.find((section) =>
+      section.includes(targetName.replace(/__section--/gi, ""))
+    );
+
+    if (sectionFile) {
+      const filename = sectionFile?.split(/[\\/]/gi)?.at(-1);
+
+      const section = Object.values(sectionsSchemas).find((section) =>
+        section.path.includes(sectionFile.replace(filename, ""))
+      );
+
+      if (!section || section.disabled) {
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${name}`)}`
+        );
+        fs.unlinkSync(path.join(process.cwd(), name));
+        config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
+      }
+      return;
+    }
+
+    const blockFile = sources.blocksJs.find((section) =>
+      section.includes(targetName.replace(/__block--/gi, ""))
+    );
+
+    if (blockFile) {
+      const filename = blockFile?.split(/[\\/]/gi)?.at(-1);
+
+      const block = Object.values(blockSchemas).find((section) =>
+        section.path.includes(blockFile.replace(filename, ""))
+      );
+
+      if (!block || block.disabled) {
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${name}`)}`
+        );
+        fs.unlinkSync(path.join(process.cwd(), name));
+        config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
+      }
+      return;
+    }
+    console.log(
+      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${name}`)}`
+    );
+    fs.unlinkSync(path.join(process.cwd(), name));
+    config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
+  });
+
+  writeCompareFile(
+    path.join(process.cwd(), theme_path, "snippets", "_layout.dynamic-imports.liquid"),
+    dynamicJsImports.join("\n")
+  );
+
   if (delete_external_snippets) {
     targets.snippets.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
@@ -418,7 +528,10 @@ declare global {
           ? `_blocks.${sourcePath.split(/[\\/]/gi).at(-1)}` === fileName
           : sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
-      if (fileName.includes("_layout.translations.liquid")) {
+      if (
+        fileName.includes("_layout.translations.liquid") ||
+        fileName.includes("_layout.dynamic-imports.liquid")
+      ) {
         return;
       }
       if (!targetFile) {

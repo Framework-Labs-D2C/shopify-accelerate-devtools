@@ -72,8 +72,10 @@ export type GlobalsState = {
     layouts: string[];
     sectionsLiquid: string[];
     sectionsSchemaFiles: string[];
+    sectionsJs: string[];
     blocksLiquid: string[];
     blocksSchemaFiles: string[];
+    blocksJs: string[];
     blockSchemas: { [T: string]: ShopifyBlock & { path: string; folder: string } };
     assets: string[];
     giftCards: string[];
@@ -88,6 +90,7 @@ export type GlobalsState = {
   };
   targets: {
     assets: string[];
+    dynamicJs: string[];
     blocks: string[];
     layout: string[];
     locales: string[];
@@ -140,8 +143,10 @@ export const config: GlobalsState = {
     layouts: [],
     sectionsLiquid: [],
     sectionsSchemaFiles: [],
+    sectionsJs: [],
     blocksLiquid: [],
     blocksSchemaFiles: [],
+    blocksJs: [],
     assets: [],
     giftCards: [],
     configs: [],
@@ -156,6 +161,7 @@ export const config: GlobalsState = {
   },
   targets: {
     assets: [],
+    dynamicJs: [],
     blocks: [],
     layout: [],
     locales: [],

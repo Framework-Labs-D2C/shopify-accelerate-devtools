@@ -9,7 +9,7 @@ import { generateSchemaLocales } from "../scaffold-theme/generate-schema-locales
 import { generateSchemaVariables } from "../scaffold-theme/generate-schema-variables";
 import { generateSectionsTypes } from "../scaffold-theme/generate-section-types";
 import { generateSettingTypes } from "../scaffold-theme/generate-setting-types";
-import { getSchemaSources, getSources, getTargets, isAsset, isLiquid, isTypeScriptSchema } from "../scaffold-theme/parse-files";
+import { getSchemaSources, getSources, getTargets, isAsset, isBlockTs, isLiquid, isSectionTs, isTypeScriptSchema } from "../scaffold-theme/parse-files";
 import { parseLocales } from "../scaffold-theme/parse-locales";
 import { writeCompareFile, writeOnlyNew } from "../utils/fs";
 
@@ -40,7 +40,6 @@ export const watchTheme = () => {
         )}] ${chalk.cyan(`File modified: ${name.replace(process.cwd(), "")}`)}`
       );
     }
-
     if (isAsset(name)) {
       const fileName = name.split(/[\\/]/gi).at(-1);
       const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
@@ -73,8 +72,7 @@ export const watchTheme = () => {
         }
       }
     }
-
-    if (isLiquid(name)) {
+    if (isLiquid(name) || isSectionTs(name) || isBlockTs(name)) {
       getSources();
       generateSchemaVariables();
       generateLiquidFiles();
