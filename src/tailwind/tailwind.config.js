@@ -88,6 +88,14 @@ module.exports = {
           "0%, 100%": { transform: "translate3d(0,0,0)" },
           "100%": { transform: "translate3d(-50%,0,0)" },
         },
+        marquee1: {
+          "0%, 100%": { transform: "translate3d(0,0,0)" },
+          "100%": { transform: "translate3d(-100%,0,0)" },
+        },
+        marquee2: {
+          "0%, 100%": { transform: "translate3d(100%,0,0)" },
+          "100%": { transform: "translate3d(0,0,0)" },
+        },
         circle: {
           "0%": { strokeDashoffset: "90" },
           "100%": { strokeDashoffset: "0" },
@@ -103,6 +111,8 @@ module.exports = {
       },
       animation: {
         slide: "slide 30s linear infinite",
+        marquee1: "marquee1 30s linear infinite",
+        marquee2: "marquee2 30s linear infinite",
         circle: "circle 8.1s linear",
         dot: "dot 8.1s linear",
         typewriter: "typewriter 0.5s linear infinite",
@@ -162,6 +172,14 @@ module.exports = {
         {
           "top-spacing": (value) => ({
             top: `calc(${theme("spacing.top-bar-spacing")} + ${value})`,
+          }),
+        },
+        { values: theme("spacing") }
+      );
+      matchUtilities(
+        {
+          "border-width": (value) => ({
+            borderWidth: `${value}`,
           }),
         },
         { values: theme("spacing") }

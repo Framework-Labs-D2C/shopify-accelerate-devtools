@@ -2,7 +2,7 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import { config } from "../../shopify-accelerate";
-import { writeCompareFile, writeOnlyNew } from "../utils/fs";
+import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const generateAssetFiles = () => {
   const { theme_path, sources, targets, delete_external_assets, ignore_assets } = config;
@@ -33,10 +33,7 @@ export const generateAssetFiles = () => {
       );
 
       if (!targetFile) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file}`)}`
-        );
-        fs.unlinkSync(path.join(process.cwd(), file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }

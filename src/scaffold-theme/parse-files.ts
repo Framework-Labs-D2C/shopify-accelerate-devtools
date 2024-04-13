@@ -115,7 +115,6 @@ export const getSources = () => {
     (acc, file) => {
       try {
         const data = importFresh(file);
-
         return {
           ...acc,
           ...Object.entries(data).reduce((acc2, [key, val]) => {

@@ -18,7 +18,7 @@ export const writeCompareFile = (file_path, content, successCallback = () => {})
 
     fs.writeFileSync(file_path, content);
     console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
         `Created: ${file_path.replace(process.cwd(), "")}`
       )}`
     );
@@ -51,7 +51,7 @@ export const writeOnlyNew = (file_path, content, successCallback = () => {}) => 
 
     fs.writeFileSync(file_path, content);
     console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
         `Created: ${file_path.replace(process.cwd(), "")}`
       )}`
     );
@@ -69,4 +69,15 @@ export const getAllFiles = (dirname) => {
     const isDirectory = fs.statSync(name).isDirectory();
     return isDirectory ? [...acc, ...getAllFiles(name)] : [...acc, name];
   }, []);
+};
+
+export const deleteFile = (file_path: string) => {
+  if (!fs.existsSync(file_path)) return;
+
+  fs.unlinkSync(file_path);
+  console.log(
+    `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
+      `Deleted: ${file_path.replace(process.cwd(), "")}`
+    )}`
+  );
 };

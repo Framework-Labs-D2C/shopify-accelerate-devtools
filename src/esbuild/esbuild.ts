@@ -159,11 +159,47 @@ export const runEsbuild = () => {
     running = false;
   });
 
-  config.sources.sectionsJs.forEach((file) => {
-    runSectionJsEsbuild(file);
+  config.sources.sectionsJs.forEach((name) => {
+    running = true;
+
+    if (isSectionTs(name)) {
+      const filename = name.split(/[\\/]/gi).at(-1);
+
+      const section = Object.values(config.sources.sectionSchemas).find((section) =>
+        section.path.includes(name.replace(filename, ""))
+      );
+
+      if (section && !section.disabled) {
+        try {
+          runSectionJsEsbuild(name);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      running = false;
+      return;
+    }
   });
-  config.sources.blocksJs.forEach((file) => {
-    runSectionJsEsbuild(file);
+
+  config.sources.blocksJs.forEach((name) => {
+    running = true;
+    if (isBlockTs(name)) {
+      const filename = name.split(/[\\/]/gi).at(-1);
+
+      const block = Object.values(config.sources.blockSchemas).find((block) =>
+        block.path.includes(name.replace(filename, ""))
+      );
+
+      if (block && !block.disabled) {
+        try {
+          runBlockJsEsbuild(name);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      running = false;
+      return;
+    }
   });
   runEsBuild();
 };

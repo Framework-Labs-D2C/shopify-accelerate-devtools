@@ -2,7 +2,7 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import { config } from "../../shopify-accelerate";
-import { writeCompareFile } from "../utils/fs";
+import { deleteFile, writeCompareFile } from "../utils/fs";
 import { isObject } from "../utils/is-object";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 import { generateBlockFiles } from "./generate-block-files";
@@ -33,10 +33,33 @@ export const generateLiquidFiles = () => {
 
   for (const key in sectionsSchemas) {
     const schema = sectionsSchemas[key];
-    if (schema.disabled) continue;
 
     const sectionName = `${schema.folder}.liquid`;
     const sectionPath = path.join(process.cwd(), theme_path, "sections", sectionName);
+
+    if (schema.disabled) {
+      const targetFile = targets.sections.find(
+        (target) => target.split(/[\\/]/gi).at(-1) === sectionName
+      );
+      if (targetFile) {
+        config.targets.sections = config.targets.sections.filter((target) => target !== targetFile);
+        deleteFile(path.join(process.cwd(), targetFile));
+      }
+      const snippetTargets = targets.snippets.filter(
+        (target) => `${target.split(/[\\/]/gi).at(-1).split(".")[0]}.liquid` === sectionName
+      );
+
+      if (snippetTargets.length) {
+        config.targets.snippets = config.targets.snippets.filter((target) => {
+          if (snippetTargets.includes(target)) {
+            deleteFile(path.join(process.cwd(), target));
+            return false;
+          }
+          return true;
+        });
+      }
+      continue;
+    }
 
     const translationArray = [];
 
@@ -117,12 +140,41 @@ export const generateLiquidFiles = () => {
 
   for (const key in blockSchemas) {
     const schema = blockSchemas[key];
-    if (schema.disabled) continue;
 
     const sectionName = `${schema.folder}.liquid`;
     const sectionPath = disabled_theme_blocks
       ? path.join(process.cwd(), theme_path, "snippets", sectionName)
       : path.join(process.cwd(), theme_path, "blocks", sectionName);
+
+    if (schema.disabled) {
+      const targetFile = targets.blocks.find(
+        (target) => target.split(/[\\/]/gi).at(-1) === sectionName
+      );
+      if (targetFile) {
+        config.targets.blocks = config.targets.blocks.filter((target) => target !== targetFile);
+        deleteFile(path.join(process.cwd(), targetFile));
+      }
+
+      const snippetTargets = targets.snippets.filter((target) => {
+        return (
+          target
+            .split(/[\\/]/gi)
+            .at(-1)
+            .replace(/_blocks\./gi, "") === sectionName
+        );
+      });
+
+      if (snippetTargets.length) {
+        config.targets.snippets = config.targets.snippets.filter((target) => {
+          if (snippetTargets.includes(target)) {
+            deleteFile(path.join(process.cwd(), target));
+            return false;
+          }
+          return true;
+        });
+      }
+      continue;
+    }
 
     const translationArray = [];
 
@@ -186,6 +238,18 @@ export const generateLiquidFiles = () => {
     const snippet = snippets[i];
     const snippetName = snippet.split(/[\\/]/gi).at(-1);
 
+    const section = Object.values(sectionsSchemas).find((section) =>
+      section.path.includes(snippet.replace(snippetName, ""))
+    );
+    if (section && section.disabled) {
+      continue;
+    }
+    const block = Object.values(blockSchemas).find((section) =>
+      section.path.includes(snippet.replace(snippetName, ""))
+    );
+    if (block && block.disabled) {
+      continue;
+    }
     const snippetPath =
       disabled_theme_blocks && snippet?.includes(folders.blocks)
         ? path.join(process.cwd(), theme_path, "snippets", `_blocks.${snippetName}`)
@@ -428,12 +492,7 @@ declare global {
         `<script type="module" src="{{ '${targetName}' | asset_url }}" defer></script>`
       );
     } else if (targetFile) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
-          `Deleted: ${targetFile}`
-        )}`
-      );
-      fs.unlinkSync(path.join(process.cwd(), targetFile));
+      deleteFile(path.join(process.cwd(), targetFile));
       config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== targetFile);
     }
   });
@@ -454,12 +513,7 @@ declare global {
         `<script type="module" src="{{ '${targetName}' | asset_url }}" defer></script>`
       );
     } else if (targetFile) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
-          `Deleted: ${targetFile}`
-        )}`
-      );
-      fs.unlinkSync(path.join(process.cwd(), targetFile));
+      deleteFile(path.join(process.cwd(), targetFile));
       config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== targetFile);
     }
   });
@@ -479,10 +533,7 @@ declare global {
       );
 
       if (!section || section.disabled) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${name}`)}`
-        );
-        fs.unlinkSync(path.join(process.cwd(), name));
+        deleteFile(path.join(process.cwd(), name));
         config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
       }
       return;
@@ -500,18 +551,12 @@ declare global {
       );
 
       if (!block || block.disabled) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${name}`)}`
-        );
-        fs.unlinkSync(path.join(process.cwd(), name));
+        deleteFile(path.join(process.cwd(), name));
         config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
       }
       return;
     }
-    console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${name}`)}`
-    );
-    fs.unlinkSync(path.join(process.cwd(), name));
+    deleteFile(path.join(process.cwd(), name));
     config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
   });
 
@@ -535,10 +580,7 @@ declare global {
         return;
       }
       if (!targetFile) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file}`)}`
-        );
-        fs.unlinkSync(path.join(process.cwd(), file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }
@@ -550,10 +592,7 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file}`)}`
-        );
-        fs.unlinkSync(path.join(process.cwd(), file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }
@@ -565,10 +604,7 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file}`)}`
-        );
-        fs.unlinkSync(path.join(process.cwd(), file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }
@@ -580,10 +616,7 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file}`)}`
-        );
-        fs.unlinkSync(path.join(process.cwd(), file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }

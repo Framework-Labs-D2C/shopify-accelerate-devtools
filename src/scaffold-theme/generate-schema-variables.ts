@@ -40,7 +40,7 @@ export const generateSchemaVariables = () => {
 
     if (!fs.existsSync(sectionLiquid)) {
       console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
           `Created: ${sectionLiquid.replace(process.cwd(), "")}`
         )}`
       );
@@ -122,7 +122,7 @@ export const generateSchemaVariables = () => {
 
       if (!fs.existsSync(blockPath)) {
         console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
             `Created: ${blockPath.replace(process.cwd(), "")}`
           )}`
         );
@@ -198,7 +198,7 @@ export const generateSchemaVariables = () => {
 
     if (!fs.existsSync(itemLiquid)) {
       console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
           `Created: ${itemLiquid.replace(process.cwd(), "")}`
         )}`
       );
@@ -272,7 +272,7 @@ export const generateSchemaVariables = () => {
 
       if (!fs.existsSync(blockPath)) {
         console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
             `Created: ${blockPath.replace(process.cwd(), "")}`
           )}`
         );

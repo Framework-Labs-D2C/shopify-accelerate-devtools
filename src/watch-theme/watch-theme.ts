@@ -11,7 +11,7 @@ import { generateSectionsTypes } from "../scaffold-theme/generate-section-types"
 import { generateSettingTypes } from "../scaffold-theme/generate-setting-types";
 import { getSchemaSources, getSources, getTargets, isAsset, isBlockTs, isLiquid, isSectionTs, isTypeScriptSchema } from "../scaffold-theme/parse-files";
 import { parseLocales } from "../scaffold-theme/parse-locales";
-import { writeCompareFile, writeOnlyNew } from "../utils/fs";
+import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const watchTheme = () => {
   const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
@@ -26,6 +26,7 @@ export const watchTheme = () => {
       getTargets();
     }
     if (isTypeScriptSchema(name)) {
+      getTargets();
       getSchemaSources();
       parseLocales();
       generateSchemaVariables();
@@ -63,16 +64,12 @@ export const watchTheme = () => {
         const targetFile = fs.existsSync(targetPath);
 
         if (targetFile) {
-          fs.unlinkSync(targetPath);
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
-              `Deleted: ${name}`
-            )}`
-          );
+          deleteFile(targetPath);
         }
       }
     }
     if (isLiquid(name) || isSectionTs(name) || isBlockTs(name)) {
+      getTargets();
       getSources();
       generateSchemaVariables();
       generateLiquidFiles();
