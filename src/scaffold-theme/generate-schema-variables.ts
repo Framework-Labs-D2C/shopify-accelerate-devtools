@@ -185,7 +185,7 @@ export const generateSchemaVariables = () => {
       variables.push(
         `  assign ${
           RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id
-        } = section.settings.${setting.id}`
+        } = block.settings.${setting.id}`
       );
     });
 

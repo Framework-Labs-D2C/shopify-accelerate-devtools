@@ -178,7 +178,7 @@ module.exports = {
       );
       matchUtilities(
         {
-          "border-width": (value) => ({
+          "border-w": (value) => ({
             borderWidth: `${value}`,
           }),
         },
