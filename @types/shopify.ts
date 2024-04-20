@@ -932,6 +932,26 @@ export type _Page_liquid_json = {
   author?: string;
 };
 
+export type _Selling_plan_liquid = {
+  id: number;
+  name: string;
+  options: {
+    name: string;
+    position: number;
+    value: string;
+  }[];
+  recurring_deliveries: boolean;
+  price_adjustments: {
+    position: number;
+    value_type: string;
+    value: number;
+  }[];
+  checkout_charge: {
+    value_type: string;
+    value: number;
+  };
+};
+
 export type _Variant_liquid = {
   available: boolean;
   barcode: string;
@@ -943,6 +963,18 @@ export type _Variant_liquid = {
   options: string[];
   price: number;
   requires_shipping: boolean;
+  selling_plan_allocations: {
+    compare_at_price: number;
+    per_delivery_price: number;
+    price: number;
+    price_adjustments: {
+      position: number;
+      price: number;
+    }[];
+    selling_plan_group_id: string;
+    selling_plan_id: number;
+    selling_plan: _Selling_plan_liquid;
+  }[];
   sku: string;
   taxable: boolean;
   title: string;

@@ -184,6 +184,56 @@ module.exports = {
         },
         { values: theme("spacing") }
       );
+      matchUtilities(
+        {
+          "border-x-w": (value) => ({
+            borderLeftWidth: `${value}`,
+            borderRightWidth: `${value}`,
+          }),
+        },
+        { values: theme("spacing") }
+      );
+      matchUtilities(
+        {
+          "border-l-w": (value) => ({
+            borderLeftWidth: `${value}`,
+          }),
+        },
+        { values: theme("spacing") }
+      );
+      matchUtilities(
+        {
+          "border-r-w": (value) => ({
+            borderRightWidth: `${value}`,
+          }),
+        },
+        { values: theme("spacing") }
+      );
+      matchUtilities(
+        {
+          "border-y-w": (value) => ({
+            borderTopWidth: `${value}`,
+            borderBottomWidth: `${value}`,
+          }),
+        },
+        { values: theme("spacing") }
+      );
+      matchUtilities(
+        {
+          "border-t-w": (value) => ({
+            borderTopWidth: `${value}`,
+          }),
+        },
+        { values: theme("spacing") }
+      );
+      matchUtilities(
+        {
+          "border-b-w": (value) => ({
+            borderBottomWidth: `${value}`,
+          }),
+        },
+        { values: theme("spacing") }
+      );
       addUtilities({
         ".shape-geometric-precision": {
           "shape-rendering": "geometricPrecision",
