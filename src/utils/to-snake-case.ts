@@ -12,7 +12,7 @@ export const toLocaleFriendlySnakeCase = (str: string) => {
         .join("_")
     );
   } catch (err) {
-    if (str.length <= 2) {
+    if (str.length <= 5) {
       return `custom_char_${escape(str)
         .match(/[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+/g)
         .map((x) => x.toLowerCase())
