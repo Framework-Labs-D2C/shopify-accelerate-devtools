@@ -61,7 +61,7 @@ export const generateLiquidFiles = () => {
       continue;
     }
 
-    const translationArray = [];
+    let translationArray = [];
 
     const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, sectionName), {
       encoding: "utf-8",
@@ -184,6 +184,12 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
+    if (schema.section_as_snippet) {
+      const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
+      writeCompareFile(snippetPath, translationArray.join("\n"));
+      snippets.push(snippetPath);
+      translationArray = [`{%- render "${schema.folder}" -%}`];
+    }
     translationArray.push(generateSectionFiles(schema));
 
     writeCompareFile(sectionPath, translationArray.join("\n"));

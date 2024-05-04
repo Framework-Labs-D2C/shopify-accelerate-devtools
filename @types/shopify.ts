@@ -500,6 +500,7 @@ export type ShopifySection<T = never> = {
   default?: ShopifySectionDefault<T>;
   disabled?: boolean;
   generate_block_files?: T extends { blocks: any } ? T["blocks"][number]["type"][] : string[];
+  section_as_snippet?: boolean;
   limit?: number;
   locales?: {
     [T: string]: {
