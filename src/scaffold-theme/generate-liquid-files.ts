@@ -129,6 +129,57 @@ export const generateLiquidFiles = () => {
             return arr.join("\n");
           }
         );
+
+        translatedContent = translatedContent?.replace(
+          /\n(\s*)content_for\s*['"]blocks["']\s*\n/gi,
+          (str, match) => {
+            const arr = [`\n${match}`];
+            arr.push(`${match}for block in section.blocks`);
+            for (const key in blockSchemas) {
+              const schema = blockSchemas[key];
+              if (schema.disabled) continue;
+              arr.push(`${match}  if block.type == "${key}"`);
+              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  endif`);
+            }
+            arr.push(`${match}endfor`);
+            arr.push(``);
+            return arr.join("\n");
+          }
+        );
+
+        translatedContent = translatedContent?.replace(
+          /\n(\s*){%-?\s*content_for\s*['"]block["']\s*-?%}/gi,
+          (str, match) => {
+            const arr = [`\n${match}{% liquid`];
+            for (const key in blockSchemas) {
+              const schema = blockSchemas[key];
+              if (schema.disabled) continue;
+              arr.push(`${match}  if block.type == "${key}"`);
+              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  endif`);
+            }
+            arr.push(`${match}%}`);
+
+            return arr.join("\n");
+          }
+        );
+        translatedContent = translatedContent?.replace(
+          /\n(\s*)content_for\s*['"]block["']\s*\n/gi,
+          (str, match) => {
+            const arr = [`\n${match}`];
+            for (const key in blockSchemas) {
+              const schema = blockSchemas[key];
+              if (schema.disabled) continue;
+              arr.push(`${match}if block.type == "${key}"`);
+              arr.push(`${match}  render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}endif`);
+            }
+            arr.push(``);
+
+            return arr.join("\n");
+          }
+        );
       }
       translationArray.push(translatedContent);
     }
@@ -183,7 +234,7 @@ export const generateLiquidFiles = () => {
     });
 
     if (rawContent) {
-      const translatedContent = rawContent.replace(
+      let translatedContent = rawContent.replace(
         /<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi,
         (str, group1, group2) => {
           const group = toLocaleFriendlySnakeCase(schema.folder);
@@ -225,6 +276,77 @@ export const generateLiquidFiles = () => {
           return group2;
         }
       );
+      if (disabled_theme_blocks) {
+        translatedContent = translatedContent?.replace(
+          /\n(\s*){%-?\s*content_for\s*['"]blocks["']\s*-?%}/gi,
+          (str, match) => {
+            const arr = [`\n${match}{% liquid`];
+            arr.push(`${match}  for block in section.blocks`);
+            for (const key in blockSchemas) {
+              const schema = blockSchemas[key];
+              if (schema.disabled) continue;
+              arr.push(`${match}    if block.type == "${key}"`);
+              arr.push(`${match}      render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}    endif`);
+            }
+            arr.push(`${match}  endfor`);
+            arr.push(`${match}%}`);
+
+            return arr.join("\n");
+          }
+        );
+
+        translatedContent = translatedContent?.replace(
+          /\n(\s*)content_for\s*['"]blocks["']\s*\n/gi,
+          (str, match) => {
+            const arr = [`\n${match}`];
+            arr.push(`${match}for block in section.blocks`);
+            for (const key in blockSchemas) {
+              const schema = blockSchemas[key];
+              if (schema.disabled) continue;
+              arr.push(`${match}  if block.type == "${key}"`);
+              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  endif`);
+            }
+            arr.push(`${match}endfor`);
+            arr.push(``);
+            return arr.join("\n");
+          }
+        );
+
+        translatedContent = translatedContent?.replace(
+          /\n(\s*){%-?\s*content_for\s*['"]block["']\s*-?%}/gi,
+          (str, match) => {
+            const arr = [`\n${match}{% liquid`];
+            for (const key in blockSchemas) {
+              const schema = blockSchemas[key];
+              if (schema.disabled) continue;
+              arr.push(`${match}  if block.type == "${key}"`);
+              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  endif`);
+            }
+            arr.push(`${match}%}`);
+
+            return arr.join("\n");
+          }
+        );
+        translatedContent = translatedContent?.replace(
+          /\n(\s*)content_for\s*['"]block["']\s*\n/gi,
+          (str, match) => {
+            const arr = [`\n${match}`];
+            for (const key in blockSchemas) {
+              const schema = blockSchemas[key];
+              if (schema.disabled) continue;
+              arr.push(`${match}if block.type == "${key}"`);
+              arr.push(`${match}  render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}endif`);
+            }
+            arr.push(``);
+
+            return arr.join("\n");
+          }
+        );
+      }
       translationArray.push(translatedContent);
     }
 
@@ -305,6 +427,7 @@ export const generateLiquidFiles = () => {
           return group2;
         }
       );
+
       returnArr.push(translatedContent);
     }
 
