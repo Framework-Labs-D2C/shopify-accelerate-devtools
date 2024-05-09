@@ -65,7 +65,12 @@ const runSectionJsEsbuild = (entryFile) => {
     // splitting: true,
   })
     .then((e) => {
-      console.log("theme.js - bundled");
+      console.log(
+        `__section--${entryFile
+          .split(/[\\/]/gi)
+          .at(-1)
+          .replace(/\.(ts)x?$/gi, ".js")}- bundled`
+      );
     })
     .catch((error) => {
       console.error(error);
@@ -100,7 +105,12 @@ const runBlockJsEsbuild = (entryFile) => {
     // splitting: true,
   })
     .then((e) => {
-      console.log("theme.js - bundled");
+      console.log(
+        `__block--${entryFile
+          .split(/[\\/]/gi)
+          .at(-1)
+          .replace(/\.(ts)x?$/gi, ".js")} - bundled`
+      );
     })
     .catch((error) => {
       console.error(error);
