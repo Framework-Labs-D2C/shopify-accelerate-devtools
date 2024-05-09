@@ -15,6 +15,7 @@ module.exports = {
   theme: {
     extend: {
       screens: {
+        xxs: "373px" /* tiny phone*/,
         xs: "427px" /*smaller than iphone pro max*/,
       },
       fontSize: {
@@ -77,12 +78,12 @@ module.exports = {
       },
       boxShadow: {
         "invert-sm": "0 -1px 2px 0 rgb(0 0 0 / 0.05)",
+        invert: "0 -3px 5px 1px rgb(0 0 0 / 0.03), 0 -2px 4px 2px rgb(0 0 0 / 0.03)",
         "invert-md": "0 -4px 6px 1px rgb(0 0 0 / 0.07), 0 -2px 4px 2px rgb(0 0 0 / 0.07)",
         "invert-lg": "0 -10px 15px 3px rgb(0 0 0 / 0.1), 0 -4px 6px 4px rgb(0 0 0 / 0.1)",
         "invert-xl": "0 -20px 25px 5px rgb(0 0 0 / 0.1), 0 -8px 10px 6px rgb(0 0 0 / 0.1)",
         "invert-2xl": "0 -25px 50px 12px rgb(0 0 0 / 0.25)",
       },
-
       keyframes: {
         slide: {
           "0%, 100%": { transform: "translate3d(0,0,0)" },

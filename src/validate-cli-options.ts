@@ -10,13 +10,13 @@ import { readFile, writeCompareFile, writeOnlyNew } from "./utils/fs";
 export const validateCliOptions = async (
   {
     store,
-    theme_id,
+    theme: theme_id,
     environment = "development",
   }: {
     store?: string;
-    theme_id?: string;
+    theme?: number;
     environment?: string;
-  } = { environment: "development", store: undefined, theme_id: undefined }
+  } = { environment: "development", store: undefined, theme: undefined }
 ) => {
   const { environments } = config;
   const { ...currentEnvironment } = environments[environment] ?? {
@@ -41,7 +41,7 @@ export const validateCliOptions = async (
     }
   }
 
-  if (theme_id && currentEnvironment.theme !== theme_id) {
+  if (theme_id && +currentEnvironment.theme !== +theme_id) {
     const { update_theme_id } = await userInput([
       {
         type: "confirm",
@@ -50,7 +50,7 @@ export const validateCliOptions = async (
       },
     ]);
     if (update_theme_id) {
-      currentEnvironment.theme = theme_id;
+      currentEnvironment.theme = +theme_id;
     }
   }
 
@@ -83,7 +83,7 @@ export const validateCliOptions = async (
 
   if (
     (store && currentEnvironment.store !== store) ||
-    (theme_id && currentEnvironment.theme !== theme_id)
+    (theme_id && currentEnvironment.theme !== +theme_id)
   ) {
     prompts.push({
       type: "text",
@@ -101,13 +101,14 @@ export const validateCliOptions = async (
   if (results) {
     environment = results.environment ?? environment;
     currentEnvironment.path = `./themes/${environment}`;
-    currentEnvironment.theme = results.theme_id ?? theme_id ?? currentEnvironment.theme;
+    currentEnvironment.theme = +(results.theme_id ?? theme_id ?? currentEnvironment.theme);
     currentEnvironment.store =
       results.store?.replace(/\.myshopify\.com/gi, "") ??
       store?.replace(/\.myshopify\.com/gi, "") ??
       currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   }
 
+  console.log(currentEnvironment);
   config.environments[environment] = currentEnvironment;
   config.environment = environment;
   config.theme_path = currentEnvironment?.path;

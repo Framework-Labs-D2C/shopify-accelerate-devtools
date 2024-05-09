@@ -32,7 +32,7 @@ const shopify_toml = tomlFile
   ? JSONParse<{
       environments: {
         [T: string]: {
-          theme: string;
+          theme: string | number;
           store: string;
           path: string;
           ignore?: string[];
@@ -212,13 +212,11 @@ program
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
     "-s, --store <store_id>",
-    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    config?.store
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`"
   )
   .option(
     "-t, --theme <theme_id>",
-    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    config?.theme_id
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
     await validateCliOptions(options);
@@ -234,13 +232,11 @@ program
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
     "-s, --store <store_id>",
-    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    config?.store
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`"
   )
   .option(
     "-t, --theme <theme_id>",
-    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    config?.theme_id
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
     await validateCliOptions(options);
@@ -257,13 +253,11 @@ program
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
     "-s, --store <store_id>",
-    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    config?.store
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`"
   )
   .option(
     "-t, --theme <theme_id>",
-    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    config?.theme_id
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
     await validateCliOptions(options);
@@ -276,13 +270,11 @@ program
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
     "-s, --store <store_id>",
-    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`",
-    config?.store
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`"
   )
   .option(
     "-t, --theme <theme_id>",
-    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`",
-    config?.theme_id
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
     await validateCliOptions(options);

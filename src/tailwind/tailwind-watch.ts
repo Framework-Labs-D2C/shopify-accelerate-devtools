@@ -2,6 +2,7 @@ import child_process from "child_process";
 import fs from "fs";
 import path from "path";
 import { config } from "../../shopify-accelerate";
+import { deleteFile } from "../utils/fs";
 const watch = require("node-watch");
 
 export const runTailwindCSSWatcher = () => {
@@ -9,6 +10,8 @@ export const runTailwindCSSWatcher = () => {
   const hasConfig = fs.existsSync(path.join(process.cwd(), "tailwind.config.js"));
   const hasPostCss = fs.existsSync(path.join(process.cwd(), "postcss.config.js"));
 
+  const filePath = path.join(process.cwd(), `assets`, `tailwind_pre_sort.css.liquid`);
+  deleteFile(filePath);
   /*= =============== Tailwind Watcher ================ */
   child_process.spawn(
     "npx",
@@ -27,7 +30,7 @@ export const runTailwindCSSWatcher = () => {
       "-i",
       path.join(process.cwd(), `assets`, `_tailwind.css`),
       "-o",
-      path.join(process.cwd(), `assets`, `tailwind_pre_sort.css.liquid`),
+      filePath,
       "--watch",
     ],
     {

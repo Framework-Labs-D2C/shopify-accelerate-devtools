@@ -240,7 +240,7 @@ export const generateLiquidFiles = () => {
     });
 
     if (rawContent) {
-      let translatedContent = rawContent.replace(
+      const translatedContent = rawContent.replace(
         /<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi,
         (str, group1, group2) => {
           const group = toLocaleFriendlySnakeCase(schema.folder);
@@ -282,6 +282,88 @@ export const generateLiquidFiles = () => {
           return group2;
         }
       );
+
+      translationArray.push(translatedContent);
+    }
+
+    translationArray.push(generateBlockFiles(schema));
+    if (disabled_theme_blocks) continue;
+
+    writeCompareFile(sectionPath, translationArray.join("\n"));
+  }
+
+  for (let i = 0; i < snippets.length; i++) {
+    const snippet = snippets[i];
+    const snippetName = snippet.split(/[\\/]/gi).at(-1);
+
+    const section = Object.values(sectionsSchemas).find((section) =>
+      section.path.includes(snippet.replace(snippetName, ""))
+    );
+    if (section && section.disabled) {
+      continue;
+    }
+    const block = Object.values(blockSchemas).find((section) =>
+      section.path.includes(snippet.replace(snippetName, ""))
+    );
+    if (block && block.disabled) {
+      continue;
+    }
+    const snippetPath =
+      disabled_theme_blocks && snippet?.includes(folders.blocks)
+        ? path.join(process.cwd(), theme_path, "snippets", `_blocks.${snippetName}`)
+        : path.join(process.cwd(), theme_path, "snippets", snippetName);
+
+    const returnArr = [];
+
+    const rawContent = fs.readFileSync(snippet, {
+      encoding: "utf-8",
+    });
+
+    if (rawContent) {
+      let translatedContent = rawContent.replace(
+        /<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi,
+        (_, group1, group2) => {
+          const group = toLocaleFriendlySnakeCase(
+            snippet.split(/[\\/]/gi).at(-1).split(".").at(0)
+          ).trim();
+          const content = toLocaleFriendlySnakeCase(
+            group2?.split(" ")?.slice(0, 2)?.join("_") ?? ""
+          ).trim();
+          const backupContent = toLocaleFriendlySnakeCase(group2).trim();
+          const id = toLocaleFriendlySnakeCase(group1?.replace(/id="(.*)"/gi, "$1") ?? "").trim();
+
+          if (!(group in translations)) {
+            translations[group] = {};
+          }
+
+          if (id && !(id in translations[group])) {
+            translations[group][id] = group2;
+            return `{{ "${group}.${id}" | t }}`;
+          }
+
+          if (!(content in translations[group])) {
+            translations[group][content] = group2;
+            return `{{ "${group}.${content}" | t }}`;
+          }
+
+          if (translations[group][content] !== group2) {
+            if (!(backupContent in translations[group])) {
+              translations[group][backupContent] = group2;
+              return `{{ "${group}.${backupContent}" | t }}`;
+            }
+            if (translations[group][backupContent] !== group2) {
+              translations[group][`${content}_2`] = group2;
+              return `{{ "${group}.${content}_2" | t }}`;
+            }
+          }
+          if (translations[group][content] === group2) {
+            return `{{ "${group}.${content}" | t }}`;
+          }
+
+          return group2;
+        }
+      );
+
       if (disabled_theme_blocks) {
         translatedContent = translatedContent?.replace(
           /\n(\s*){%-?\s*content_for\s*['"]blocks["']\s*-?%}/gi,
@@ -353,86 +435,6 @@ export const generateLiquidFiles = () => {
           }
         );
       }
-      translationArray.push(translatedContent);
-    }
-
-    translationArray.push(generateBlockFiles(schema));
-    if (disabled_theme_blocks) continue;
-
-    writeCompareFile(sectionPath, translationArray.join("\n"));
-  }
-
-  for (let i = 0; i < snippets.length; i++) {
-    const snippet = snippets[i];
-    const snippetName = snippet.split(/[\\/]/gi).at(-1);
-
-    const section = Object.values(sectionsSchemas).find((section) =>
-      section.path.includes(snippet.replace(snippetName, ""))
-    );
-    if (section && section.disabled) {
-      continue;
-    }
-    const block = Object.values(blockSchemas).find((section) =>
-      section.path.includes(snippet.replace(snippetName, ""))
-    );
-    if (block && block.disabled) {
-      continue;
-    }
-    const snippetPath =
-      disabled_theme_blocks && snippet?.includes(folders.blocks)
-        ? path.join(process.cwd(), theme_path, "snippets", `_blocks.${snippetName}`)
-        : path.join(process.cwd(), theme_path, "snippets", snippetName);
-
-    const returnArr = [];
-
-    const rawContent = fs.readFileSync(snippet, {
-      encoding: "utf-8",
-    });
-
-    if (rawContent) {
-      const translatedContent = rawContent.replace(
-        /<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi,
-        (_, group1, group2) => {
-          const group = toLocaleFriendlySnakeCase(
-            snippet.split(/[\\/]/gi).at(-1).split(".").at(0)
-          ).trim();
-          const content = toLocaleFriendlySnakeCase(
-            group2?.split(" ")?.slice(0, 2)?.join("_") ?? ""
-          ).trim();
-          const backupContent = toLocaleFriendlySnakeCase(group2).trim();
-          const id = toLocaleFriendlySnakeCase(group1?.replace(/id="(.*)"/gi, "$1") ?? "").trim();
-
-          if (!(group in translations)) {
-            translations[group] = {};
-          }
-
-          if (id && !(id in translations[group])) {
-            translations[group][id] = group2;
-            return `{{ "${group}.${id}" | t }}`;
-          }
-
-          if (!(content in translations[group])) {
-            translations[group][content] = group2;
-            return `{{ "${group}.${content}" | t }}`;
-          }
-
-          if (translations[group][content] !== group2) {
-            if (!(backupContent in translations[group])) {
-              translations[group][backupContent] = group2;
-              return `{{ "${group}.${backupContent}" | t }}`;
-            }
-            if (translations[group][backupContent] !== group2) {
-              translations[group][`${content}_2`] = group2;
-              return `{{ "${group}.${content}_2" | t }}`;
-            }
-          }
-          if (translations[group][content] === group2) {
-            return `{{ "${group}.${content}" | t }}`;
-          }
-
-          return group2;
-        }
-      );
 
       returnArr.push(translatedContent);
     }
