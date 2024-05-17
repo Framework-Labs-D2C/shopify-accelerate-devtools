@@ -61,6 +61,23 @@ export const generateLiquidFiles = () => {
       continue;
     }
 
+    schema?.blocks?.forEach((block) => {
+      if (block.disabled) {
+        console.log(sectionName);
+        const targetFile = targets.snippets.find(
+          (target) =>
+            target.split(/[\\/]/gi).at(-1) ===
+            `${sectionName.replace(".liquid", "")}.${block.type}.liquid`
+        );
+        if (targetFile) {
+          config.targets.snippets = config.targets.snippets.filter(
+            (target) => target !== targetFile
+          );
+          deleteFile(path.join(process.cwd(), targetFile));
+        }
+      }
+    });
+
     let translationArray = [];
 
     const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, sectionName), {
@@ -114,13 +131,16 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*){%-?\s*content_for\s*['"]blocks["']\s*-?%}/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}{% liquid`];
             arr.push(`${match}  for block in section.blocks`);
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}    if block.type == "${key}"`);
-              arr.push(`${match}      render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}    if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}    endif`);
             }
             arr.push(`${match}  endfor`);
@@ -133,17 +153,21 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*)content_for\s*['"]blocks["']\s*\n/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}`];
             arr.push(`${match}for block in section.blocks`);
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}  if block.type == "${key}"`);
-              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}  endif`);
             }
             arr.push(`${match}endfor`);
             arr.push(``);
+
             return arr.join("\n");
           }
         );
@@ -151,12 +175,15 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*){%-?\s*content_for\s*['"]block["']\s*-?%}/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}{% liquid`];
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}  if block.type == "${key}"`);
-              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}  endif`);
             }
             arr.push(`${match}%}`);
@@ -167,16 +194,18 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*)content_for\s*['"]block["']\s*\n/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}`];
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}if block.type == "${key}"`);
-              arr.push(`${match}  render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}endif`);
             }
             arr.push(``);
-
             return arr.join("\n");
           }
         );
@@ -299,7 +328,11 @@ export const generateLiquidFiles = () => {
     const section = Object.values(sectionsSchemas).find((section) =>
       section.path.includes(snippet.replace(snippetName, ""))
     );
-    if (section && section.disabled) {
+    const blockSchema = section?.blocks?.find((block) =>
+      new RegExp(`\\.${block.type}\\.`, "gi").test(snippetName)
+    );
+
+    if (section && (section.disabled || blockSchema?.disabled)) {
       continue;
     }
     const block = Object.values(blockSchemas).find((section) =>
@@ -368,13 +401,16 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*){%-?\s*content_for\s*['"]blocks["']\s*-?%}/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}{% liquid`];
             arr.push(`${match}  for block in section.blocks`);
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}    if block.type == "${key}"`);
-              arr.push(`${match}      render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}    if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}    endif`);
             }
             arr.push(`${match}  endfor`);
@@ -387,17 +423,21 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*)content_for\s*['"]blocks["']\s*\n/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}`];
             arr.push(`${match}for block in section.blocks`);
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}  if block.type == "${key}"`);
-              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}  endif`);
             }
             arr.push(`${match}endfor`);
             arr.push(``);
+
             return arr.join("\n");
           }
         );
@@ -405,12 +445,15 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*){%-?\s*content_for\s*['"]block["']\s*-?%}/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}{% liquid`];
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}  if block.type == "${key}"`);
-              arr.push(`${match}    render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}  if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}  endif`);
             }
             arr.push(`${match}%}`);
@@ -421,16 +464,18 @@ export const generateLiquidFiles = () => {
         translatedContent = translatedContent?.replace(
           /\n(\s*)content_for\s*['"]block["']\s*\n/gi,
           (str, match) => {
+            match = match.replace(/\n/gi, "");
             const arr = [`\n${match}`];
             for (const key in blockSchemas) {
               const schema = blockSchemas[key];
               if (schema.disabled) continue;
-              arr.push(`${match}if block.type == "${key}"`);
-              arr.push(`${match}  render "_blocks.${key}", block: block, forloop: forloop`);
+              arr.push(`${match}if block.type == "${schema.folder}"`);
+              arr.push(
+                `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+              );
               arr.push(`${match}endif`);
             }
             arr.push(``);
-
             return arr.join("\n");
           }
         );

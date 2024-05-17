@@ -4,7 +4,6 @@ import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
 export const generateBlockFiles = ({
   name,
-  type,
   disabled,
   path,
   folder,

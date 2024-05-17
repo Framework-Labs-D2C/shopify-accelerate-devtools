@@ -458,19 +458,15 @@ type ShopifySectionPreset<T = unknown> = {
 };
 
 export type ShopifySectionBlock =
-  | (
-      | {
-          name: string;
-          type: string;
-          limit?: number;
-          settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
-        }
-      | { type: "@app"; limit?: never; name?: never; settings?: never }
-    )
-  | (
-      | { type: "@theme"; limit?: never; name?: never; settings?: never }
-      | { type: "@app"; limit?: never; name?: never; settings?: never }
-    );
+  | {
+      name: string;
+      disabled?: boolean;
+      type: string;
+      limit?: number;
+      settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+    }
+  | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+  | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never };
 
 export type ShopifyTemplateTypes =
   | "404"

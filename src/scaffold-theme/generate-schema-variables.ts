@@ -5,7 +5,7 @@ import { ShopifyBlock, ShopifySection } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 
 export const generateSchemaVariables = () => {
-  const { folders, sources } = config;
+  const { folders, sources, disabled_theme_blocks } = config;
 
   const sections = sources.sectionSchemas as {
     [T: string]: ShopifySection<{ blocks: any; settings: any }> & { path: string; folder: string };
@@ -21,6 +21,7 @@ export const generateSchemaVariables = () => {
 
     const variables = [start];
     variables.push("{%- liquid");
+    variables.push(`  assign section_type = "${schema.folder}"`);
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
@@ -102,6 +103,8 @@ export const generateSchemaVariables = () => {
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
+      blockVariables.push(`  assign block_type = "${block.type}"`);
+      blockVariables.push(`  assign section_type = "${schema.folder}"`);
 
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
@@ -179,6 +182,11 @@ export const generateSchemaVariables = () => {
 
     const variables = [start];
     variables.push("{%- liquid");
+    if (disabled_theme_blocks) {
+      variables.push(`  assign block_type = "_blocks.${schema.folder}"`);
+    } else {
+      variables.push(`  assign block_type = "${schema.folder}"`);
+    }
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
@@ -252,6 +260,8 @@ export const generateSchemaVariables = () => {
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
+      blockVariables.push(`  assign block_type = "${block.type}"`);
+      blockVariables.push(`  assign blocK_section_type = "${schema.folder}"`);
 
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
