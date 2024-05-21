@@ -63,7 +63,6 @@ export const generateLiquidFiles = () => {
 
     schema?.blocks?.forEach((block) => {
       if (block.disabled) {
-        console.log(sectionName);
         const targetFile = targets.snippets.find(
           (target) =>
             target.split(/[\\/]/gi).at(-1) ===

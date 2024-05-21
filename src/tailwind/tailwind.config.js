@@ -145,7 +145,7 @@ module.exports = {
       addVariant("b", ["&::before"]);
       addVariant("a", ["&::after"]);
       addVariant("not-prose", [":not(.prose &)&"]);
-      addVariant("hfaa", ["&:hover", "&:focus", "&:active, &.active"]);
+      addVariant("hfaa", ["&:hover", "&:focus", "&:active", "&.active"]);
       addVariant("hfvaa", ["&:hover", "&:focus", "&:focus-visible", "&:active", "&.active"]);
       addVariant("group-hfa", [".group:hover &", ".group:focus &", ".group:active &"]);
       addVariant("group-hf", [".group:hover &", ".group:focus &"]);

@@ -90,7 +90,7 @@ export const generateSectionFiles = ({
     }),
     blocks: section?.blocks
       ?.filter((block) => !block?.disabled)
-      ?.reduce((acc, { name, ...block }) => {
+      ?.reduce((acc, { name, disabled, ...block }) => {
         let paragraphCount = 1;
         let headerCount = 1;
 
