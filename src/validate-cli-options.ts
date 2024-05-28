@@ -1,10 +1,12 @@
 import chalk from "chalk";
+import { exec } from "child_process";
 import fs from "fs";
 
 import json2toml from "json2toml";
 import path from "path";
 import userInput from "prompts";
 import { config } from "../shopify-accelerate";
+import { delay } from "./utils/delay";
 import { readFile, writeCompareFile, writeOnlyNew } from "./utils/fs";
 
 export const validateCliOptions = async (
@@ -61,14 +63,30 @@ export const validateCliOptions = async (
         `Store handle missing.`
       )}`
     );
-    prompts.push({
-      type: "text",
-      name: "store",
-      message:
-        "Please enter the Shopify Store Handle (http://{handle}.myshopify.com/admin / https://admin.shopify.com/store/{handle}) for your setup",
-    });
+    const results = await userInput([
+      {
+        type: "text",
+        name: "store",
+        message:
+          "Please enter the Shopify Store Handle (http://{handle}.myshopify.com/admin / https://admin.shopify.com/store/{handle}) for your setup",
+      },
+    ]);
+    currentEnvironment.store =
+      results.store?.replace(/\.myshopify\.com/gi, "") ??
+      store?.replace(/\.myshopify\.com/gi, "") ??
+      currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   }
+
   if (!theme_id && !currentEnvironment.theme) {
+    if (currentEnvironment.store) {
+      await new Promise((resolve, reject) => {
+        exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
+          console.log(stdout);
+          await delay(4500);
+          resolve(true);
+        });
+      });
+    }
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Theme ID missing.`)}`
     );
