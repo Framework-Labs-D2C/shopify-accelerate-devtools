@@ -1,4 +1,5 @@
 import { _Article_metafields, _Blog_metafields, _Collection_metafields, _Page_metafields, _Product_metafields, _Shop_metafields, _Variant_metafields } from "./metafields";
+import { Sections } from "./sections";
 import { SettingsSchema } from "./settings";
 
 export type ShopifyHeader = {
@@ -455,6 +456,14 @@ export type ShopifySectionPreset<T = unknown> = {
     : T extends { settings: any }
     ? Partial<T["settings"]> | undefined
     : { [T: string]: string | number | boolean } | undefined;
+};
+
+export type SectionSettingsOutput<T> = {
+  settings?: ShopifySectionPreset<T>["settings"];
+  blocks?: Record<string, ShopifySectionPreset<T>["blocks"][number]>;
+  type: Sections["type"];
+  block_order?: string[];
+  name?: string;
 };
 
 export type ShopifySectionBlock =
