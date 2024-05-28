@@ -444,7 +444,7 @@ export type ShopifySectionDefaultGuaranteed<T = never> = {
     : { [T: string]: string | number | boolean };
 };
 
-type ShopifySectionPreset<T = unknown> = {
+export type ShopifySectionPreset<T = unknown> = {
   name: string;
   category?: string;
   blocks?: T extends { blocks: Array<any> }
