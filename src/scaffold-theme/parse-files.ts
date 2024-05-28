@@ -10,6 +10,7 @@ export const getSources = () => {
 
   const sourceFiles = [
     ...getAllFiles(folders.sections),
+    ...getAllFiles(folders.presets),
     ...getAllFiles(folders.snippets),
     ...getAllFiles(folders.config),
     ...getAllFiles(folders.templates),
@@ -26,6 +27,7 @@ export const getSources = () => {
   const layouts = [];
   const sectionsLiquid = [];
   const sectionsSchemaFiles = [];
+  const sectionPresetSchemaFiles = [];
   const sectionsJs = [];
   const settingsFiles = [];
   const blocksLiquid = [];
@@ -53,6 +55,9 @@ export const getSources = () => {
     }
     if (isSectionSchema(filePath)) {
       sectionsSchemaFiles.push(filePath);
+    }
+    if (isSectionPresetSchema(filePath)) {
+      sectionPresetSchemaFiles.push(filePath);
     }
     if (isSectionTs(filePath)) {
       sectionsJs.push(filePath);
@@ -96,6 +101,7 @@ export const getSources = () => {
   config.sources.layouts = layouts;
   config.sources.sectionsLiquid = sectionsLiquid;
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+  config.sources.sectionPresetSchemaFiles = sectionPresetSchemaFiles;
   config.sources.sectionsJs = sectionsJs;
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.blocksSchemaFiles = blocksSchemaFiles;
@@ -112,6 +118,25 @@ export const getSources = () => {
   )?.settingsSchema;
 
   config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifySection }
+  );
+  config.sources.sectionPresetSchemas = sectionPresetSchemaFiles.reduce(
     (acc, file) => {
       try {
         const data = importFresh(file);
@@ -159,6 +184,7 @@ export const getSchemaSources = () => {
   const sourceFiles = [
     ...getAllFiles(folders.layout),
     ...getAllFiles(folders.snippets),
+    ...getAllFiles(folders.presets),
     ...getAllFiles(folders.blocks),
     ...getAllFiles(folders.sections),
     ...getAllFiles(folders.config),
@@ -170,6 +196,7 @@ export const getSchemaSources = () => {
   const layouts = [];
   const sectionsLiquid = [];
   const sectionsSchemaFiles = [];
+  const sectionPresetSchemaFiles = [];
   const settingsFiles = [];
   const blocksLiquid = [];
   const blocksSchemaFiles = [];
@@ -192,6 +219,9 @@ export const getSchemaSources = () => {
     }
     if (isSectionSchema(filePath)) {
       sectionsSchemaFiles.push(filePath);
+    }
+    if (isSectionPresetSchema(filePath)) {
+      sectionPresetSchemaFiles.push(filePath);
     }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
@@ -220,6 +250,7 @@ export const getSchemaSources = () => {
   config.sources.layouts = layouts;
   config.sources.sectionsLiquid = sectionsLiquid;
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+  config.sources.sectionPresetSchemaFiles = sectionPresetSchemaFiles;
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.giftCards = giftCards;
   config.sources.settingsFile = settingsFiles[0];
@@ -231,6 +262,25 @@ export const getSchemaSources = () => {
       try {
         const data = importFresh(file);
 
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifySection }
+  );
+  config.sources.sectionPresetSchemas = sectionPresetSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
         return {
           ...acc,
           ...Object.entries(data).reduce((acc2, [key, val]) => {
@@ -344,6 +394,9 @@ export const isSectionLiquid = (name: string) =>
 
 export const isSectionSchema = (name: string) =>
   /[\\/]sections([\\/])[^\\/]*([\\/])schema\.ts$/gi.test(name);
+
+export const isSectionPresetSchema = (name: string) =>
+  /[\\/]presets([\\/])[^\\/]*\.ts$/gi.test(name);
 
 export const isSectionTs = (name: string) =>
   !isSectionSchema(name) && /[\\/]sections([\\/])[^\\/]*([\\/])[^\\/]*\.ts$/gi.test(name);

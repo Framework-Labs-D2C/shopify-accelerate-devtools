@@ -1,12 +1,15 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
+import { PresetSchema, ShopifySectionPreset } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { deleteFile, writeCompareFile } from "../utils/fs";
 import { isObject } from "../utils/is-object";
-import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
+import { toCamelCase } from "../utils/to-camel-case";
+import { toLocaleFriendlySnakeCase, toSnakeCase } from "../utils/to-snake-case";
 import { generateBlockFiles } from "./generate-block-files";
 import { generateSectionFiles } from "./generate-section-files";
+import { generateSectionPresetFiles } from "./generate-section-preset-files";
 import { generateSettingsFile } from "./generate-settings-file";
 
 export const generateLiquidFiles = () => {
@@ -27,6 +30,7 @@ export const generateLiquidFiles = () => {
   const giftCards = sources.giftCards;
   const layouts = sources.layouts;
   const sectionsSchemas = sources.sectionSchemas;
+  const sectionPresetSchemas = sources.sectionPresetSchemas;
   const blockSchemas = sources.blockSchemas;
 
   generateSettingsFile();
@@ -220,6 +224,41 @@ export const generateLiquidFiles = () => {
     }
     translationArray.push(generateSectionFiles(schema));
 
+    writeCompareFile(sectionPath, translationArray.join("\n"));
+  }
+
+  for (const key in sectionPresetSchemas) {
+    if (sectionPresetSchemas[key]?.disabled) {
+      const targetFile = targets.sections.find(
+        (target) => target.split(/[\\/]/gi).at(-1) === `preset__${toSnakeCase(key)}.liquid`
+      );
+      if (targetFile) {
+        config.targets.sections = config.targets.sections.filter((target) => target !== targetFile);
+        deleteFile(path.join(process.cwd(), targetFile));
+      }
+      continue;
+    }
+    const schema = Object.values(sectionsSchemas)?.find(
+      (val) => val.folder === sectionPresetSchemas[key]?.type && val.section_as_snippet
+    );
+    if (!schema) {
+      continue;
+    }
+    const preset: ShopifySectionPreset = {
+      name: sectionPresetSchemas[key]?.name,
+      settings: sectionPresetSchemas[key]?.settings,
+      // @ts-ignore
+      blocks: Array.isArray(sectionPresetSchemas[key]?.blocks)
+        ? sectionPresetSchemas[key]?.blocks
+        : Object.values(sectionPresetSchemas[key]?.blocks ?? {}) ?? [],
+    };
+
+    const translationArray = [`{%- render "${schema.folder}" -%}`];
+
+    translationArray.push(generateSectionPresetFiles({ schema, preset }));
+
+    const sectionName = `preset__${toSnakeCase(key)}.liquid`;
+    const sectionPath = path.join(process.cwd(), theme_path, "sections", sectionName);
     writeCompareFile(sectionPath, translationArray.join("\n"));
   }
 
@@ -763,9 +802,13 @@ declare global {
   if (delete_external_sections) {
     targets.sections.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
-      const targetFile = sources.sectionsLiquid.find(
-        (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
-      );
+      const targetFile =
+        sources.sectionsLiquid.find(
+          (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
+        ) ||
+        Object.entries(sources.sectionPresetSchemas).find(
+          ([key, val]) => !val.disabled && fileName === `preset__${toSnakeCase(key)}.liquid`
+        );
       if (!targetFile) {
         deleteFile(path.join(process.cwd(), file));
       }

@@ -5,7 +5,7 @@ import path from "path";
 import toml from "toml";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
-import { ShopifyBlock, ShopifySection, ShopifySettings } from "./@types/shopify";
+import { PresetSchema, ShopifyBlock, ShopifySection, ShopifySettings } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { generateConfigFiles } from "./src/scaffold-theme/generate-config-files";
@@ -73,6 +73,8 @@ export type GlobalsState = {
     sectionsLiquid: string[];
     sectionsSchemaFiles: string[];
     sectionsJs: string[];
+    sectionPresetSchemaFiles: string[];
+    sectionPresetSchemas: { [T: string]: PresetSchema & { path: string; folder: string } };
     blocksLiquid: string[];
     blocksSchemaFiles: string[];
     blocksJs: string[];
@@ -107,6 +109,7 @@ export type GlobalsState = {
     types: string;
     utils: string;
     sections: string;
+    presets: string;
     layout: string;
     blocks: string;
     snippets: string;
@@ -141,6 +144,8 @@ export const config: GlobalsState = {
   sources: {
     snippets: [],
     layouts: [],
+    sectionPresetSchemaFiles: [],
+    sectionPresetSchemas: {},
     sectionsLiquid: [],
     sectionsSchemaFiles: [],
     sectionsJs: [],
@@ -178,6 +183,7 @@ export const config: GlobalsState = {
     types: path.join(process.cwd(), "@types"),
     utils: path.join(process.cwd(), "@utils"),
     sections: path.join(process.cwd(), "sections"),
+    presets: path.join(process.cwd(), "presets"),
     layout: path.join(process.cwd(), "layout"),
     blocks: path.join(process.cwd(), "blocks"),
     snippets: path.join(process.cwd(), "snippets"),
