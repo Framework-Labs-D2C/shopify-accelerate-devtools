@@ -1,5 +1,5 @@
 import chalk from "chalk";
-import { exec } from "child_process";
+import child_process, { exec } from "child_process";
 import fs from "fs";
 
 import json2toml from "json2toml";
@@ -80,9 +80,24 @@ export const validateCliOptions = async (
   if (!theme_id && !currentEnvironment.theme) {
     if (currentEnvironment.store) {
       await new Promise((resolve, reject) => {
-        exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
-          console.log(stdout);
-          await delay(4500);
+        // exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
+        //   console.log(stdout);
+        //   if (stdout.includes("Press any key to open the login page on your brows")) {
+        //     console.log("MATCHED!!");
+        //   }
+        //   await delay(4500);
+        //   resolve(true);
+        // });
+
+        const process = child_process.spawn(
+          "npx",
+          ["shopify", "theme", "list", "-s", currentEnvironment.store],
+          {
+            shell: true,
+            stdio: "inherit",
+          }
+        );
+        process.on("exit", () => {
           resolve(true);
         });
       });
