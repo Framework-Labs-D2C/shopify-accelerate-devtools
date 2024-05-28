@@ -131,7 +131,8 @@ export const validateCliOptions = async (
   }
 
   const results = await userInput(prompts);
-  if (results) {
+
+  if (Object.keys(results)?.length) {
     environment = results.environment ?? environment;
     currentEnvironment.path = `./themes/${environment}`;
     currentEnvironment.theme = +(results.theme_id ?? theme_id ?? currentEnvironment.theme);
