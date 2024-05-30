@@ -142,7 +142,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}    if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}    endif`);
             }
@@ -164,7 +164,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}  if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}  endif`);
             }
@@ -185,7 +185,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}  if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}  endif`);
             }
@@ -204,7 +204,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}endif`);
             }
@@ -447,7 +447,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}    if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}    endif`);
             }
@@ -469,7 +469,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}  if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}  endif`);
             }
@@ -490,7 +490,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}  if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}  endif`);
             }
@@ -509,7 +509,7 @@ export const generateLiquidFiles = () => {
               if (schema.disabled) continue;
               arr.push(`${match}if block.type == "${schema.folder}"`);
               arr.push(
-                `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type`
+                `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
               );
               arr.push(`${match}endif`);
             }
