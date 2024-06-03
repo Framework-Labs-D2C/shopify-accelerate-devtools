@@ -251,6 +251,9 @@ module.exports = {
         ".animation-pause": {
           "animation-play-state": "paused",
         },
+        ".animation-play": {
+          "animation-play-state": "running",
+        },
       });
     }),
   ],

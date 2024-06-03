@@ -139,7 +139,11 @@ export const getSources = () => {
   config.sources.sectionPresetSchemas = sectionPresetSchemaFiles.reduce(
     (acc, file) => {
       try {
-        const data = importFresh(file);
+        let data = importFresh(file);
+        if (data["default"]) {
+          data = data["default"];
+        }
+
         return {
           ...acc,
           ...Object.entries(data).reduce((acc2, [key, val]) => {
@@ -280,7 +284,10 @@ export const getSchemaSources = () => {
   config.sources.sectionPresetSchemas = sectionPresetSchemaFiles.reduce(
     (acc, file) => {
       try {
-        const data = importFresh(file);
+        let data = importFresh(file);
+        if (data["default"]) {
+          data = data["default"];
+        }
         return {
           ...acc,
           ...Object.entries(data).reduce((acc2, [key, val]) => {

@@ -143,6 +143,7 @@ export const validateCliOptions = async (
   }
 
   console.log(currentEnvironment);
+  process.env["SHOPIFY_ACCELERATE_STORE"] = currentEnvironment.store;
   config.environments[environment] = currentEnvironment;
   config.environment = environment;
   config.theme_path = currentEnvironment?.path;
