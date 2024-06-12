@@ -735,8 +735,10 @@ declare global {
   targets.dynamicJs.forEach((name) => {
     const targetName = name.split(/[\\/]/gi).at(-1).replace(/\.js$/gi, "");
 
-    const sectionFile = sources.sectionsJs.find((section) =>
-      section.includes(targetName.replace(/__section--/gi, ""))
+    const sectionFile = sources.sectionsJs.find(
+      (section) =>
+        section.includes(`\\${targetName.replace(/__section--/gi, "")}.ts`) ||
+        section.includes(`/${targetName.replace(/__section--/gi, "")}.ts`)
     );
 
     if (sectionFile) {
