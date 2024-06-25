@@ -216,12 +216,12 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
-    if (schema.section_as_snippet) {
-      const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
-      writeCompareFile(snippetPath, translationArray.join("\n"));
-      snippets.push(snippetPath);
-      translationArray = [`{%- render "${schema.folder}" -%}`];
-    }
+    const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
+    writeCompareFile(snippetPath, translationArray.join("\n"));
+    snippets.push(snippetPath);
+
+    translationArray = [`{%- render "${schema.folder}" -%}`];
+
     translationArray.push(generateSectionFiles(schema));
 
     writeCompareFile(sectionPath, translationArray.join("\n"));
@@ -239,8 +239,9 @@ export const generateLiquidFiles = () => {
       continue;
     }
     const schema = Object.values(sectionsSchemas)?.find(
-      (val) => val.folder === sectionPresetSchemas[key]?.type && val.section_as_snippet
+      (val) => val.folder === sectionPresetSchemas[key]?.type
     );
+
     if (!schema) {
       continue;
     }

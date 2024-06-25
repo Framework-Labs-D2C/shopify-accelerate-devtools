@@ -55,7 +55,7 @@ module.exports = {
           "overlay-text": "rgb(var(--color-overlay-text) / <alpha-value>)",
           "overlay-text-hex": "var(--color-overlay-text-hex)",
           accent: "rgb(var(--color-accent) / <alpha-value>)",
-          borders: "rgb(var(--color-borders) / <alpha-value>)",
+          border: "rgb(var(--color-border) / <alpha-value>)",
         },
         error: "rgb(var(--color-error) / <alpha-value>)",
         warning: "rgb(var(--color-warning) / <alpha-value>)",

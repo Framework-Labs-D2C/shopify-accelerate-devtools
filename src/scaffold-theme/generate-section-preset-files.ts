@@ -3,7 +3,7 @@ import { config } from "../../shopify-accelerate";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
 export const generateSectionPresetFiles = ({
-  schema: { name, generate_block_files, section_as_snippet, disabled, path, folder, ...section },
+  schema: { name, generate_block_files, disabled, path, folder, ...section },
   preset,
 }: {
   schema: ShopifySection & { path: string; folder: string };
