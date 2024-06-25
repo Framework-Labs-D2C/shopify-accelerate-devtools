@@ -67,7 +67,11 @@ export const runTailwindCSSWatcher = () => {
 
   /*= =============== Tailwind Plugin Order ================ */
   watch(path.join(process.cwd(), "assets"), { recursive: false }, async (evt, name) => {
-    if (!name.match(/tailwind_pre_sort.css.liquid$/)) return;
+    if (
+      !name.match(/tailwind_pre_sort.css.liquid$/) ||
+      !fs.existsSync("./assets/tailwind_pre_sort.css.liquid")
+    )
+      return;
     const file = fs.readFileSync("./assets/tailwind_pre_sort.css.liquid", { encoding: "utf-8" });
 
     const top = file
