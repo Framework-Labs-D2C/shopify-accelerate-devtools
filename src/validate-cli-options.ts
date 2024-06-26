@@ -29,6 +29,7 @@ export const validateCliOptions = async (
     path: `./themes/${environment}`,
   };
 
+  // console.log({ environments, currentEnvironment });
   if (reset_theme_id) {
     currentEnvironment.theme = undefined;
   }
@@ -139,7 +140,7 @@ export const validateCliOptions = async (
 
   if (Object.keys(results)?.length) {
     environment = results.environment ?? environment;
-    currentEnvironment.path = `./themes/${environment}`;
+    currentEnvironment.path = currentEnvironment.path || `./themes/${environment}`;
     currentEnvironment.theme = +(results.theme_id ?? theme_id ?? currentEnvironment.theme);
     currentEnvironment.store =
       results.store?.replace(/\.myshopify\.com/gi, "") ??
