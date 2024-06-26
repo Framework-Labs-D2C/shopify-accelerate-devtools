@@ -53,7 +53,7 @@ export type GlobalsState = {
   theme_id: number;
   theme_path: string;
   store: string;
-  environment: keyof (typeof shopify_toml)["environments"];
+  environment: string;
   environments: (typeof shopify_toml)["environments"];
   ignore_blocks: string[];
   ignore_snippets: string[];

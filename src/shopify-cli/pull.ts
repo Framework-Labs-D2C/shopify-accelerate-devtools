@@ -3,10 +3,15 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import { config } from "../../shopify-accelerate";
+import { buildTheme } from "../scaffold-theme/build-theme";
+import { generateConfigFiles } from "../scaffold-theme/generate-config-files";
+import { validateCliOptions } from "../validate-cli-options";
 
 export const shopifyCliPull = async () => {
   const { store, theme_id, environment, theme_path } = config;
   const cleanThemePath = theme_path?.replace(/^\.\//gi, "")?.replace(/\\/gi, "/");
+  let second_attempt = false;
+
   await new Promise((resolve, reject) => {
     const interval = setInterval(() => {
       console.log(
@@ -17,7 +22,7 @@ export const shopifyCliPull = async () => {
     }, 1000);
     exec(
       `shopify theme pull --environment ${environment} && cd ${cleanThemePath} && git init && git add . && git commit -m init`,
-      (error, stdout, stderr) => {
+      async (error, stdout, stderr) => {
         const vcsPath = path.join(process.cwd(), ".idea/vcs.xml");
         const workspace = path.join(process.cwd(), ".idea/workspace.xml");
         if (fs.existsSync(workspace)) {
@@ -46,6 +51,43 @@ export const shopifyCliPull = async () => {
 </project>`
             );
           }
+        }
+        if (
+          stderr &&
+          stderr.includes(`doesn't exist`) &&
+          stderr.includes(`Theme`) &&
+          !second_attempt
+        ) {
+          clearInterval(interval);
+          second_attempt = true;
+          console.log(stderr);
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
+              `Error - Theme not Found`
+            )}`
+          );
+          await validateCliOptions({
+            store,
+            environment,
+            reset_theme_id: true,
+          });
+          buildTheme();
+          generateConfigFiles();
+          await shopifyCliPull();
+
+          resolve(true);
+          return;
+        }
+        if (stderr && stderr.includes(`doesn't exist`) && stderr.includes(`Theme`)) {
+          console.log(stderr);
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
+              `Error - Could not initialize the Theme`
+            )}`
+          );
+
+          clearInterval(interval);
+          resolve(true);
         }
         console.log(
           `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(

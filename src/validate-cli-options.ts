@@ -14,19 +14,24 @@ export const validateCliOptions = async (
     store,
     theme: theme_id,
     environment = "development",
+    reset_theme_id = false,
   }: {
     store?: string;
     theme?: number;
     environment?: string;
-  } = { environment: "development", store: undefined, theme: undefined }
+    reset_theme_id?: boolean;
+  } = { environment: "development", store: undefined, theme: undefined, reset_theme_id: false }
 ) => {
   const { environments } = config;
   const { ...currentEnvironment } = environments[environment] ?? {
     store: store?.replace(/\.myshopify\.com/gi, ""),
     theme: theme_id,
     path: `./themes/${environment}`,
-    environment,
   };
+
+  if (reset_theme_id) {
+    currentEnvironment.theme = undefined;
+  }
 
   if (store && currentEnvironment.store !== store) {
     const { update_store } = await userInput([
