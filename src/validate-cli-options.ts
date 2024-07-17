@@ -6,6 +6,8 @@ import json2toml from "json2toml";
 import path from "path";
 import userInput from "prompts";
 import { config } from "../shopify-accelerate";
+import { buildTheme } from "./scaffold-theme/build-theme";
+import { generateConfigFiles } from "./scaffold-theme/generate-config-files";
 import { delay } from "./utils/delay";
 import { readFile, writeCompareFile, writeOnlyNew } from "./utils/fs";
 
@@ -85,28 +87,85 @@ export const validateCliOptions = async (
 
   if (!theme_id && !currentEnvironment.theme) {
     if (currentEnvironment.store) {
-      await new Promise((resolve, reject) => {
-        // exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
-        //   console.log(stdout);
-        //   if (stdout.includes("Press any key to open the login page on your brows")) {
-        //     console.log("MATCHED!!");
-        //   }
-        //   await delay(4500);
-        //   resolve(true);
-        // });
+      const results = await userInput([
+        {
+          type: "select",
+          name: "theme_action",
+          message: "Next step",
+          choices: [
+            { title: "Create new Theme", value: "create_theme" },
+            { title: "List Themes", value: "list_themes" },
+            { title: "Add Theme Id", value: "add_theme" },
+          ],
+          initial: 1,
+        },
+      ]);
+      if (results.theme_action === "create_theme") {
+        await new Promise((resolve, reject) => {
+          // exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
+          //   console.log(stdout);
+          //   if (stdout.includes("Press any key to open the login page on your brows")) {
+          //     console.log("MATCHED!!");
+          //   }
+          //   await delay(4500);
+          //   resolve(true);
+          // });
 
-        const process = child_process.spawn(
-          "npx",
-          ["shopify", "theme", "list", "-s", currentEnvironment.store],
-          {
-            shell: true,
-            stdio: "inherit",
-          }
-        );
-        process.on("exit", () => {
-          resolve(true);
+          process.env["SHOPIFY_ACCELERATE_STORE"] = currentEnvironment.store;
+          config.environments[environment] = currentEnvironment;
+          config.environment = environment;
+          config.theme_path = currentEnvironment?.path;
+          config.theme_id = +currentEnvironment?.theme;
+          config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
+
+          buildTheme();
+          generateConfigFiles();
+
+          const cp = child_process.spawn(
+            "npx",
+            [
+              "shopify",
+              "theme",
+              "share",
+              "-s",
+              currentEnvironment.store,
+              "--path",
+              `./themes/${environment}`,
+            ],
+            {
+              shell: true,
+              stdio: "inherit",
+            }
+          );
+          cp.on("exit", (e) => {
+            resolve(true);
+          });
         });
-      });
+      }
+      if (results.theme_action === "list_themes") {
+        await new Promise((resolve, reject) => {
+          // exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
+          //   console.log(stdout);
+          //   if (stdout.includes("Press any key to open the login page on your brows")) {
+          //     console.log("MATCHED!!");
+          //   }
+          //   await delay(4500);
+          //   resolve(true);
+          // });
+
+          const cp = child_process.spawn(
+            "npx",
+            ["shopify", "theme", "list", "-s", currentEnvironment.store],
+            {
+              shell: true,
+              stdio: "inherit",
+            }
+          );
+          cp.on("exit", () => {
+            resolve(true);
+          });
+        });
+      }
     }
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Theme ID missing.`)}`
