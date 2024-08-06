@@ -101,7 +101,7 @@ export const validateCliOptions = async (
         },
       ]);
       if (results.theme_action === "create_theme") {
-        await new Promise((resolve, reject) => {
+        await new Promise(async (resolve, reject) => {
           // exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
           //   console.log(stdout);
           //   if (stdout.includes("Press any key to open the login page on your brows")) {
@@ -118,6 +118,9 @@ export const validateCliOptions = async (
           config.theme_id = +currentEnvironment?.theme;
           config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
 
+          buildTheme();
+          generateConfigFiles();
+          await delay(350);
           buildTheme();
           generateConfigFiles();
 

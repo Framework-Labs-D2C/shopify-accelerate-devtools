@@ -245,7 +245,7 @@ export const getSchemaSources = () => {
   });
 
   Object.keys(require.cache)?.forEach((file) => {
-    if (file.includes("@utils\\settings")) {
+    if (/[\\/]@utils[\\/]settings[\\/][^\\/]*\.ts$/gi.test(file)) {
       importFresh(file);
     }
   });
