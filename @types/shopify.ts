@@ -466,6 +466,7 @@ export type PresetSchema<T = never> = {
     | ShopifySectionPreset<T>["blocks"];
   type: T extends { type: string } ? T["type"] : Sections["type"];
   block_order?: string[];
+  custom_css?: string[];
   name: string;
 };
 
