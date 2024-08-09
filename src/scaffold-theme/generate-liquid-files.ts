@@ -794,6 +794,7 @@ declare global {
         fileName.includes("_layout.translations.liquid") ||
         fileName.includes("_layout.dynamic-imports.liquid") ||
         /^replo/gi.test(fileName) ||
+        /^pandectes/gi.test(fileName) ||
         /^_preset/gi.test(fileName)
       ) {
         return;
@@ -814,7 +815,11 @@ declare global {
         Object.entries(sources.sectionPresetSchemas).find(
           ([key, val]) => !val.disabled && fileName === `preset__${toSnakeCase(key)}.liquid`
         );
-      if (/^replo/gi.test(fileName) || /^_preset/gi.test(fileName)) {
+      if (
+        /^replo/gi.test(fileName) ||
+        /^pandectes/gi.test(fileName) ||
+        /^_preset/gi.test(fileName)
+      ) {
         return;
       }
       if (!targetFile) {
