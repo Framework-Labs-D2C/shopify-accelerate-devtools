@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { writeOnlyNew } from "../utils/fs";
 
 export const generateConfigFiles = () => {

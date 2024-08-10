@@ -2,7 +2,7 @@ import chalk from "chalk";
 import fs from "fs";
 import watch from "node-watch";
 import path from "path";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { generateBlocksTypes } from "../scaffold-theme/generate-blocks-types";
 import { generateLiquidFiles } from "../scaffold-theme/generate-liquid-files";
 import { generateSchemaLocales } from "../scaffold-theme/generate-schema-locales";

@@ -1,16 +1,16 @@
 import child_process from "child_process";
 import fs from "fs";
 import path from "path";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { deleteFile } from "../utils/fs";
 const watch = require("node-watch");
 
 export const runTailwindCSSWatcher = () => {
   const { package_root } = config;
-  const hasConfig = fs.existsSync(path.join(process.cwd(), "tailwind.config.js"));
-  const hasPostCss = fs.existsSync(path.join(process.cwd(), "postcss.config.js"));
+  const hasConfig = fs.existsSync(path.join(root_dir, "tailwind.config.js"));
+  const hasPostCss = fs.existsSync(path.join(root_dir, "postcss.config.js"));
 
-  const filePath = path.join(process.cwd(), `assets`, `tailwind_pre_sort.css.liquid`);
+  const filePath = path.join(root_dir, `assets`, `tailwind_pre_sort.css.liquid`);
   deleteFile(filePath);
   /*= =============== Tailwind Watcher ================ */
   child_process.spawn(
@@ -28,7 +28,7 @@ export const runTailwindCSSWatcher = () => {
         `src/tailwind/postcss.config.js`
       ),
       "-i",
-      path.join(process.cwd(), `assets`, `_tailwind.css`),
+      path.join(root_dir, `assets`, `_tailwind.css`),
       "-o",
       filePath,
       "--watch",
@@ -55,9 +55,9 @@ export const runTailwindCSSWatcher = () => {
         `src/tailwind/postcss.config.js`
       ),
       "-i",
-      path.join(process.cwd(), `assets`, `_reset.css`),
+      path.join(root_dir, `assets`, `_reset.css`),
       "-o",
-      path.join(process.cwd(), `assets`, `reset.css.liquid`),
+      path.join(root_dir, `assets`, `reset.css.liquid`),
     ],
     {
       shell: true,
@@ -66,7 +66,7 @@ export const runTailwindCSSWatcher = () => {
   );
 
   /*= =============== Tailwind Plugin Order ================ */
-  watch(path.join(process.cwd(), "assets"), { recursive: false }, async (evt, name) => {
+  watch(path.join(root_dir, "assets"), { recursive: false }, async (evt, name) => {
     if (
       !name.match(/tailwind_pre_sort.css.liquid$/) ||
       !fs.existsSync("./assets/tailwind_pre_sort.css.liquid")
@@ -114,7 +114,7 @@ export const runTailwindCSSWatcher = () => {
       }
     });
 
-    fs.writeFileSync(path.join(process.cwd(), `assets/tailwind.css.liquid`), content);
-    fs.writeFileSync(path.join(process.cwd(), ".tailwindorder"), classesInOrder.join("\n"));
+    fs.writeFileSync(path.join(root_dir, `assets/tailwind.css.liquid`), content);
+    fs.writeFileSync(path.join(root_dir, ".tailwindorder"), classesInOrder.join("\n"));
   });
 };

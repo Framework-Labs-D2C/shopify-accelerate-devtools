@@ -1,6 +1,6 @@
 import path from "path";
 import { ShopifySettings, ShopifySettingsInput } from "../../@types/shopify";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
 import { getSettingsType } from "./generate-section-types";
 
@@ -115,7 +115,7 @@ export const generateSettingTypes = () => {
     "\n"
   )}\n`;
 
-  const settingsTypesPath = path.join(process.cwd(), "@types", "settings.ts");
+  const settingsTypesPath = path.join(root_dir, "@types", "settings.ts");
 
   writeCompareFile(settingsTypesPath, typesContent);
 };

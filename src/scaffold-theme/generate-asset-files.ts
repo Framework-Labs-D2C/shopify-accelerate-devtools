@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const generateAssetFiles = () => {
@@ -32,8 +32,11 @@ export const generateAssetFiles = () => {
         sourcePath.split(/[\\/]/gi).at(-1).includes(fileName)
       );
 
+      if (/^replo/gi.test(fileName) || /^pandectes/gi.test(fileName)) {
+        return;
+      }
       if (!targetFile) {
-        deleteFile(path.join(process.cwd(), file));
+        deleteFile(path.join(root_dir, file));
       }
     });
   }

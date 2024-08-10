@@ -1,5 +1,5 @@
 import path from "path";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { isBlockTs, isSectionTs } from "../scaffold-theme/parse-files";
 
 const { build } = require("esbuild");
@@ -11,8 +11,8 @@ const fs = require("fs");
 const runEsBuild = () => {
   build({
     entryPoints: [
-      path.join(process.cwd(), "assets", "theme.ts"),
-      path.join(process.cwd(), "assets", "editor.ts"),
+      path.join(root_dir, "assets", "theme.ts"),
+      path.join(root_dir, "assets", "editor.ts"),
     ],
     metafile: true,
     target: "es2020",
@@ -20,7 +20,7 @@ const runEsBuild = () => {
     treeShaking: true,
     bundle: true,
     // outfile: "./assets/theme.js",
-    outdir: path.join(process.cwd(), "assets"),
+    outdir: path.join(root_dir, "assets"),
     minify: false,
     ignoreAnnotations: true,
     packages: "external",
@@ -47,7 +47,7 @@ const runSectionJsEsbuild = (entryFile) => {
     treeShaking: true,
     // bundle: true,
     outfile: path.join(
-      process.cwd(),
+      root_dir,
       config.theme_path,
       "assets",
       `__section--${entryFile
@@ -55,7 +55,7 @@ const runSectionJsEsbuild = (entryFile) => {
         .at(-1)
         .replace(/\.(ts)x?$/gi, ".js")}`
     ),
-    // outdir: path.join(process.cwd(), config.theme_path, "assets"),
+    // outdir: path.join(root_dir, config.theme_path, "assets"),
     minify: false,
     ignoreAnnotations: true,
     packages: "external",
@@ -87,7 +87,7 @@ const runBlockJsEsbuild = (entryFile) => {
     treeShaking: true,
     // bundle: true,
     outfile: path.join(
-      process.cwd(),
+      root_dir,
       config.theme_path,
       "assets",
       `__block--${entryFile
@@ -95,7 +95,7 @@ const runBlockJsEsbuild = (entryFile) => {
         .at(-1)
         .replace(/\.(ts)x?$/gi, ".js")}`
     ),
-    // outdir: path.join(process.cwd(), config.theme_path, "assets"),
+    // outdir: path.join(root_dir, config.theme_path, "assets"),
     minify: false,
     ignoreAnnotations: true,
     packages: "external",
@@ -120,7 +120,7 @@ const runBlockJsEsbuild = (entryFile) => {
 
 export const runEsbuild = () => {
   let running = false;
-  watch(process.cwd(), { recursive: true }, async (event, name) => {
+  watch(root_dir, { recursive: true }, async (event, name) => {
     if (running || event === "remove") return;
     if (!name.match(/\.(ts)x?$/) || /schema\.ts$/gi.test(name)) return;
     running = true;

@@ -3,8 +3,6 @@
 import fs from "fs";
 import path from "path";
 import toml from "toml";
-import { create } from "zustand";
-import { immer } from "zustand/middleware/immer";
 import { PresetSchema, ShopifyBlock, ShopifySection, ShopifySettings } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
@@ -19,6 +17,10 @@ import { watchTheme } from "./src/watch-theme/watch-theme";
 const { Command } = require("commander");
 const program = new Command();
 require("dotenv").config();
+
+export const root_dir = process.env.SHOPIFY_ACCELERATE_ROOT
+  ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_ROOT)
+  : process.cwd();
 
 const tomlFile = fs.existsSync(path.join(process.cwd(), "shopify.theme.toml"))
   ? toml.parse(
@@ -138,7 +140,7 @@ export const config: GlobalsState = {
   disabled_locales: process.env.SHOPIFY_ACCELERATE_DISABLED_LOCALES === "true",
   disabled_theme_blocks: process.env.SHOPIFY_ACCELERATE_DISABLE_THEME_BLOCKS === "true",
   package_root: path.resolve(__dirname),
-  project_root: process.cwd(),
+  project_root: root_dir,
   package_templates: path.join(path.resolve(__dirname), "./src/templates"),
   package_types: path.join(path.resolve(__dirname), "./@types"),
   sources: {
@@ -180,16 +182,16 @@ export const config: GlobalsState = {
     customerTemplates: [],
   },
   folders: {
-    types: path.join(process.cwd(), "@types"),
-    utils: path.join(process.cwd(), "@utils"),
-    sections: path.join(process.cwd(), "sections"),
-    presets: path.join(process.cwd(), "presets"),
-    layout: path.join(process.cwd(), "layout"),
-    blocks: path.join(process.cwd(), "blocks"),
-    snippets: path.join(process.cwd(), "snippets"),
-    templates: path.join(process.cwd(), "templates"),
-    assets: path.join(process.cwd(), "assets"),
-    config: path.join(process.cwd(), "config"),
+    types: path.join(root_dir, "@types"),
+    utils: path.join(root_dir, "@utils"),
+    sections: path.join(root_dir, "sections"),
+    presets: path.join(root_dir, "presets"),
+    layout: path.join(root_dir, "layout"),
+    blocks: path.join(root_dir, "blocks"),
+    snippets: path.join(root_dir, "snippets"),
+    templates: path.join(root_dir, "templates"),
+    assets: path.join(root_dir, "assets"),
+    config: path.join(root_dir, "config"),
   },
   environments: Object.entries(shopify_toml?.environments ?? {})?.reduce((acc, [key, val]) => {
     acc[key] = {

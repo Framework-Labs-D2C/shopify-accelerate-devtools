@@ -2,7 +2,7 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import { PresetSchema, ShopifySectionPreset } from "../../@types/shopify";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { deleteFile, writeCompareFile } from "../utils/fs";
 import { isObject } from "../utils/is-object";
 import { toCamelCase } from "../utils/to-camel-case";
@@ -47,7 +47,7 @@ export const generateLiquidFiles = () => {
       );
       if (targetFile) {
         config.targets.sections = config.targets.sections.filter((target) => target !== targetFile);
-        deleteFile(path.join(process.cwd(), targetFile));
+        deleteFile(path.join(root_dir, targetFile));
       }
       const snippetTargets = targets.snippets.filter(
         (target) => `${target.split(/[\\/]/gi).at(-1).split(".")[0]}.liquid` === sectionName
@@ -56,7 +56,7 @@ export const generateLiquidFiles = () => {
       if (snippetTargets.length) {
         config.targets.snippets = config.targets.snippets.filter((target) => {
           if (snippetTargets.includes(target)) {
-            deleteFile(path.join(process.cwd(), target));
+            deleteFile(path.join(root_dir, target));
             return false;
           }
           return true;
@@ -76,7 +76,7 @@ export const generateLiquidFiles = () => {
           config.targets.snippets = config.targets.snippets.filter(
             (target) => target !== targetFile
           );
-          deleteFile(path.join(process.cwd(), targetFile));
+          deleteFile(path.join(root_dir, targetFile));
         }
       }
     });
@@ -234,7 +234,7 @@ export const generateLiquidFiles = () => {
       );
       if (targetFile) {
         config.targets.sections = config.targets.sections.filter((target) => target !== targetFile);
-        deleteFile(path.join(process.cwd(), targetFile));
+        deleteFile(path.join(root_dir, targetFile));
       }
       continue;
     }
@@ -277,7 +277,7 @@ export const generateLiquidFiles = () => {
       );
       if (targetFile) {
         config.targets.blocks = config.targets.blocks.filter((target) => target !== targetFile);
-        deleteFile(path.join(process.cwd(), targetFile));
+        deleteFile(path.join(root_dir, targetFile));
       }
 
       const snippetTargets = targets.snippets.filter((target) => {
@@ -292,7 +292,7 @@ export const generateLiquidFiles = () => {
       if (snippetTargets.length) {
         config.targets.snippets = config.targets.snippets.filter((target) => {
           if (snippetTargets.includes(target)) {
-            deleteFile(path.join(process.cwd(), target));
+            deleteFile(path.join(root_dir, target));
             return false;
           }
           return true;
@@ -707,7 +707,7 @@ declare global {
         `<script type="module" src="{{ '${targetName}' | asset_url }}" defer></script>`
       );
     } else if (targetFile) {
-      deleteFile(path.join(process.cwd(), targetFile));
+      deleteFile(path.join(root_dir, targetFile));
       config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== targetFile);
     }
   });
@@ -728,7 +728,7 @@ declare global {
         `<script type="module" src="{{ '${targetName}' | asset_url }}" defer></script>`
       );
     } else if (targetFile) {
-      deleteFile(path.join(process.cwd(), targetFile));
+      deleteFile(path.join(root_dir, targetFile));
       config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== targetFile);
     }
   });
@@ -750,7 +750,7 @@ declare global {
       );
 
       if (!section || section.disabled) {
-        deleteFile(path.join(process.cwd(), name));
+        deleteFile(path.join(root_dir, name));
         config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
       }
       return;
@@ -768,12 +768,12 @@ declare global {
       );
 
       if (!block || block.disabled) {
-        deleteFile(path.join(process.cwd(), name));
+        deleteFile(path.join(root_dir, name));
         config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
       }
       return;
     }
-    deleteFile(path.join(process.cwd(), name));
+    deleteFile(path.join(root_dir, name));
     config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
   });
 
@@ -800,7 +800,7 @@ declare global {
         return;
       }
       if (!targetFile) {
-        deleteFile(path.join(process.cwd(), file));
+        deleteFile(path.join(root_dir, file));
       }
     });
   }
@@ -823,7 +823,7 @@ declare global {
         return;
       }
       if (!targetFile) {
-        deleteFile(path.join(process.cwd(), file));
+        deleteFile(path.join(root_dir, file));
       }
     });
   }
@@ -835,7 +835,7 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        deleteFile(path.join(process.cwd(), file));
+        deleteFile(path.join(root_dir, file));
       }
     });
   }
@@ -847,7 +847,7 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        deleteFile(path.join(process.cwd(), file));
+        deleteFile(path.join(root_dir, file));
       }
     });
   }

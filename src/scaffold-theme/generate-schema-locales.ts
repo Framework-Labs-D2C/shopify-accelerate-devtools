@@ -1,6 +1,6 @@
 import { produce } from "immer";
 import path from "path";
-import { config } from "../../shopify-accelerate";
+import { config, root_dir } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
