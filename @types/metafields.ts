@@ -1,4 +1,4 @@
-import { _Metafield_liquid, _Metafield_liquid_file_reference, _Metafield_liquid_list_file_reference, _Metafield_liquid_list_product_reference, _Metafield_liquid_list_variant_reference, _Metafield_liquid_page_reference, _Metafield_liquid_product_reference, _Metafield_liquid_variant_reference } from "types/shopify";
+import { _Metafield_liquid } from "./shopify";
 
 export type _Article_metafields = { [T: string]: { [T: string]: _Metafield_liquid["value"] } };
 export type _Blog_metafields = { [T: string]: { [T: string]: _Metafield_liquid["value"] } };
