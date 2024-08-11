@@ -248,6 +248,7 @@ program
   )
   .action(async (options) => {
     await validateCliOptions(options);
+    console.log(config);
     buildTheme();
     generateConfigFiles();
     runEsbuild();

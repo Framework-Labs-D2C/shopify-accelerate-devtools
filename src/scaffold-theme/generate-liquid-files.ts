@@ -800,7 +800,7 @@ declare global {
         return;
       }
       if (!targetFile) {
-        deleteFile(path.join(root_dir, file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }
@@ -823,7 +823,7 @@ declare global {
         return;
       }
       if (!targetFile) {
-        deleteFile(path.join(root_dir, file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }
@@ -835,7 +835,7 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        deleteFile(path.join(root_dir, file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }
@@ -847,7 +847,7 @@ declare global {
         (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
       );
       if (!targetFile) {
-        deleteFile(path.join(root_dir, file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }

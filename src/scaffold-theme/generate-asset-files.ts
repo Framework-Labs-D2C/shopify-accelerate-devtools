@@ -36,7 +36,7 @@ export const generateAssetFiles = () => {
         return;
       }
       if (!targetFile) {
-        deleteFile(path.join(root_dir, file));
+        deleteFile(path.join(process.cwd(), file));
       }
     });
   }
