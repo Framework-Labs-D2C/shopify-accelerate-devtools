@@ -9,11 +9,20 @@ const watch = require("node-watch");
 const fs = require("fs");
 
 const runEsBuild = () => {
+  const entryPoints = [];
+  if (fs.existsSync(path.join(root_dir, "assets", "theme.ts"))) {
+    entryPoints.push(path.join(root_dir, "assets", "theme.ts"));
+  }
+
+  if (fs.existsSync(path.join(root_dir, "assets", "editor.ts"))) {
+    entryPoints.push(path.join(root_dir, "assets", "editor.ts"));
+  }
+  if (!entryPoints.length) {
+    console.log("No JS/TS entry files found.");
+    return;
+  }
   build({
-    entryPoints: [
-      path.join(root_dir, "assets", "theme.ts"),
-      path.join(root_dir, "assets", "editor.ts"),
-    ],
+    entryPoints: entryPoints,
     metafile: true,
     target: "es2020",
     // sourcemap: "external",

@@ -9,6 +9,13 @@ export const runTailwindCSSWatcher = () => {
   const { package_root } = config;
   const hasConfig = fs.existsSync(path.join(root_dir, "tailwind.config.js"));
   const hasPostCss = fs.existsSync(path.join(root_dir, "postcss.config.js"));
+  const inputFile = fs.existsSync(path.join(root_dir, `assets`, `_tailwind.css`));
+  const resetInputFile = fs.existsSync(path.join(root_dir, `assets`, `_reset.css`));
+
+  if (!inputFile) {
+    console.log("Tailwind Input file not found");
+    return;
+  }
 
   const filePath = path.join(root_dir, `assets`, `tailwind_pre_sort.css.liquid`);
   deleteFile(filePath);
@@ -39,6 +46,10 @@ export const runTailwindCSSWatcher = () => {
     }
   );
 
+  if (!resetInputFile) {
+    console.log("Tailwind Reset Input file not found");
+    return;
+  }
   /*= =============== Tailwind Reset ================ */
   child_process.spawn(
     "npx",
