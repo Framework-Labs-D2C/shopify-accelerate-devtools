@@ -462,12 +462,7 @@ export type PresetSchema<T = never> = {
   settings?: ShopifySectionPreset<T>["settings"];
   disabled?: boolean;
   blocks?:
-    | Record<
-        string,
-        ShopifySectionPreset<T>["blocks"] extends { blocks: Array<any> }
-          ? ShopifySectionPreset<T>["blocks"][number]
-          : ShopifySectionPreset<T>["blocks"]
-      >
+    | Record<string, ShopifySectionPreset<T>["blocks"][number]>
     | ShopifySectionPreset<T>["blocks"];
   type: T extends { type: string } ? T["type"] : Sections["type"];
   block_order?: string[];

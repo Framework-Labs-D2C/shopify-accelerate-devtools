@@ -119,6 +119,5 @@ export const generateSettingTypes = () => {
     ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_TYPES, "settings.ts")
     : path.join(root_dir, "@types", "settings.ts");
 
-  console.log("process.env.SHOPIFY_ACCELERATE_TYPES");
   writeCompareFile(settingsTypesPath, typesContent);
 };
