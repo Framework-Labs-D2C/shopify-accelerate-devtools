@@ -1530,21 +1530,23 @@ export type RichtextSchema_Text = {
 };
 
 export type GlobalSettings = {
-  article?: _Article_liquid;
-  blog?: _Blog_liquid;
-  collection?: _Collection_liquid;
-  description?: string;
-  handle?: string;
-  linklists?: _Linklist_liquid[];
-  page?: _Page_liquid_json;
-  product?: _Product_liquid;
-  recommendations?: _Recommendations_liquid;
-  request?: _Request_liquid;
-  routes?: _Routes_liquid;
-  settings?: SettingsSchema;
-  shop?: _Shop_liquid_json;
-  template?: string;
-  title?: string;
+  title: string;
+  article: _Article_liquid | null;
+  blog: _Blog_liquid | null;
+  collection: _Collection_liquid | null;
+  description: string;
+  handle: string | null;
+  page: _Page_liquid_json | null;
+  product: _Product_liquid | null;
+  file_url: string;
+  asset_url: string;
+  pathname: string;
+  template: string;
+  money_format: string;
+  theme_id: string;
+  theme_role: string;
+  settings: SettingsSchema;
+  shop: _Shop_liquid_json;
 };
 
 export type _Font_options =

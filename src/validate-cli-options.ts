@@ -221,7 +221,7 @@ export const validateCliOptions = async (
   const { project_root, package_templates } = config;
 
   writeOnlyNew(
-    path.join(project_root, ".env"),
+    path.join(process.cwd(), ".env"),
     readFile(path.join(package_templates, "/.env.template"))
   );
 

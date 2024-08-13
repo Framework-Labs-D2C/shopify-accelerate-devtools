@@ -128,6 +128,6 @@ export const runTailwindCSSWatcher = () => {
     });
 
     fs.writeFileSync(path.join(root_dir, `assets/tailwind.css.liquid`), content);
-    fs.writeFileSync(path.join(root_dir, ".tailwindorder"), classesInOrder.join("\n"));
+    fs.writeFileSync(path.join(process.cwd(), ".tailwindorder"), classesInOrder.join("\n"));
   });
 };

@@ -182,16 +182,36 @@ export const config: GlobalsState = {
     customerTemplates: [],
   },
   folders: {
-    types: path.join(root_dir, "@types"),
-    utils: path.join(root_dir, "@utils"),
-    sections: path.join(root_dir, "sections"),
-    presets: path.join(root_dir, "presets"),
-    layout: path.join(root_dir, "layout"),
-    blocks: path.join(root_dir, "blocks"),
-    snippets: path.join(root_dir, "snippets"),
-    templates: path.join(root_dir, "templates"),
-    assets: path.join(root_dir, "assets"),
-    config: path.join(root_dir, "config"),
+    types: process.env.SHOPIFY_ACCELERATE_TYPES
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_TYPES)
+      : path.join(root_dir, "@types"),
+    utils: process.env.SHOPIFY_ACCELERATE_UTILS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_UTILS)
+      : path.join(root_dir, "@utils"),
+    sections: process.env.SHOPIFY_ACCELERATE_SECTIONS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_SECTIONS)
+      : path.join(root_dir, "sections"),
+    presets: process.env.SHOPIFY_ACCELERATE_PRESETS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_PRESETS)
+      : path.join(root_dir, "presets"),
+    layout: process.env.SHOPIFY_ACCELERATE_LAYOUT
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_LAYOUT)
+      : path.join(root_dir, "layout"),
+    blocks: process.env.SHOPIFY_ACCELERATE_BLOCKS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_BLOCKS)
+      : path.join(root_dir, "blocks"),
+    snippets: process.env.SHOPIFY_ACCELERATE_SNIPPETS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_SNIPPETS)
+      : path.join(root_dir, "snippets"),
+    templates: process.env.SHOPIFY_ACCELERATE_TEMPLATES
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_TEMPLATES)
+      : path.join(root_dir, "templates"),
+    assets: process.env.SHOPIFY_ACCELERATE_ASSETS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_ASSETS)
+      : path.join(root_dir, "assets"),
+    config: process.env.SHOPIFY_ACCELERATE_CONFIG
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_CONFIG)
+      : path.join(root_dir, "config"),
   },
   environments: Object.entries(shopify_toml?.environments ?? {})?.reduce((acc, [key, val]) => {
     acc[key] = {
