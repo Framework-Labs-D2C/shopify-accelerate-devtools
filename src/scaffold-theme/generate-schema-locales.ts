@@ -32,21 +32,24 @@ export const generateSchemaLocales = () => {
         section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
 
       current.sections[toLocaleFriendlySnakeCase(section.name)] = {
-        name: section.name,
+        name: section.name?.length > 25 ? section.name : undefined,
         settings: generateSectionSettings(section.settings, localesDuplicates),
         blocks: blocks.length
           ? blocks?.reduce((acc, block) => {
               acc[toLocaleFriendlySnakeCase(block.name)] = {
-                name: block.name,
+                name: block.name?.length > 25 ? block.name : undefined,
                 settings: generateSectionSettings(block.settings, localesDuplicates),
               };
               return acc;
             }, {})
           : undefined,
         presets: section.presets?.reduce((acc, preset) => {
-          acc[toLocaleFriendlySnakeCase(preset.name)] = {
-            name: preset.name,
-          };
+          acc[toLocaleFriendlySnakeCase(preset.name)] =
+            preset.name?.length > 25
+              ? {
+                  name: preset.name,
+                }
+              : undefined;
           return acc;
         }, {}),
       };
@@ -59,21 +62,23 @@ export const generateSchemaLocales = () => {
         schema.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
 
       current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
-        name: schema.name,
+        name: schema.name?.length > 25 ? schema.name : undefined,
         settings: generateSectionSettings(schema.settings, localesDuplicates),
         blocks: blocks.length
           ? blocks?.reduce((acc, block) => {
               acc[toLocaleFriendlySnakeCase(block.name)] = {
-                name: block.name,
+                name: block.name?.length > 25 ? block.name : undefined,
                 settings: generateSectionSettings(block.settings, localesDuplicates),
               };
               return acc;
             }, {})
           : undefined,
         presets: schema.presets?.reduce((acc, preset) => {
-          acc[toLocaleFriendlySnakeCase(preset.name)] = {
-            name: preset.name,
-          };
+          acc[toLocaleFriendlySnakeCase(preset.name)] = preset.name?.length
+            ? {
+                name: preset.name,
+              }
+            : undefined;
           return acc;
         }, {}),
       };
@@ -85,7 +90,7 @@ export const generateSchemaLocales = () => {
 
     returnObject = produce(returnObject, (current) => {
       current.settings_schema[toLocaleFriendlySnakeCase(settingsBlock.name)] = {
-        name: settingsBlock.name,
+        name: settingsBlock.name?.length > 25 ? settingsBlock.name : undefined,
         settings: generateSectionSettings(settingsBlock.settings, localesDuplicates),
       };
     });
@@ -160,6 +165,9 @@ export const generateSectionSettings = (
                 : setting?.placeholder,
             ...options,
           };
+          if (!Object.values(current[setting.id]).filter(Boolean)?.length) {
+            current[setting.id] = undefined;
+          }
           return;
         }
         current[setting.id] = {
@@ -176,6 +184,9 @@ export const generateSectionSettings = (
               ? undefined
               : setting?.placeholder,
         };
+        if (!Object.values(current[setting.id]).filter(Boolean)?.length) {
+          current[setting.id] = undefined;
+        }
       }
     });
   });

@@ -17,7 +17,7 @@ export const generateSectionFiles = ({
   let headerCount = 1;
 
   const localizedSection = {
-    name: disabled_locales ? name : `t:sections.${sectionName}.name`,
+    name: disabled_locales || name?.length <= 25 ? name : `t:sections.${sectionName}.name`,
     ...section,
     settings: section?.settings?.map((setting) => {
       const settingsBase = `t:sections.${sectionName}.settings`;
@@ -108,9 +108,10 @@ export const generateSectionFiles = ({
                 continue;
               }
               acc.push({
-                name: disabled_locales
-                  ? schema.name
-                  : `t:blocks.${toLocaleFriendlySnakeCase(schema?.name)}.name`,
+                name:
+                  disabled_locales || schema.name?.length <= 25
+                    ? schema.name
+                    : `t:blocks.${toLocaleFriendlySnakeCase(schema?.name)}.name`,
                 type: schema.folder,
                 settings: schema?.settings?.map((setting) => {
                   const settingsBase = `t:blocks.${toLocaleFriendlySnakeCase(
@@ -200,9 +201,10 @@ export const generateSectionFiles = ({
         }
 
         acc.push({
-          name: disabled_locales
-            ? name
-            : `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
+          name:
+            disabled_locales || name?.length <= 25
+              ? name
+              : `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
           ...block,
           settings: block?.settings?.map((setting) => {
             const settingsBase = `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(
@@ -285,9 +287,10 @@ export const generateSectionFiles = ({
       }, []),
     presets: section.presets?.map(({ name, ...preset }) => {
       return {
-        name: disabled_locales
-          ? name
-          : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+        name:
+          disabled_locales || name?.length <= 25
+            ? name
+            : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
         ...preset,
       };
     }),
