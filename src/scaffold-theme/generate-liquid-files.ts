@@ -228,7 +228,29 @@ export const generateLiquidFiles = () => {
   }
 
   for (const key in sectionPresetSchemas) {
-    if (sectionPresetSchemas[key]?.disabled) {
+    const presets =
+      sectionPresetSchemas[key]?.presets
+        ?.filter(
+          (preset) =>
+            config.all_presets ||
+            !preset.enabled_on ||
+            preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
+        )
+        ?.map(
+          (preset, index, arr) =>
+            ({
+              name:
+                arr?.length === 1
+                  ? sectionPresetSchemas[key]?.name
+                  : `${sectionPresetSchemas[key]?.name} - ${index + 1}`,
+              settings: preset?.settings,
+              blocks: Array.isArray(preset?.blocks)
+                ? preset?.blocks
+                : Object.values(preset?.blocks ?? {}) ?? [],
+            }) as unknown as ShopifySectionPreset
+        ) ?? [];
+
+    if (!presets?.length) {
       const targetFile = targets.sections.find(
         (target) => target.split(/[\\/]/gi).at(-1) === `preset__${toSnakeCase(key)}.liquid`
       );
@@ -245,18 +267,12 @@ export const generateLiquidFiles = () => {
     if (!schema) {
       continue;
     }
-    const preset: ShopifySectionPreset = {
-      name: sectionPresetSchemas[key]?.name,
-      settings: sectionPresetSchemas[key]?.settings,
-      // @ts-ignore
-      blocks: Array.isArray(sectionPresetSchemas[key]?.blocks)
-        ? sectionPresetSchemas[key]?.blocks
-        : Object.values(sectionPresetSchemas[key]?.blocks ?? {}) ?? [],
-    };
 
     const translationArray = [`{%- render "${schema.folder}" -%}`];
 
-    translationArray.push(generateSectionPresetFiles({ schema, preset }));
+    translationArray.push(
+      generateSectionPresetFiles({ schema, preset_name: sectionPresetSchemas[key].name, presets })
+    );
 
     const sectionName = `preset__${toSnakeCase(key)}.liquid`;
     const sectionPath = path.join(process.cwd(), theme_path, "sections", sectionName);
@@ -813,13 +829,15 @@ declare global {
           (sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName
         ) ||
         Object.entries(sources.sectionPresetSchemas).find(
-          ([key, val]) => !val.disabled && fileName === `preset__${toSnakeCase(key)}.liquid`
+          ([key, val]) =>
+            val.presets?.filter(
+              (preset) =>
+                config.all_presets ||
+                !preset.enabled_on ||
+                preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
+            )?.length && fileName === `preset__${toSnakeCase(key)}.liquid`
         );
-      if (
-        /^replo/gi.test(fileName) ||
-        /^pandectes/gi.test(fileName) ||
-        /^_preset/gi.test(fileName)
-      ) {
+      if (/^replo/gi.test(fileName) || /^pandectes/gi.test(fileName)) {
         return;
       }
       if (!targetFile) {

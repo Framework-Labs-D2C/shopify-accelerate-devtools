@@ -16,7 +16,7 @@ export const generateBlockFiles = ({
   let headerCount = 1;
 
   const localizedSection = {
-    name: disabled_locales ? name : `t:blocks.${sectionName}.name`,
+    name: disabled_locales || sectionName?.length <= 25 ? name : `t:blocks.${sectionName}.name`,
     ...section,
     settings: section?.settings?.map((setting) => {
       const settingsBase = `t:blocks.${sectionName}.settings`;
@@ -94,9 +94,10 @@ export const generateBlockFiles = ({
       if (block.type === "@theme") return { name, ...block };
 
       return {
-        name: disabled_locales
-          ? name
-          : `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
+        name:
+          disabled_locales || name?.length <= 25
+            ? name
+            : `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
         ...block,
         settings: block?.settings?.map((setting) => {
           const settingsBase = `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(
@@ -177,9 +178,10 @@ export const generateBlockFiles = ({
     }),
     presets: section.presets?.map(({ name, ...preset }) => {
       return {
-        name: disabled_locales
-          ? name
-          : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+        name:
+          disabled_locales || name?.length <= 25
+            ? name
+            : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
         ...preset,
       };
     }),

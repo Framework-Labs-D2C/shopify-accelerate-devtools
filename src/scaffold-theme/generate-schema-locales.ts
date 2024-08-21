@@ -74,11 +74,12 @@ export const generateSchemaLocales = () => {
             }, {})
           : undefined,
         presets: schema.presets?.reduce((acc, preset) => {
-          acc[toLocaleFriendlySnakeCase(preset.name)] = preset.name?.length
-            ? {
-                name: preset.name,
-              }
-            : undefined;
+          acc[toLocaleFriendlySnakeCase(preset.name)] =
+            preset.name?.length > 25
+              ? {
+                  name: preset.name,
+                }
+              : undefined;
           return acc;
         }, {}),
       };

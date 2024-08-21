@@ -459,15 +459,17 @@ export type ShopifySectionPreset<T = unknown> = {
 };
 
 export type PresetSchema<T = never> = {
-  settings?: ShopifySectionPreset<T>["settings"];
-  disabled?: boolean;
-  blocks?:
-    | Record<string, ShopifySectionPreset<T>["blocks"][number]>
-    | ShopifySectionPreset<T>["blocks"];
   type: T extends { type: string } ? T["type"] : Sections["type"];
-  block_order?: string[];
-  custom_css?: string[];
   name: string;
+  presets: {
+    enabled_on?: string[];
+    settings?: ShopifySectionPreset<T>["settings"];
+    blocks?:
+      | Record<string, ShopifySectionPreset<T>["blocks"][number]>
+      | ShopifySectionPreset<T>["blocks"];
+    block_order?: string[];
+    custom_css?: string[];
+  }[];
 };
 
 export type ShopifySectionBlock =

@@ -4,10 +4,12 @@ import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
 export const generateSectionPresetFiles = ({
   schema: { name, generate_block_files, disabled, path, folder, ...section },
-  preset,
+  preset_name,
+  presets,
 }: {
   schema: ShopifySection & { path: string; folder: string };
-  preset: ShopifySectionPreset;
+  preset_name: string;
+  presets: ShopifySectionPreset[];
 }) => {
   const sectionName = toLocaleFriendlySnakeCase(name);
   const { sources, disabled_locales, disabled_theme_blocks } = config;
@@ -16,7 +18,7 @@ export const generateSectionPresetFiles = ({
   let headerCount = 1;
 
   const localizedSection = {
-    name: preset.name,
+    name: preset_name,
     ...section,
     settings: section?.settings?.map((setting) => {
       const settingsBase = `t:sections.${sectionName}.settings`;
@@ -107,9 +109,10 @@ export const generateSectionPresetFiles = ({
                 continue;
               }
               acc.push({
-                name: disabled_locales
-                  ? schema.name
-                  : `t:blocks.${toLocaleFriendlySnakeCase(schema?.name)}.name`,
+                name:
+                  disabled_locales || schema.name?.length <= 25
+                    ? schema.name
+                    : `t:blocks.${toLocaleFriendlySnakeCase(schema?.name)}.name`,
                 type: schema.folder,
                 settings: schema?.settings?.map((setting) => {
                   const settingsBase = `t:blocks.${toLocaleFriendlySnakeCase(
@@ -199,9 +202,10 @@ export const generateSectionPresetFiles = ({
         }
 
         acc.push({
-          name: disabled_locales
-            ? name
-            : `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
+          name:
+            disabled_locales || name?.length <= 25
+              ? name
+              : `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
           ...block,
           settings: block?.settings?.map((setting) => {
             const settingsBase = `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(
@@ -282,7 +286,7 @@ export const generateSectionPresetFiles = ({
 
         return acc;
       }, []),
-    presets: [preset],
+    presets: presets,
   };
 
   return `{% schema %}

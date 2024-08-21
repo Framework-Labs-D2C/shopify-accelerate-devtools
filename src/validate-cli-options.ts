@@ -29,6 +29,7 @@ export const validateCliOptions = async (
     store: store?.replace(/\.myshopify\.com/gi, ""),
     theme: theme_id,
     path: `./themes/${environment}`,
+    all_presets: false,
   };
 
   // console.log({ environments, currentEnvironment });
@@ -210,6 +211,7 @@ export const validateCliOptions = async (
       currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   }
 
+  currentEnvironment.all_presets = !!currentEnvironment?.all_presets;
   console.log(currentEnvironment);
   process.env["SHOPIFY_ACCELERATE_STORE"] = currentEnvironment.store;
   config.environments[environment] = currentEnvironment;
@@ -217,6 +219,7 @@ export const validateCliOptions = async (
   config.theme_path = currentEnvironment?.path;
   config.theme_id = +currentEnvironment?.theme;
   config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
+  config.all_presets = currentEnvironment?.all_presets;
 
   const { project_root, package_templates } = config;
 
