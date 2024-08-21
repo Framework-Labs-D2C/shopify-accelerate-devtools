@@ -811,7 +811,8 @@ declare global {
         fileName.includes("_layout.dynamic-imports.liquid") ||
         /^replo/gi.test(fileName) ||
         /^pandectes/gi.test(fileName) ||
-        /^_preset/gi.test(fileName)
+        /^locksmith/gi.test(fileName) ||
+        /^shogun/gi.test(fileName)
       ) {
         return;
       }
@@ -837,7 +838,12 @@ declare global {
                 preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
             )?.length && fileName === `preset__${toSnakeCase(key)}.liquid`
         );
-      if (/^replo/gi.test(fileName) || /^pandectes/gi.test(fileName)) {
+      if (
+        /^replo/gi.test(fileName) ||
+        /^pandectes/gi.test(fileName) ||
+        /^locksmith/gi.test(fileName) ||
+        /^shogun/gi.test(fileName)
+      ) {
         return;
       }
       if (!targetFile) {

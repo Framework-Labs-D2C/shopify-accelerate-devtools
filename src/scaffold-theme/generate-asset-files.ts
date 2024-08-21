@@ -32,7 +32,12 @@ export const generateAssetFiles = () => {
         sourcePath.split(/[\\/]/gi).at(-1).includes(fileName)
       );
 
-      if (/^replo/gi.test(fileName) || /^pandectes/gi.test(fileName)) {
+      if (
+        /^replo/gi.test(fileName) ||
+        /^pandectes/gi.test(fileName) ||
+        /^locksmith/gi.test(fileName) ||
+        /^shogun/gi.test(fileName)
+      ) {
         return;
       }
       if (!targetFile) {
