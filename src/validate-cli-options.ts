@@ -30,6 +30,12 @@ export const validateCliOptions = async (
     theme: theme_id,
     path: `./themes/${environment}`,
     all_presets: false,
+    mode: environment === "development" ? "development" : "production",
+    ignore_blocks: "",
+    ignore_snippets: "",
+    ignore_layouts: "",
+    ignore_sections: "",
+    ignore_assets: "custom.css.liquid,custom.css,custom.js",
   };
 
   // console.log({ environments, currentEnvironment });
@@ -102,6 +108,7 @@ export const validateCliOptions = async (
         },
       ]);
       if (results.theme_action === "create_theme") {
+        // eslint-disable-next-line no-async-promise-executor
         await new Promise(async (resolve, reject) => {
           // exec(`shopify theme list -s ${currentEnvironment.store}`, async (error, stdout, stderr) => {
           //   console.log(stdout);
@@ -212,6 +219,15 @@ export const validateCliOptions = async (
   }
 
   currentEnvironment.all_presets = !!currentEnvironment?.all_presets;
+  currentEnvironment.mode =
+    currentEnvironment.mode ?? (environment === "development" ? "development" : "production");
+  currentEnvironment.ignore_blocks = currentEnvironment.ignore_blocks ?? "";
+  currentEnvironment.ignore_snippets = currentEnvironment.ignore_snippets ?? "";
+  currentEnvironment.ignore_layouts = currentEnvironment.ignore_layouts ?? "";
+  currentEnvironment.ignore_sections = currentEnvironment.ignore_sections ?? "";
+  currentEnvironment.ignore_assets =
+    currentEnvironment.ignore_assets ?? "custom.css.liquid,custom.css,custom.js";
+
   console.log(currentEnvironment);
   process.env["SHOPIFY_ACCELERATE_STORE"] = currentEnvironment.store;
   config.environments[environment] = currentEnvironment;
@@ -220,6 +236,26 @@ export const validateCliOptions = async (
   config.theme_id = +currentEnvironment?.theme;
   config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   config.all_presets = currentEnvironment?.all_presets;
+  config.mode = currentEnvironment?.mode;
+  config.ignore_blocks =
+    currentEnvironment?.ignore_blocks?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_snippets =
+    currentEnvironment?.ignore_snippets?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_layouts =
+    currentEnvironment?.ignore_layouts?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_sections =
+    currentEnvironment?.ignore_sections?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_assets =
+    currentEnvironment?.ignore_assets?.split(",").map((str) => str.trim()) ?? [];
+
+  if (config.mode === "production") {
+    config.ignore_layouts.push("theme.liquid");
+    config.delete_external_layouts = false;
+    config.delete_external_sections = false;
+    config.delete_external_snippets = false;
+    config.delete_external_blocks = false;
+    config.delete_external_assets = false;
+  }
 
   const { project_root, package_templates } = config;
 

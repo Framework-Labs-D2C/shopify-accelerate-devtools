@@ -42,6 +42,12 @@ const shopify_toml = tomlFile
           live?: boolean;
           "allow-live"?: boolean;
           all_presets?: boolean;
+          mode: "development" | "production";
+          ignore_blocks: string;
+          ignore_snippets: string;
+          ignore_layouts: string;
+          ignore_sections: string;
+          ignore_assets: string;
         };
       };
     }>(JSON.stringify(tomlFile))
@@ -53,6 +59,7 @@ export type GlobalsState = {
   package_types: string;
   project_root: ReturnType<typeof process.cwd>;
   all_presets: boolean;
+  mode: "development" | "production";
   theme_id: number;
   theme_path: string;
   store: string;
@@ -124,15 +131,25 @@ export type GlobalsState = {
 
 export const config: GlobalsState = {
   ignore_blocks:
-    process.env.SHOPIFY_ACCELERATE_IGNORE_BLOCKS?.split(",").map((str) => str.trim()) ?? [],
+    shopify_toml?.environments?.["development"]?.ignore_blocks
+      ?.split(",")
+      .map((str) => str.trim()) ?? [],
   ignore_snippets:
-    process.env.SHOPIFY_ACCELERATE_IGNORE_SNIPPETS?.split(",").map((str) => str.trim()) ?? [],
+    shopify_toml?.environments?.["development"]?.ignore_snippets
+      ?.split(",")
+      .map((str) => str.trim()) ?? [],
   ignore_layouts:
-    process.env.SHOPIFY_ACCELERATE_IGNORE_LAYOUTS?.split(",").map((str) => str.trim()) ?? [],
+    shopify_toml?.environments?.["development"]?.ignore_layouts
+      ?.split(",")
+      .map((str) => str.trim()) ?? [],
   ignore_sections:
-    process.env.SHOPIFY_ACCELERATE_IGNORE_SECTIONS?.split(",").map((str) => str.trim()) ?? [],
+    shopify_toml?.environments?.["development"]?.ignore_sections
+      ?.split(",")
+      .map((str) => str.trim()) ?? [],
   ignore_assets:
-    process.env.SHOPIFY_ACCELERATE_IGNORE_ASSETS?.split(",").map((str) => str.trim()) ?? [],
+    shopify_toml?.environments?.["development"]?.ignore_assets
+      ?.split(",")
+      .map((str) => str.trim()) ?? [],
   delete_external_layouts: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_LAYOUTS === "true",
   delete_external_sections: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SECTIONS === "true",
   delete_external_snippets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SNIPPETS === "true",
@@ -228,6 +245,7 @@ export const config: GlobalsState = {
   theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
   store: shopify_toml?.environments?.["development"]?.store,
   all_presets: shopify_toml?.environments?.["development"]?.all_presets,
+  mode: shopify_toml?.environments?.["development"].mode ?? "production",
 };
 
 program

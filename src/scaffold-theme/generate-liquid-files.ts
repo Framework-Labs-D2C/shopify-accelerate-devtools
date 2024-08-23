@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import { PresetSchema, ShopifySectionPreset } from "../../@types/shopify";
 import { config, root_dir } from "../../shopify-accelerate";
-import { deleteFile, writeCompareFile } from "../utils/fs";
+import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { isObject } from "../utils/is-object";
 import { toCamelCase } from "../utils/to-camel-case";
 import { toLocaleFriendlySnakeCase, toSnakeCase } from "../utils/to-snake-case";
@@ -217,14 +217,34 @@ export const generateLiquidFiles = () => {
     }
 
     const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
-    writeCompareFile(snippetPath, translationArray.join("\n"));
+
+    if (config.ignore_snippets?.includes(snippetPath.split(/[/\\]/)?.at(-1))) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+          `Ignored: ${snippetPath.replace(process.cwd(), "")}`
+        )}`
+      );
+      writeOnlyNew(snippetPath, translationArray.join("\n"));
+    } else {
+      writeCompareFile(snippetPath, translationArray.join("\n"));
+    }
+
     snippets.push(snippetPath);
 
     translationArray = [`{%- render "${schema.folder}" -%}`];
 
     translationArray.push(generateSectionFiles(schema));
 
-    writeCompareFile(sectionPath, translationArray.join("\n"));
+    if (config.ignore_sections?.includes(sectionPath.split(/[/\\]/)?.at(-1))) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+          `Ignored: ${sectionPath.replace(process.cwd(), "")}`
+        )}`
+      );
+      writeOnlyNew(sectionPath, translationArray.join("\n"));
+    } else {
+      writeCompareFile(sectionPath, translationArray.join("\n"));
+    }
   }
 
   for (const key in sectionPresetSchemas) {
@@ -283,7 +303,7 @@ export const generateLiquidFiles = () => {
     const schema = blockSchemas[key];
 
     const sectionName = `${schema.folder}.liquid`;
-    const sectionPath = disabled_theme_blocks
+    const blockPath = disabled_theme_blocks
       ? path.join(process.cwd(), theme_path, "snippets", sectionName)
       : path.join(process.cwd(), theme_path, "blocks", sectionName);
 
@@ -373,7 +393,16 @@ export const generateLiquidFiles = () => {
     translationArray.push(generateBlockFiles(schema));
     if (disabled_theme_blocks) continue;
 
-    writeCompareFile(sectionPath, translationArray.join("\n"));
+    if (config.ignore_blocks?.includes(blockPath.split(/[/\\]/)?.at(-1))) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+          `Ignored: ${blockPath.replace(process.cwd(), "")}`
+        )}`
+      );
+      writeOnlyNew(blockPath, translationArray.join("\n"));
+    } else {
+      writeCompareFile(blockPath, translationArray.join("\n"));
+    }
   }
 
   for (let i = 0; i < snippets.length; i++) {
@@ -539,7 +568,16 @@ export const generateLiquidFiles = () => {
       returnArr.push(translatedContent);
     }
 
-    writeCompareFile(snippetPath, returnArr.join("\n"));
+    if (config.ignore_snippets?.includes(snippetPath.split(/[/\\]/)?.at(-1))) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+          `Ignored: ${snippetPath.replace(process.cwd(), "")}`
+        )}`
+      );
+      writeOnlyNew(snippetPath, returnArr.join("\n"));
+    } else {
+      writeCompareFile(snippetPath, returnArr.join("\n"));
+    }
   }
 
   for (let i = 0; i < giftCards.length; i++) {
@@ -662,7 +700,22 @@ export const generateLiquidFiles = () => {
       returnArr.push(translatedContent);
     }
 
-    writeCompareFile(layoutPath, returnArr.join("\n"));
+    if (config.ignore_layouts?.includes(layoutPath.split(/[/\\]/)?.at(-1))) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+          `Ignored: ${layoutPath.replace(process.cwd(), "")}`
+        )}`
+      );
+      if (layoutPath.split(/[/\\]/)?.at(-1) === "theme.liquid") {
+        writeCompareFile(
+          layoutPath.replace("theme.liquid", "theme.dev.liquid"),
+          returnArr.join("\n")
+        );
+      }
+      writeOnlyNew(layoutPath, returnArr.join("\n"));
+    } else {
+      writeCompareFile(layoutPath, returnArr.join("\n"));
+    }
   }
 
   const transformTranslations = (input, prevKey = "") => {
