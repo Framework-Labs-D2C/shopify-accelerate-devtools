@@ -40,6 +40,20 @@ const runEsBuild = () => {
   })
     .then((e) => {
       console.log("theme.js - bundled");
+      const content = fs.readFileSync(path.join(root_dir, "assets", "editor.js"), {
+        encoding: "utf-8",
+      });
+      fs.writeFileSync(
+        path.join(root_dir, "assets", "editor.js"),
+        `${content}\n // random_comment `
+      );
+      const content2 = fs.readFileSync(path.join(root_dir, "assets", "theme.js"), {
+        encoding: "utf-8",
+      });
+      fs.writeFileSync(
+        path.join(root_dir, "assets", "theme.js"),
+        `${content2}\n // random_comment `
+      );
     })
     .catch((error) => {
       console.error(error);

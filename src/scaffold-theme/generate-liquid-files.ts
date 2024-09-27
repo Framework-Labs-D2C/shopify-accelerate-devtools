@@ -5,6 +5,7 @@ import { PresetSchema, ShopifySectionPreset } from "../../@types/shopify";
 import { config, root_dir } from "../../shopify-accelerate";
 import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { isObject } from "../utils/is-object";
+import { JSONParse } from "../utils/json";
 import { toCamelCase } from "../utils/to-camel-case";
 import { toLocaleFriendlySnakeCase, toSnakeCase } from "../utils/to-snake-case";
 import { generateBlockFiles } from "./generate-block-files";
@@ -256,19 +257,82 @@ export const generateLiquidFiles = () => {
             !preset.enabled_on ||
             preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
         )
-        ?.map(
-          (preset, index, arr) =>
-            ({
-              name:
-                arr?.length === 1
-                  ? sectionPresetSchemas[key]?.name
-                  : `${sectionPresetSchemas[key]?.name} - ${index + 1}`,
-              settings: preset?.settings,
-              blocks: Array.isArray(preset?.blocks)
-                ? preset?.blocks
-                : Object.values(preset?.blocks ?? {}) ?? [],
-            }) as unknown as ShopifySectionPreset
-        ) ?? [];
+        ?.map((preset, index, arr) => {
+          let currentPreset = {
+            name:
+              arr?.length === 1
+                ? sectionPresetSchemas[key]?.name
+                : preset.enabled_on &&
+                  !preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
+                ? `${sectionPresetSchemas[key]?.name} - ${
+                    index + 1
+                  }` /*`${sectionPresetSchemas[key]?.name} - ${preset.enabled_on?.[0]}`*/
+                : `${sectionPresetSchemas[key]?.name} - ${index + 1}`,
+            settings: preset?.settings,
+            blocks: Array.isArray(preset?.blocks)
+              ? preset?.blocks
+              : Object.values(preset?.blocks ?? {}) ?? [],
+          } as unknown as ShopifySectionPreset;
+
+          if (
+            preset.enabled_on &&
+            !preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
+          ) {
+            const matchList = {
+              content_class: ["richtext-md"],
+              button_class: [
+                "button-primary",
+                "button-tabs",
+                "button-secondary",
+                "button-primary-outline",
+              ],
+              scrollbar_class: ["scrollbar-no-buttons", "scrollbar"],
+              article_card_class: ["article-card"],
+              title_class: ["richtext-md"],
+              product_card_class: ["product-card", "product-card-flat"],
+              select_class: ["input-select"],
+              subscription_label_class: ["label-primary"],
+              legend_class: ["richtext-md"],
+              savings_highlight_class: ["richtext-md"],
+              label_class: ["richtext-md"],
+              price_class: ["richtext-md"],
+              incomplete_button_class: [
+                "button-primary",
+                "button-tabs",
+                "button-secondary",
+                "button-primary-outline",
+              ],
+              collection_card_class: ["collection-card"],
+              input_class: ["input-text", "input-text-inline"],
+              accordion_class: ["accordion"],
+              text_over_image_class: ["richtext-md"],
+              link_class: ["richtext-md"],
+              color_scheme: ["color_scheme_1"],
+            };
+            let string_content = JSON.stringify(currentPreset, null, 2);
+            for (const key in matchList) {
+              const regexp = new RegExp(`("${key}": )"([^"]*)"`, "gi");
+              string_content = string_content.replace(regexp, (totalMatch, _1, _2) => {
+                const value = _2;
+                const isValid = matchList[key].some(
+                  (className) =>
+                    new RegExp(`^${className}$`, "gi").test(value) ||
+                    new RegExp(` ${className}$`, "gi").test(value) ||
+                    new RegExp(`^${className} `, "gi").test(value) ||
+                    new RegExp(` ${className} `, "gi").test(value)
+                );
+                if (!isValid) {
+                  return `${_1}"${matchList[key][0]}"`;
+                }
+                return `${_1}"${value}"`;
+              });
+            }
+
+            currentPreset = JSONParse(string_content) || currentPreset;
+          }
+
+          return currentPreset;
+        }) ?? [];
 
     if (!presets?.length) {
       const targetFile = targets.sections.find(

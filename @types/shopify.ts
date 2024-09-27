@@ -464,9 +464,8 @@ export type PresetSchema<T = never> = {
   presets: {
     enabled_on?: string[];
     settings?: ShopifySectionPreset<T>["settings"];
-    blocks?:
-      | Record<string, ShopifySectionPreset<T>["blocks"][number]>
-      | ShopifySectionPreset<T>["blocks"];
+    blocks?: /* @ts-ignore */
+    Record<string, ShopifySectionPreset<T>["blocks"][number]> | ShopifySectionPreset<T>["blocks"];
     block_order?: string[];
     custom_css?: string[];
   }[];
@@ -1528,6 +1527,7 @@ export type RichtextSchema_Text = {
 
 export type GlobalSettings = {
   title: string;
+  request: _Request_liquid | null;
   article: _Article_liquid | null;
   blog: _Blog_liquid | null;
   collection: _Collection_liquid | null;
@@ -1542,8 +1542,8 @@ export type GlobalSettings = {
   money_format: string;
   theme_id: string;
   theme_role: string;
-  settings: SettingsSchema;
-  shop: _Shop_liquid_json;
+  settings: SettingsSchema | null;
+  shop: _Shop_liquid_json | null;
 };
 
 export type _Font_options =
