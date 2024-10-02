@@ -245,7 +245,7 @@ export const config: GlobalsState = {
   theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
   store: shopify_toml?.environments?.["development"]?.store,
   all_presets: shopify_toml?.environments?.["development"]?.all_presets,
-  mode: shopify_toml?.environments?.["development"].mode ?? "production",
+  mode: shopify_toml?.environments?.["development"]?.mode ?? "production",
 };
 
 program
