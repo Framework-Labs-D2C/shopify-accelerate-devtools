@@ -1,9 +1,8 @@
 import path from "path";
-import { ShopifyBlock, ShopifySection, ShopifySettingsInput } from "../../@types/shopify";
+import { ShopifyBlock, ShopifySettingsInput } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { capitalize } from "../utils/capitalize";
 import { writeCompareFile } from "../utils/fs";
-import { toPascalCase } from "../utils/to-pascal-case";
 
 export const generateBlocksTypes = () => {
   const { folders, sources } = config;
@@ -116,7 +115,7 @@ export const blockToTypes = (section, key) => {
   if (section.blocks?.some((block) => block.type === "@theme")) {
     arr.push(`  blocks: ThemeBlocks[];`);
   }
-  arr.push(`  id: string;`);
+  arr.push(`  id${config.headless ? "?" : ""}: string;`);
   if (settings?.length) {
     arr.push(`  settings: {`);
     arr.push(

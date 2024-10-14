@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
+import { config } from "../../shopify-accelerate";
 
 export const readFile = (file_path, options?: any) => {
   if (fs.existsSync(file_path)) {
@@ -61,6 +62,9 @@ export const writeOnlyNew = (file_path, content, successCallback = () => {}) => 
 
 export const getAllFiles = (dirname) => {
   if (!fs.existsSync(dirname)) {
+    if (config.headless) {
+      return [];
+    }
     fs.mkdirSync(dirname, { recursive: true });
   }
   return fs.readdirSync(dirname).reduce((acc, file) => {

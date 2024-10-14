@@ -327,6 +327,29 @@ export type ShopifySettingsInput =
   | ShopifyColorThemeGroup
   | ShopifyTextAlignment;
 
+export type HeadlessSettingsInput =
+  | ShopifyCheckbox
+  | ShopifyNumber
+  | ShopifyRadio
+  | ShopifyRange
+  | ShopifySelect
+  | ShopifyText
+  | ShopifyTextarea
+  | ShopifyColor
+  | ShopifyColor_background
+  | ShopifyFont_picker
+  | ShopifyFont
+  | ShopifyHtml
+  | ShopifyImage_picker
+  | ShopifyProduct
+  | ShopifyProduct_list
+  | ShopifyRichtext
+  | ShopifyInlineRichtext
+  | ShopifyUrl
+  | ShopifyVideo
+  | ShopifyVideo_url
+  | ShopifyTextAlignment;
+
 type ExtractSettings<T extends ShopifySection | ShopifySectionBlock> = Extract<
   /* @ts-ignore*/
   T["settings"][number],
@@ -482,6 +505,16 @@ export type ShopifySectionBlock =
   | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
   | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never };
 
+export type HeadlessSectionBlock =
+  | {
+      name: string;
+      disabled?: boolean;
+      type: string;
+      limit?: number;
+      settings?: (HeadlessSettingsInput | ShopifyHeader | ShopifyParagraph)[];
+    }
+  | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never };
+
 export type ShopifyTemplateTypes =
   | "404"
   | "article"
@@ -534,6 +567,18 @@ export type ShopifySection<T = never> = {
       };
     }
 );
+
+export type HeadlessSection<T = never> = {
+  name: string;
+  blocks?: HeadlessSectionBlock[];
+  default?: ShopifySectionDefault<T>;
+  disabled?: boolean;
+  limit?: number;
+  max_blocks?: number;
+  presets?: ShopifySectionPreset<T>[];
+  settings?: (HeadlessSettingsInput | ShopifyHeader | ShopifyParagraph)[];
+};
+
 export type ShopifyBlock<T = never> = {
   name: string;
   blocks?: ShopifySectionBlock[];
@@ -541,6 +586,16 @@ export type ShopifyBlock<T = never> = {
   disabled?: boolean;
   presets?: ShopifySectionPreset<T>[];
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+  tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
+};
+
+export type HeadlessBlock<T = never> = {
+  name: string;
+  blocks?: HeadlessSectionBlock[];
+  class?: string;
+  disabled?: boolean;
+  presets?: ShopifySectionPreset<T>[];
+  settings?: (HeadlessSettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
 };
 

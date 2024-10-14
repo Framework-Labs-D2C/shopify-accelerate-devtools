@@ -6,16 +6,17 @@ import { getSettingsType } from "./generate-section-types";
 
 export const generateSettingTypes = () => {
   const { sources } = config;
-  const settings = sources?.settingsSchema?.reduce((acc: ShopifySettingsInput[], group) => {
-    if (!("settings" in group)) return acc;
+  const settings =
+    sources?.settingsSchema?.reduce((acc: ShopifySettingsInput[], group) => {
+      if (!("settings" in group)) return acc;
 
-    return [
-      ...acc,
-      ...((group.settings as any)
-        .filter((s) => s.type !== "header" && s.type !== "paragraph")
-        .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0)) as ShopifySettingsInput[]),
-    ];
-  }, []);
+      return [
+        ...acc,
+        ...((group.settings as any)
+          .filter((s) => s.type !== "header" && s.type !== "paragraph")
+          .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0)) as ShopifySettingsInput[]),
+      ];
+    }, []) ?? [];
 
   const localTypes = [];
   const analyseSetting = (setting) => {
@@ -79,9 +80,8 @@ export const generateSettingTypes = () => {
 
   settings.forEach(analyseSetting);
   const arr = [];
+  arr.push(`export type SettingsSchema = {`);
   if (settings?.length) {
-    arr.push(`export type SettingsSchema = {`);
-
     arr.push(
       settings
         .map(
@@ -108,8 +108,8 @@ export const generateSettingTypes = () => {
         })
         .join("\n")
     );
-    arr.push(`};`);
   }
+  arr.push(`};`);
 
   const typesContent = `import { ${localTypes.join(", ")} } from "./shopify";\n\n${arr.join(
     "\n"

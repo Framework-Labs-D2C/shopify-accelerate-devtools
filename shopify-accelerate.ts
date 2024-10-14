@@ -6,12 +6,19 @@ import toml from "toml";
 import { PresetSchema, ShopifyBlock, ShopifySection, ShopifySettings } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
+import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
+import { generateBlocksTypes } from "./src/scaffold-theme/generate-blocks-types";
 import { generateConfigFiles } from "./src/scaffold-theme/generate-config-files";
+import { generateSectionsTypes } from "./src/scaffold-theme/generate-section-types";
+import { generateSettingTypes } from "./src/scaffold-theme/generate-setting-types";
+import { getSchemaSources, getSources } from "./src/scaffold-theme/parse-files";
 import { shopifyCliPull } from "./src/shopify-cli/pull";
 import { runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
-import { readFile } from "./src/utils/fs";
+import { capitalize } from "./src/utils/capitalize";
+import { readFile, writeCompareFile, writeOnlyNew } from "./src/utils/fs";
 import { JSONParse } from "./src/utils/json";
 import { validateCliOptions } from "./src/validate-cli-options";
+import { watchHeadless } from "./src/watch-headless/watch-headless";
 import { watchTheme } from "./src/watch-theme/watch-theme";
 
 const { Command } = require("commander");
@@ -54,6 +61,7 @@ const shopify_toml = tomlFile
   : { environments: {} };
 
 export type GlobalsState = {
+  headless?: boolean;
   package_root: string;
   package_templates: string;
   package_types: string;
@@ -327,6 +335,60 @@ program
   .action(async (options) => {
     await validateCliOptions(options);
     runEsbuild();
+  });
+
+program
+  .command("headless")
+  .description("Shopify Headless Development")
+  .action(async (options) => {
+    config.headless = true;
+    generateBaseTypes();
+    getSources();
+    getSchemaSources();
+    generateSectionsTypes();
+    generateSettingTypes();
+    generateBlocksTypes();
+
+    const imports = [`import type { FC } from "react";`];
+    const renderBlocks = [];
+    Object.entries(config.sources.sectionSchemas ?? {})?.forEach(([key, entry]) => {
+      imports.push(
+        `import { ${capitalize(key)} } from "sections/${entry.folder}/${entry.folder}";`
+      );
+      renderBlocks.push(`    case "${entry.folder}": {
+      return <${capitalize(key)} {...section} />;
+    }`);
+
+      writeOnlyNew(
+        entry.path?.replace("schema.ts", `${entry.folder}.tsx`),
+        `import type { ${capitalize(key)}Section } from "types/sections";
+
+export const ${capitalize(key)} = ({ id, type, settings, blocks, disabled }: ${capitalize(
+          key
+        )}Section) => {
+  if (disabled) return null
+  
+  return <>${capitalize(key)}</>;
+};
+`
+      );
+    });
+    imports.push('import type { Sections } from "types/sections";');
+    imports.push("");
+    imports.push("type RenderSectionProps = { section: Sections; };");
+    imports.push("");
+    imports.push("export const RenderSection: FC<RenderSectionProps> = ({ section }) => {");
+    imports.push("  switch (section.type) {");
+    imports.push(...renderBlocks);
+    imports.push("  }");
+    imports.push("};");
+
+    writeCompareFile(
+      path.join(process.cwd(), "./app/[...slug]/render-section.tsx"),
+      imports.join("\n")
+    );
+
+    watchHeadless();
   });
 
 program.parse(process.argv);

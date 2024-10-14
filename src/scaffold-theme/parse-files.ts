@@ -112,10 +112,10 @@ export const getSources = () => {
   config.sources.sectionGroups = sectionGroups;
   config.sources.templates = templates;
   config.sources.customerTemplates = customerTemplates;
-  config.sources.settingsFile = settingsFiles[0];
-  config.sources.settingsSchema = (
-    importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
-  )?.settingsSchema;
+  config.sources.settingsFile = settingsFiles?.[0];
+  config.sources.settingsSchema = settingsFiles?.[0]
+    ? (importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings })?.settingsSchema
+    : [];
 
   config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
     (acc, file) => {
@@ -258,9 +258,9 @@ export const getSchemaSources = () => {
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.giftCards = giftCards;
   config.sources.settingsFile = settingsFiles[0];
-  config.sources.settingsSchema = (
-    importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings }
-  )?.settingsSchema;
+  config.sources.settingsSchema = settingsFiles?.[0]
+    ? (importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings })?.settingsSchema
+    : [];
   config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
     (acc, file) => {
       try {
@@ -326,6 +326,9 @@ export const getSchemaSources = () => {
 };
 
 export const getTargets = () => {
+  if (config.headless) {
+    return;
+  }
   const { theme_path } = config;
 
   const targetFiles = [
@@ -410,7 +413,8 @@ export const isSectionTs = (name: string) =>
   !isSectionSchema(name) && /[\\/]sections([\\/])[^\\/]*([\\/])[^\\/]*\.ts$/gi.test(name);
 
 export const isSettingsSchema = (name: string) =>
-  /[\\/]config[\\/]settings_schema\.ts$/gi.test(name);
+  /[\\/]config[\\/]settings_schema\.ts$/gi.test(name) ||
+  path.join(name) === path.join(config.folders.config, "settings_schema.ts");
 
 export const isAsset = (name: string) =>
   /[\\/]assets[\\/][^\\/]*$/gi.test(name) ||

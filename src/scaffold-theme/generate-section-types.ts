@@ -135,9 +135,13 @@ export const sectionToTypes = (section, key) => {
   if (hasNonThemeBlocks && hasThemeBlocks) {
     arr.push(`  blocks: (${capitalize(key)}Blocks | ThemeBlocks)[];`);
   }
-  arr.push(`  id: string;`);
+  if (!hasNonThemeBlocks && !hasThemeBlocks) {
+    arr.push(`  blocks${config.headless ? "?" : ""}: never[];`);
+  }
+  arr.push(`  id${config.headless ? "?" : ""}: string;`);
+  arr.push(`  disabled?: boolean;`);
+  arr.push(`  settings${!settings?.length ? "?" : ""}: {`);
   if (settings?.length) {
-    arr.push(`  settings: {`);
     arr.push(
       settings
         .map(
@@ -164,8 +168,8 @@ export const sectionToTypes = (section, key) => {
         })
         .join("\n")
     );
-    arr.push(`  };`);
   }
+  arr.push(`  };`);
   arr.push(`  type: "${filename}";`);
   arr.push(`};`);
 
@@ -179,7 +183,7 @@ export const sectionToTypes = (section, key) => {
       arr.push(
         `export type ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))} = {`
       );
-      arr.push("  id: string;");
+      arr.push(`  id${config.headless ? "?" : ""}: string;`);
 
       if (blockSettings?.length) {
         arr.push(`  settings: {`);
@@ -275,15 +279,17 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
       return "?: _Collection_liquid[]";
     }
     case "color":
-      return "?: _Color_liquid | string";
+      return config.headless ? "?: string" : "?: _Color_liquid | string";
     case "color_background":
       return "?: string";
     case "font_picker":
-      return ": _Font_liquid | _Font_options";
+      return config.headless ? ": string" : ": _Font_liquid | _Font_options";
     case "html":
       return "?: string";
     case "image_picker":
-      return "?: _Image_liquid | string";
+      return config.headless
+        ? "?: { src?: string | null, alt?: string | null }"
+        : "?: _Image_liquid | string";
     case "link_list":
       return "?: _Linklist_liquid";
     case "liquid":
@@ -291,13 +297,13 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
     case "page":
       return "?: _Page_liquid | string";
     case "product": {
-      if (setting.id.includes("__handle_only")) {
+      if (setting.id.includes("__handle_only") || config.headless) {
         return "?: string";
       }
       return "?: _Product_liquid";
     }
     case "product_list": {
-      if (setting.id.includes("__handle_only")) {
+      if (setting.id.includes("__handle_only") || config.headless) {
         return "?: string[]";
       }
       return "?: _Product_liquid[]";
@@ -318,7 +324,9 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
     case "url":
       return "?: string";
     case "video":
-      return "?:  _Video_liquid";
+      return config.headless
+        ? "?:  { src?: string | null,  mimeType?: string | null, alt?: string | null }"
+        : "?:  _Video_liquid";
     case "video_url":
       return "?:  `${string}youtube${string}` | `${string}vimeo${string}`";
     case "font":
