@@ -1,3 +1,4 @@
+import { dtsPlugin } from "esbuild-plugin-d.ts";
 import path from "path";
 import { config, root_dir } from "../../shopify-accelerate";
 import { isBlockTs, isSectionTs } from "../scaffold-theme/parse-files";
@@ -33,9 +34,12 @@ const runEsBuild = () => {
     minify: false,
     ignoreAnnotations: true,
     packages: "external",
+
     format: "esm",
     legalComments: "none",
     keepNames: true,
+    plugins: [dtsPlugin({})],
+
     // splitting: true,
   })
     .then((e) => {
@@ -85,6 +89,8 @@ const runSectionJsEsbuild = (entryFile) => {
     format: "esm",
     legalComments: "none",
     keepNames: true,
+    plugins: [dtsPlugin({})],
+
     // splitting: true,
   })
     .then((e) => {
@@ -125,6 +131,8 @@ const runBlockJsEsbuild = (entryFile) => {
     format: "esm",
     legalComments: "none",
     keepNames: true,
+    plugins: [dtsPlugin({})],
+
     // splitting: true,
   })
     .then((e) => {
