@@ -109,7 +109,7 @@ export const generateSectionFiles = ({
               }
               acc.push({
                 name:
-                  disabled_locales || schema.name?.length <= 25
+                  schema.name?.length <= 25
                     ? schema.name
                     : `t:blocks.${toLocaleFriendlySnakeCase(schema?.name)}.name`,
                 type: schema.folder,
@@ -202,7 +202,7 @@ export const generateSectionFiles = ({
 
         acc.push({
           name:
-            disabled_locales || name?.length <= 25
+            name?.length <= 25
               ? name
               : `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
           ...block,
