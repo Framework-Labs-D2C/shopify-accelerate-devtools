@@ -16,7 +16,7 @@ export const generateBlockFiles = ({
   let headerCount = 1;
 
   const localizedSection = {
-    name: disabled_locales || sectionName?.length <= 25 ? name : `t:blocks.${sectionName}.name`,
+    name: sectionName?.length <= 25 ? name : `t:blocks.${sectionName}.name`,
     ...section,
     settings: section?.settings?.map((setting) => {
       const settingsBase = `t:blocks.${sectionName}.settings`;
@@ -95,7 +95,7 @@ export const generateBlockFiles = ({
 
       return {
         name:
-          disabled_locales || name?.length <= 25
+          name?.length <= 25
             ? name
             : `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
         ...block,
@@ -179,7 +179,7 @@ export const generateBlockFiles = ({
     presets: section.presets?.map(({ name, ...preset }) => {
       return {
         name:
-          disabled_locales || name?.length <= 25
+          name?.length <= 25
             ? name
             : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
         ...preset,

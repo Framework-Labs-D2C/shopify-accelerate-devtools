@@ -52,7 +52,7 @@ export const generateSectionPresetFiles = ({
         ...setting,
         label:
           "label" in setting
-            ? disabled_locales
+            ? disabled_locales && setting.label?.length <= 50
               ? setting.label
               : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
               ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
@@ -68,7 +68,7 @@ export const generateSectionPresetFiles = ({
             : undefined,
         placeholder:
           "placeholder" in setting && typeof setting.placeholder === "string"
-            ? disabled_locales
+            ? disabled_locales && setting.placeholder?.length <= 50
               ? setting.placeholder
               : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
               ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
@@ -76,7 +76,7 @@ export const generateSectionPresetFiles = ({
             : undefined,
         options:
           "options" in setting
-            ? disabled_locales
+            ? disabled_locales && setting.options.every((option) => option.label.length <= 50)
               ? setting.options
               : setting.options.map((option, index) => ({
                   ...option,
@@ -110,7 +110,7 @@ export const generateSectionPresetFiles = ({
               }
               acc.push({
                 name:
-                  disabled_locales || schema.name?.length <= 25
+                  schema.name?.length <= 25
                     ? schema.name
                     : `t:blocks.${toLocaleFriendlySnakeCase(schema?.name)}.name`,
                 type: schema.folder,
@@ -142,7 +142,7 @@ export const generateSectionPresetFiles = ({
                         "content" in setting
                           ? disabled_locales &&
                             !setting.content.includes(" ") &&
-                            setting.content.length < 500
+                            setting.content.length <= 50
                             ? setting.content
                             : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length >
                               1
@@ -155,7 +155,7 @@ export const generateSectionPresetFiles = ({
                     ...setting,
                     label:
                       "label" in setting
-                        ? disabled_locales
+                        ? disabled_locales && setting.label?.length <= 50
                           ? setting.label
                           : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
                           ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
@@ -171,7 +171,7 @@ export const generateSectionPresetFiles = ({
                         : undefined,
                     placeholder:
                       "placeholder" in setting && typeof setting.placeholder === "string"
-                        ? disabled_locales
+                        ? disabled_locales && setting.placeholder?.length <= 50
                           ? setting.placeholder
                           : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]
                               ?.length > 1
@@ -180,7 +180,8 @@ export const generateSectionPresetFiles = ({
                         : undefined,
                     options:
                       "options" in setting
-                        ? disabled_locales
+                        ? disabled_locales &&
+                          setting.options.every((option) => option.label.length <= 50)
                           ? setting.options
                           : setting.options.map((option, index) => ({
                               ...option,
@@ -203,7 +204,7 @@ export const generateSectionPresetFiles = ({
 
         acc.push({
           name:
-            disabled_locales || name?.length <= 25
+            name?.length <= 25
               ? name
               : `t:sections.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
           ...block,
@@ -234,7 +235,7 @@ export const generateSectionPresetFiles = ({
                   "content" in setting
                     ? disabled_locales &&
                       !setting.content.includes(" ") &&
-                      setting.content.length < 500
+                      setting.content.length <= 50
                       ? setting.content
                       : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                       ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
@@ -246,7 +247,7 @@ export const generateSectionPresetFiles = ({
               ...setting,
               label:
                 "label" in setting
-                  ? disabled_locales
+                  ? disabled_locales && setting.label.length <= 50
                     ? setting.label
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
                     ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
@@ -262,7 +263,7 @@ export const generateSectionPresetFiles = ({
                   : undefined,
               placeholder:
                 "placeholder" in setting && typeof setting.placeholder === "string"
-                  ? disabled_locales
+                  ? disabled_locales && setting.placeholder.length <= 50
                     ? setting.placeholder
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
                     ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
@@ -270,7 +271,7 @@ export const generateSectionPresetFiles = ({
                   : undefined,
               options:
                 "options" in setting
-                  ? disabled_locales
+                  ? disabled_locales && setting.options.every((option) => option.label.length <= 50)
                     ? setting.options
                     : setting.options.map((option, index) => ({
                         ...option,

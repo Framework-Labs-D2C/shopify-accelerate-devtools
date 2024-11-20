@@ -14,8 +14,7 @@ export const generateSettingsFile = () => {
     let headerCount = 1;
 
     return {
-      name:
-        disabled_locales || name?.length <= 25 ? name : `t:settings_schema.${settingsName}.name`,
+      name: name?.length <= 25 ? name : `t:settings_schema.${settingsName}.name`,
       ...settingsBlock,
       settings: settingsBlock.settings?.map((setting) => {
         const settingsBase = `t:settings_schema.${settingsName}.settings`;

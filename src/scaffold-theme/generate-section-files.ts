@@ -17,7 +17,7 @@ export const generateSectionFiles = ({
   let headerCount = 1;
 
   const localizedSection = {
-    name: disabled_locales || name?.length <= 25 ? name : `t:sections.${sectionName}.name`,
+    name: name?.length <= 25 ? name : `t:sections.${sectionName}.name`,
     ...section,
     settings: section?.settings?.map((setting) => {
       const settingsBase = `t:sections.${sectionName}.settings`;
@@ -39,7 +39,7 @@ export const generateSectionFiles = ({
           ...setting,
           content:
             "content" in setting
-              ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
+              ? disabled_locales && !setting.content.includes(" ") && setting.content.length <= 50
                 ? setting.content
                 : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                 ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
@@ -51,7 +51,7 @@ export const generateSectionFiles = ({
         ...setting,
         label:
           "label" in setting
-            ? disabled_locales
+            ? disabled_locales && setting.label.length <= 50
               ? setting.label
               : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
               ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
@@ -67,7 +67,7 @@ export const generateSectionFiles = ({
             : undefined,
         placeholder:
           "placeholder" in setting && typeof setting.placeholder === "string"
-            ? disabled_locales
+            ? disabled_locales && setting.placeholder.length <= 50
               ? setting.placeholder
               : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
               ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
@@ -75,7 +75,7 @@ export const generateSectionFiles = ({
             : undefined,
         options:
           "options" in setting
-            ? disabled_locales
+            ? disabled_locales && setting.options.every((option) => option.label.length <= 50)
               ? setting.options
               : setting.options.map((option, index) => ({
                   ...option,
@@ -141,7 +141,7 @@ export const generateSectionFiles = ({
                         "content" in setting
                           ? disabled_locales &&
                             !setting.content.includes(" ") &&
-                            setting.content.length < 500
+                            setting.content.length <= 50
                             ? setting.content
                             : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length >
                               1
@@ -154,7 +154,7 @@ export const generateSectionFiles = ({
                     ...setting,
                     label:
                       "label" in setting
-                        ? disabled_locales
+                        ? disabled_locales && setting.label.length <= 50
                           ? setting.label
                           : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
                           ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
@@ -170,7 +170,7 @@ export const generateSectionFiles = ({
                         : undefined,
                     placeholder:
                       "placeholder" in setting && typeof setting.placeholder === "string"
-                        ? disabled_locales
+                        ? disabled_locales && setting.placeholder.length <= 50
                           ? setting.placeholder
                           : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]
                               ?.length > 1
@@ -179,7 +179,8 @@ export const generateSectionFiles = ({
                         : undefined,
                     options:
                       "options" in setting
-                        ? disabled_locales
+                        ? disabled_locales &&
+                          setting.options.every((option) => option.label.length <= 50)
                           ? setting.options
                           : setting.options.map((option, index) => ({
                               ...option,
@@ -233,7 +234,7 @@ export const generateSectionFiles = ({
                   "content" in setting
                     ? disabled_locales &&
                       !setting.content.includes(" ") &&
-                      setting.content.length < 500
+                      setting.content.length <= 50
                       ? setting.content
                       : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                       ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
@@ -245,7 +246,7 @@ export const generateSectionFiles = ({
               ...setting,
               label:
                 "label" in setting
-                  ? disabled_locales
+                  ? disabled_locales && setting.label.length <= 50
                     ? setting.label
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.label)]?.length > 1
                     ? `t:all.${toLocaleFriendlySnakeCase(setting.label)}`
@@ -261,7 +262,7 @@ export const generateSectionFiles = ({
                   : undefined,
               placeholder:
                 "placeholder" in setting && typeof setting.placeholder === "string"
-                  ? disabled_locales
+                  ? disabled_locales && setting.placeholder.length <= 50
                     ? setting.placeholder
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.placeholder)]?.length > 1
                     ? `t:all.${toLocaleFriendlySnakeCase(setting.placeholder)}`
@@ -269,7 +270,7 @@ export const generateSectionFiles = ({
                   : undefined,
               options:
                 "options" in setting
-                  ? disabled_locales
+                  ? disabled_locales && setting.options.every((option) => option.label.length <= 50)
                     ? setting.options
                     : setting.options.map((option, index) => ({
                         ...option,
@@ -288,7 +289,7 @@ export const generateSectionFiles = ({
     presets: section.presets?.map(({ name, ...preset }) => {
       return {
         name:
-          disabled_locales || name?.length <= 25
+          name?.length <= 25
             ? name
             : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
         ...preset,
