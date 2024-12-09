@@ -84,6 +84,7 @@ export type GlobalsState = {
   delete_external_blocks?: boolean;
   delete_external_assets?: boolean;
   disabled_locales?: boolean;
+  disabled_presets?: boolean;
   disabled_theme_blocks?: boolean;
   sources: {
     snippets: string[];
@@ -164,6 +165,7 @@ export const config: GlobalsState = {
   delete_external_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS === "true",
   delete_external_assets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_ASSETS === "true",
   disabled_locales: process.env.SHOPIFY_ACCELERATE_DISABLED_LOCALES === "true",
+  disabled_presets: process.env.SHOPIFY_ACCELERATE_DISABLED_PRESETS === "true",
   disabled_theme_blocks: process.env.SHOPIFY_ACCELERATE_DISABLE_THEME_BLOCKS === "true",
   package_root: path.resolve(__dirname),
   project_root: root_dir,

@@ -36,7 +36,7 @@ export const generateSettingsFile = () => {
             ...setting,
             content:
               "content" in setting
-                ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
+                ? disabled_locales && !setting.content.includes(" ") && setting.content.length <= 50
                   ? setting.content
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                   ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`

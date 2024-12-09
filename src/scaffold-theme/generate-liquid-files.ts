@@ -82,7 +82,7 @@ export const generateLiquidFiles = () => {
       }
     });
 
-    let translationArray = [];
+    const translationArray = [];
 
     const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, sectionName), {
       encoding: "utf-8",
@@ -217,22 +217,22 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
-    const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
-
-    if (config.ignore_snippets?.includes(snippetPath.split(/[/\\]/)?.at(-1))) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
-          `Ignored: ${snippetPath.replace(process.cwd(), "")}`
-        )}`
-      );
-      writeOnlyNew(snippetPath, translationArray.join("\n"));
-    } else {
-      writeCompareFile(snippetPath, translationArray.join("\n"));
-    }
-
-    snippets.push(snippetPath);
-
-    translationArray = [`{%- render "${schema.folder}" -%}`];
+    // const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
+    //
+    // if (config.ignore_snippets?.includes(snippetPath.split(/[/\\]/)?.at(-1))) {
+    //   console.log(
+    //     `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+    //       `Ignored: ${snippetPath.replace(process.cwd(), "")}`
+    //     )}`
+    //   );
+    //   writeOnlyNew(snippetPath, translationArray.join("\n"));
+    // } else {
+    //   writeCompareFile(snippetPath, translationArray.join("\n"));
+    // }
+    //
+    // snippets.push(snippetPath);
+    //
+    // translationArray = [`{%- render "${schema.folder}" -%}`];
 
     translationArray.push(generateSectionFiles(schema));
 
@@ -248,121 +248,124 @@ export const generateLiquidFiles = () => {
     }
   }
 
-  for (const key in sectionPresetSchemas) {
-    const presets =
-      sectionPresetSchemas[key]?.presets
-        ?.filter(
-          (preset) =>
-            config.all_presets ||
-            !preset.enabled_on ||
-            preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
-        )
-        ?.map((preset, index, arr) => {
-          let currentPreset = {
-            name:
-              arr?.length === 1
-                ? sectionPresetSchemas[key]?.name
-                : preset.enabled_on &&
-                  !preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
-                ? `${sectionPresetSchemas[key]?.name} - ${
-                    index + 1
-                  }` /*`${sectionPresetSchemas[key]?.name} - ${preset.enabled_on?.[0]}`*/
-                : `${sectionPresetSchemas[key]?.name} - ${index + 1}`,
-            settings: preset?.settings,
-            blocks: Array.isArray(preset?.blocks)
-              ? preset?.blocks
-              : Object.values(preset?.blocks ?? {}) ?? [],
-          } as unknown as ShopifySectionPreset;
+  if (!config.disabled_presets) {
+    for (const key in sectionPresetSchemas) {
+      const presets =
+        sectionPresetSchemas[key]?.presets
+          ?.filter(
+            (preset) =>
+              config.all_presets ||
+              !preset.enabled_on ||
+              preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
+          )
+          ?.map((preset, index, arr) => {
+            let currentPreset = {
+              name:
+                arr?.length === 1
+                  ? sectionPresetSchemas[key]?.name
+                  : preset.enabled_on &&
+                    !preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
+                  ? `${sectionPresetSchemas[key]?.name} - ${
+                      index + 1
+                    }` /*`${sectionPresetSchemas[key]?.name} - ${preset.enabled_on?.[0]}`*/
+                  : `${sectionPresetSchemas[key]?.name} - ${index + 1}`,
+              settings: preset?.settings,
+              blocks: Array.isArray(preset?.blocks)
+                ? preset?.blocks
+                : Object.values(preset?.blocks ?? {}) ?? [],
+            } as unknown as ShopifySectionPreset;
 
-          if (
-            preset.enabled_on &&
-            !preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
-          ) {
-            const matchList = {
-              content_class: ["richtext-md"],
-              button_class: [
-                "button-primary",
-                "button-tabs",
-                "button-secondary",
-                "button-primary-outline",
-              ],
-              scrollbar_class: ["scrollbar-no-buttons", "scrollbar"],
-              article_card_class: ["article-card"],
-              title_class: ["richtext-md"],
-              product_card_class: ["product-card", "product-card-flat"],
-              select_class: ["input-select"],
-              subscription_label_class: ["label-primary"],
-              legend_class: ["richtext-md"],
-              savings_highlight_class: ["richtext-md"],
-              label_class: ["richtext-md"],
-              price_class: ["richtext-md"],
-              incomplete_button_class: [
-                "button-primary",
-                "button-tabs",
-                "button-secondary",
-                "button-primary-outline",
-              ],
-              collection_card_class: ["collection-card"],
-              input_class: ["input-text", "input-text-inline"],
-              accordion_class: ["accordion"],
-              text_over_image_class: ["richtext-md"],
-              link_class: ["richtext-md"],
-              color_scheme: ["color_scheme_1"],
-            };
-            let string_content = JSON.stringify(currentPreset, null, 2);
-            for (const key in matchList) {
-              const regexp = new RegExp(`("${key}": )"([^"]*)"`, "gi");
-              string_content = string_content.replace(regexp, (totalMatch, _1, _2) => {
-                const value = _2;
-                const isValid = matchList[key].some(
-                  (className) =>
-                    new RegExp(`^${className}$`, "gi").test(value) ||
-                    new RegExp(` ${className}$`, "gi").test(value) ||
-                    new RegExp(`^${className} `, "gi").test(value) ||
-                    new RegExp(` ${className} `, "gi").test(value)
-                );
-                if (!isValid) {
-                  return `${_1}"${matchList[key][0]}"`;
-                }
-                return `${_1}"${value}"`;
-              });
+            if (
+              preset.enabled_on &&
+              !preset.enabled_on?.includes(process.env.SHOPIFY_ACCELERATE_STORE)
+            ) {
+              const matchList = {
+                content_class: ["richtext-md"],
+                button_class: [
+                  "button-primary",
+                  "button-tabs",
+                  "button-secondary",
+                  "button-primary-outline",
+                ],
+                scrollbar_class: ["scrollbar-no-buttons", "scrollbar"],
+                article_card_class: ["article-card"],
+                title_class: ["richtext-md"],
+                product_card_class: ["product-card", "product-card-flat"],
+                select_class: ["input-select"],
+                subscription_label_class: ["label-primary"],
+                legend_class: ["richtext-md"],
+                savings_highlight_class: ["richtext-md"],
+                label_class: ["richtext-md"],
+                price_class: ["richtext-md"],
+                incomplete_button_class: [
+                  "button-primary",
+                  "button-tabs",
+                  "button-secondary",
+                  "button-primary-outline",
+                ],
+                collection_card_class: ["collection-card"],
+                input_class: ["input-text", "input-text-inline"],
+                accordion_class: ["accordion"],
+                text_over_image_class: ["richtext-md"],
+                link_class: ["richtext-md"],
+                color_scheme: ["color_scheme_1"],
+              };
+              let string_content = JSON.stringify(currentPreset, null, 2);
+              for (const key in matchList) {
+                const regexp = new RegExp(`("${key}": )"([^"]*)"`, "gi");
+                string_content = string_content.replace(regexp, (totalMatch, _1, _2) => {
+                  const value = _2;
+                  const isValid = matchList[key].some(
+                    (className) =>
+                      new RegExp(`^${className}$`, "gi").test(value) ||
+                      new RegExp(` ${className}$`, "gi").test(value) ||
+                      new RegExp(`^${className} `, "gi").test(value) ||
+                      new RegExp(` ${className} `, "gi").test(value)
+                  );
+                  if (!isValid) {
+                    return `${_1}"${matchList[key][0]}"`;
+                  }
+                  return `${_1}"${value}"`;
+                });
+              }
+
+              currentPreset = JSONParse(string_content) || currentPreset;
             }
 
-            currentPreset = JSONParse(string_content) || currentPreset;
-          }
+            return currentPreset;
+          }) ?? [];
 
-          return currentPreset;
-        }) ?? [];
-
-    if (!presets?.length) {
-      const targetFile = targets.sections.find(
-        (target) => target.split(/[\\/]/gi).at(-1) === `preset__${toSnakeCase(key)}.liquid`
-      );
-      if (targetFile) {
-        config.targets.sections = config.targets.sections.filter((target) => target !== targetFile);
-        deleteFile(path.join(root_dir, targetFile));
+      if (!presets?.length) {
+        const targetFile = targets.sections.find(
+          (target) => target.split(/[\\/]/gi).at(-1) === `preset__${toSnakeCase(key)}.liquid`
+        );
+        if (targetFile) {
+          config.targets.sections = config.targets.sections.filter(
+            (target) => target !== targetFile
+          );
+          deleteFile(path.join(root_dir, targetFile));
+        }
+        continue;
       }
-      continue;
+      const schema = Object.values(sectionsSchemas)?.find(
+        (val) => val.folder === sectionPresetSchemas[key]?.type
+      );
+
+      if (!schema) {
+        continue;
+      }
+
+      const translationArray = [`{%- render "${schema.folder}" -%}`];
+
+      translationArray.push(
+        generateSectionPresetFiles({ schema, preset_name: sectionPresetSchemas[key].name, presets })
+      );
+
+      const sectionName = `preset__${toSnakeCase(key)}.liquid`;
+      const sectionPath = path.join(process.cwd(), theme_path, "sections", sectionName);
+      writeCompareFile(sectionPath, translationArray.join("\n"));
     }
-    const schema = Object.values(sectionsSchemas)?.find(
-      (val) => val.folder === sectionPresetSchemas[key]?.type
-    );
-
-    if (!schema) {
-      continue;
-    }
-
-    const translationArray = [`{%- render "${schema.folder}" -%}`];
-
-    translationArray.push(
-      generateSectionPresetFiles({ schema, preset_name: sectionPresetSchemas[key].name, presets })
-    );
-
-    const sectionName = `preset__${toSnakeCase(key)}.liquid`;
-    const sectionPath = path.join(process.cwd(), theme_path, "sections", sectionName);
-    writeCompareFile(sectionPath, translationArray.join("\n"));
   }
-
   for (const key in blockSchemas) {
     const schema = blockSchemas[key];
 

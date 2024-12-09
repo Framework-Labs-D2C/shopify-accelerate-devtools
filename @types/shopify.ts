@@ -497,13 +497,20 @@ export type PresetSchema<T = never> = {
 export type ShopifySectionBlock =
   | {
       name: string;
-      disabled?: boolean;
       type: string;
       limit?: number;
       settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+      disabled?: boolean;
     }
   | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-  | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never };
+  | {
+      type: "@theme";
+      disabled?: boolean;
+      limit?: never;
+      name?: never;
+      settings?: never;
+    }
+  | { type: string; disabled?: boolean; limit?: never; name?: never; settings?: never };
 
 export type HeadlessSectionBlock =
   | {
@@ -584,6 +591,7 @@ export type ShopifyBlock<T = never> = {
   blocks?: ShopifySectionBlock[];
   class?: string;
   disabled?: boolean;
+  generate_block_files?: T extends { blocks: any } ? T["blocks"][number]["type"][] : string[];
   presets?: ShopifySectionPreset<T>[];
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;

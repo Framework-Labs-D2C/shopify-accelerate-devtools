@@ -202,7 +202,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
         const key = toLocaleFriendlySnakeCase(setting.content);
         if (
           localesDuplicates[key]?.length > 1 ||
-          (disabled_locales && !setting.content.includes(" ") && setting.content.length < 500)
+          (disabled_locales && !setting.content.includes(" ") && setting.content.length <= 50)
         ) {
           return;
         }

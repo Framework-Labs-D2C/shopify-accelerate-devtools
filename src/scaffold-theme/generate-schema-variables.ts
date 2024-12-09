@@ -251,9 +251,10 @@ export const generateSchemaVariables = () => {
     schema.blocks?.forEach((block) => {
       if (block.type === "@app") return;
       if (block.type === "@theme") return;
+      if (block.type && !block.name) return;
 
       const blockPath = path.join(
-        folders.sections,
+        folders.blocks,
         schema.folder,
         `${schema.folder}.${block.type}.liquid`
       );
