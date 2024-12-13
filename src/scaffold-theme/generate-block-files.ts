@@ -1,14 +1,14 @@
-import { ShopifyBlock } from "../../@types/shopify";
+import { ShopifyBlock, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 
-export const generateBlockFiles = ({
+export const generateBlockFileSchema = ({
   name,
   disabled,
   path,
   folder,
   ...section
-}: ShopifyBlock & { path: string; folder: string }) => {
+}: ShopifyThemeBlock & { path: string; folder: string }) => {
   const sectionName = toLocaleFriendlySnakeCase(name);
   const { sources, disabled_locales } = config;
   const localeDuplicates = sources.locale_duplicates;
@@ -94,24 +94,17 @@ export const generateBlockFiles = ({
       if (block.type === "@theme") return { name, ...block };
 
       return {
-        name:
-          name?.length <= 25
-            ? name
-            : `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
+        name: name?.length <= 25 ? name : `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.name`,
         ...block,
         settings: block?.settings?.map((setting) => {
-          const settingsBase = `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(
-            name
-          )}.settings`;
+          const settingsBase = `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.settings`;
 
           if (setting.type === "paragraph") {
             return {
               ...setting,
               content:
                 "content" in setting
-                  ? disabled_locales &&
-                    !setting.content.includes(" ") &&
-                    setting.content.length < 500
+                  ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
                     ? setting.content
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                     ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
@@ -124,9 +117,7 @@ export const generateBlockFiles = ({
               ...setting,
               content:
                 "content" in setting
-                  ? disabled_locales &&
-                    !setting.content.includes(" ") &&
-                    setting.content.length < 500
+                  ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
                     ? setting.content
                     : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                     ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
@@ -178,10 +169,7 @@ export const generateBlockFiles = ({
     }),
     presets: section.presets?.map(({ name, ...preset }) => {
       return {
-        name:
-          name?.length <= 25
-            ? name
-            : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+        name: name?.length <= 25 ? name : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
         ...preset,
       };
     }),

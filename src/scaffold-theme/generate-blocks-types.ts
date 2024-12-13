@@ -1,5 +1,5 @@
 import path from "path";
-import { ShopifyBlock, ShopifySettingsInput } from "../../@types/shopify";
+import { ShopifyBlock, ShopifySettingsInput, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { capitalize } from "../utils/capitalize";
 import { writeCompareFile } from "../utils/fs";
@@ -27,7 +27,7 @@ export const generateBlocksTypes = () => {
   writeCompareFile(blockTypesPath, finalContent);
 };
 
-export const getImports = (sections: { [T: string]: ShopifyBlock }) => {
+export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {
   const localTypes = [];
 
   const analyseSetting = (setting) => {
@@ -123,9 +123,7 @@ export const blockToTypes = (section, key) => {
         .map(
           (setting) =>
             `    /** Input type: ${setting.type} */\n    ` +
-            `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(
-              setting
-            )};`
+            `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(setting)};`
         )
         .sort((a, b) => {
           const aX = a.split("\n")[1];
@@ -153,6 +151,7 @@ export const blockToTypes = (section, key) => {
   return arr.join("\n");
 };
 
+/* TODO: Update for Style settings in future*/
 export const getSettingsType = (setting: ShopifySettingsInput) => {
   switch (setting.type) {
     case "article":

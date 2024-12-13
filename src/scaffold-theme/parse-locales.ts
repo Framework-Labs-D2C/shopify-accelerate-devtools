@@ -58,10 +58,7 @@ export function parseLocales() {
           }
         }
         if ("placeholder" in setting && typeof setting.placeholder === "string") {
-          const [key, value] = [
-            toLocaleFriendlySnakeCase(setting.placeholder),
-            setting.placeholder,
-          ];
+          const [key, value] = [toLocaleFriendlySnakeCase(setting.placeholder), setting.placeholder];
           if (entries[key]) {
             entries[key].push(value);
           } else {
@@ -73,15 +70,13 @@ export function parseLocales() {
   };
 
   Object.values(sections).forEach((section) => {
-    const blocks =
-      section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
+    const blocks = section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
     mapSettings(section.settings);
     blocks.forEach((block) => mapSettings(block.settings));
   });
 
   Object.values(blocks).forEach((section) => {
-    const blocks =
-      section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
+    const blocks = section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
     mapSettings(section.settings);
     blocks.forEach((block) => mapSettings(block.settings));
   });

@@ -1,11 +1,11 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { ShopifyBlock, ShopifySection } from "../../@types/shopify";
+import { ShopifyBlock, ShopifySection, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 
 export const generateSchemaVariables = () => {
-  const { folders, sources, disabled_theme_blocks } = config;
+  const { folders, sources } = config;
 
   const sections = sources.sectionSchemas as {
     [T: string]: ShopifySection<{ blocks: any; settings: any }> & { path: string; folder: string };
@@ -26,9 +26,7 @@ export const generateSchemaVariables = () => {
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
       variables.push(
-        `  assign ${
-          RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id
-        } = section.settings.${setting.id}`
+        `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = section.settings.${setting.id}`
       );
     });
 
@@ -46,9 +44,7 @@ export const generateSchemaVariables = () => {
         )}`
       );
       fs.writeFileSync(sectionLiquid, schema.settings ? variables.join("\n") : "");
-      config.sources.sectionsLiquid = [
-        ...new Set([...config.sources.sectionsLiquid, sectionLiquid]),
-      ];
+      config.sources.sectionsLiquid = [...new Set([...config.sources.sectionsLiquid, sectionLiquid])];
     }
 
     if (fs.existsSync(sectionLiquid)) {
@@ -88,18 +84,11 @@ export const generateSchemaVariables = () => {
     schema.blocks?.forEach((block) => {
       if (block.type === "@app") return;
       if (block.type === "@theme") return;
-      if (
-        Array.isArray(schema.generate_block_files) &&
-        !schema.generate_block_files.includes(block.type)
-      ) {
+      if (Array.isArray(schema.generate_block_files) && !schema.generate_block_files.includes(block.type)) {
         return;
       }
 
-      const blockPath = path.join(
-        folders.sections,
-        schema.folder,
-        `${schema.folder}.${block.type}.liquid`
-      );
+      const blockPath = path.join(folders.sections, schema.folder, `${schema.folder}.${block.type}.liquid`);
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
@@ -109,9 +98,7 @@ export const generateSchemaVariables = () => {
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
         blockVariables.push(
-          `  assign ${
-            RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id
-          } = block.settings.${setting.id}`
+          `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
         );
       });
 
@@ -120,8 +107,7 @@ export const generateSchemaVariables = () => {
       blockVariables.push("");
       blockVariables.push("");
 
-      const variableContent =
-        block?.settings && block?.settings?.length ? blockVariables.join("\n") : "";
+      const variableContent = block?.settings && block?.settings?.length ? blockVariables.join("\n") : "";
 
       if (!fs.existsSync(blockPath)) {
         console.log(
@@ -169,7 +155,7 @@ export const generateSchemaVariables = () => {
   }
 
   const blocks = sources.blockSchemas as {
-    [T: string]: ShopifyBlock<{ blocks: any; settings: any }> & { path: string; folder: string };
+    [T: string]: ShopifyThemeBlock<{ blocks: any; settings: any }> & { path: string; folder: string };
   };
 
   for (const key in blocks) {
@@ -182,18 +168,12 @@ export const generateSchemaVariables = () => {
 
     const variables = [start];
     variables.push("{%- liquid");
-    if (disabled_theme_blocks) {
-      variables.push(`  assign block_type = "_blocks.${schema.folder}"`);
-    } else {
-      variables.push(`  assign block_type = "${schema.folder}"`);
-    }
+    variables.push(`  assign block_type = "${schema.folder}"`);
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
       variables.push(
-        `  assign ${
-          RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id
-        } = block.settings.${setting.id}`
+        `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
       );
     });
 
@@ -211,7 +191,7 @@ export const generateSchemaVariables = () => {
         )}`
       );
       fs.writeFileSync(itemLiquid, schema.settings ? variables.join("\n") : "");
-      config.sources.sectionsLiquid = [...new Set([...config.sources.sectionsLiquid, itemLiquid])];
+      config.sources.blocksLiquid = [...new Set([...config.sources.blocksLiquid, itemLiquid])];
     }
 
     if (fs.existsSync(itemLiquid)) {
@@ -252,11 +232,7 @@ export const generateSchemaVariables = () => {
       if (block.type === "@app") return;
       if (block.type === "@theme") return;
 
-      const blockPath = path.join(
-        folders.sections,
-        schema.folder,
-        `${schema.folder}.${block.type}.liquid`
-      );
+      const blockPath = path.join(folders.sections, schema.folder, `${schema.folder}.${block.type}.liquid`);
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
@@ -266,9 +242,7 @@ export const generateSchemaVariables = () => {
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
         blockVariables.push(
-          `  assign ${
-            RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id
-          } = block.settings.${setting.id}`
+          `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
         );
       });
 
@@ -277,8 +251,7 @@ export const generateSchemaVariables = () => {
       blockVariables.push("");
       blockVariables.push("");
 
-      const variableContent =
-        block?.settings && block?.settings?.length ? blockVariables.join("\n") : "";
+      const variableContent = block?.settings && block?.settings?.length ? blockVariables.join("\n") : "";
 
       if (!fs.existsSync(blockPath)) {
         console.log(
@@ -323,6 +296,83 @@ export const generateSchemaVariables = () => {
         }
       }
     });
+  }
+
+  const classic_blocks = sources.classic_blockSchemas as {
+    [T: string]: ShopifyBlock<{ settings: any }> & { path: string; folder: string };
+  };
+
+  for (const key in classic_blocks) {
+    const schema = classic_blocks[key];
+
+    const itemLiquid = path.join(folders.classic_blocks, schema.folder, `${schema.folder}.liquid`);
+
+    const start = "{%- comment -%} Auto Generated Variables start {%- endcomment -%}";
+    const end = "{%- comment -%} Auto Generated Variables end {%- endcomment -%}";
+
+    const variables = [start];
+    variables.push("{%- liquid");
+
+    variables.push(`  assign block_type = "_blocks.${schema.folder}"`);
+
+    schema.settings?.forEach((setting) => {
+      if (setting.type === "header" || setting.type === "paragraph") return;
+      variables.push(
+        `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
+      );
+    });
+
+    variables.push("-%}");
+    variables.push(end);
+    variables.push("");
+    variables.push("");
+
+    const variableContent = schema.settings && schema.settings.length ? variables.join("\n") : "";
+
+    if (!fs.existsSync(itemLiquid)) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
+          `Created: ${itemLiquid.replace(process.cwd(), "")}`
+        )}`
+      );
+      fs.writeFileSync(itemLiquid, schema.settings ? variables.join("\n") : "");
+      config.sources.classic_blocksLiquid = [...new Set([...config.sources.classic_blocksLiquid, itemLiquid])];
+      config.sources.snippets = [...new Set([...config.sources.snippets, itemLiquid])];
+    }
+
+    if (fs.existsSync(itemLiquid)) {
+      const itemContent = fs.readFileSync(itemLiquid, {
+        encoding: "utf-8",
+      });
+
+      if (itemContent.includes(start) && itemContent.includes(end)) {
+        const newContent = itemContent.replace(
+          // eslint-disable-next-line max-len
+          /({%- comment -%} Auto Generated Variables start {%- endcomment -%})(.|\n|\r)*({%- comment -%} Auto Generated Variables end {%- endcomment -%})(\r|\n|\s)*/gim,
+          variableContent
+        );
+
+        if (itemContent !== newContent) {
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+              `Updated: ${itemLiquid.replace(process.cwd(), "")}`
+            )}`
+          );
+          fs.writeFileSync(itemLiquid, newContent);
+        }
+      }
+
+      if (!itemContent.includes(start) && !itemContent.includes(end) && variableContent) {
+        const newContent = variableContent + itemContent;
+
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+            `Updated: ${itemLiquid.replace(process.cwd(), "")}`
+          )}`
+        );
+        fs.writeFileSync(itemLiquid, newContent);
+      }
+    }
   }
 };
 

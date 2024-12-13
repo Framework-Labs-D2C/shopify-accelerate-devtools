@@ -1,6 +1,6 @@
 import path from "path";
 import { config, root_dir } from "../../shopify-accelerate";
-import { isBlockTs, isSectionTs } from "../scaffold-theme/parse-files";
+import { isBlockTs, isClassicBlockTs, isSectionTs } from "../scaffold-theme/parse-files";
 
 const { build } = require("esbuild");
 
@@ -46,17 +46,11 @@ const runEsBuild = () => {
       const content = fs.readFileSync(path.join(root_dir, "assets", "editor.js"), {
         encoding: "utf-8",
       });
-      fs.writeFileSync(
-        path.join(root_dir, "assets", "editor.js"),
-        `${content}\n // random_comment `
-      );
+      fs.writeFileSync(path.join(root_dir, "assets", "editor.js"), `${content}\n // random_comment `);
       const content2 = fs.readFileSync(path.join(root_dir, "assets", "theme.js"), {
         encoding: "utf-8",
       });
-      fs.writeFileSync(
-        path.join(root_dir, "assets", "theme.js"),
-        `${content2}\n // random_comment `
-      );
+      fs.writeFileSync(path.join(root_dir, "assets", "theme.js"), `${content2}\n // random_comment `);
     })
     .catch((error) => {
       console.error(error);
@@ -148,6 +142,48 @@ const runBlockJsEsbuild = (entryFile) => {
     });
 };
 
+const runClassicBlockJsEsbuild = (entryFile) => {
+  build({
+    entryPoints: [entryFile],
+    metafile: true,
+    target: "es2020",
+    // sourcemap: "external",
+    treeShaking: true,
+    // bundle: true,
+    outfile: path.join(
+      root_dir,
+      config.theme_path,
+      "assets",
+      `__classic_block--${entryFile
+        .split(/[\\/]/gi)
+        .at(-1)
+        .replace(/\.(ts)x?$/gi, ".js")}`
+    ),
+    // outdir: path.join(root_dir, config.theme_path, "assets"),
+    minify: false,
+    ignoreAnnotations: true,
+    packages: "external",
+    format: "esm",
+    legalComments: "none",
+    keepNames: true,
+    plugins: [],
+
+    // splitting: true,
+  })
+    .then((e) => {
+      console.log(
+        `__classic_block--${entryFile
+          .split(/[\\/]/gi)
+          .at(-1)
+          .replace(/\.(ts)x?$/gi, ".js")} - bundled`
+      );
+    })
+    .catch((error) => {
+      console.error(error);
+      // eslint-disable-next-line no-process-exit
+    });
+};
+
 export const runEsbuild = () => {
   let running = false;
   watch(root_dir, { recursive: true }, async (event, name) => {
@@ -176,13 +212,29 @@ export const runEsbuild = () => {
     if (isBlockTs(name)) {
       const filename = name.split(/[\\/]/gi).at(-1);
 
-      const block = Object.values(config.sources.blockSchemas).find((block) =>
+      const block = Object.values(config.sources.blockSchemas).find((block) => block.path.includes(name.replace(filename, "")));
+
+      if (block && !block.disabled) {
+        try {
+          runBlockJsEsbuild(name);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      running = false;
+      return;
+    }
+
+    if (isClassicBlockTs(name)) {
+      const filename = name.split(/[\\/]/gi).at(-1);
+
+      const block = Object.values(config.sources.classic_blockSchemas).find((block) =>
         block.path.includes(name.replace(filename, ""))
       );
 
       if (block && !block.disabled) {
         try {
-          runBlockJsEsbuild(name);
+          runClassicBlockJsEsbuild(name);
         } catch (err) {
           console.log(err);
         }
@@ -226,13 +278,31 @@ export const runEsbuild = () => {
     if (isBlockTs(name)) {
       const filename = name.split(/[\\/]/gi).at(-1);
 
-      const block = Object.values(config.sources.blockSchemas).find((block) =>
+      const block = Object.values(config.sources.blockSchemas).find((block) => block.path.includes(name.replace(filename, "")));
+
+      if (block && !block.disabled) {
+        try {
+          runBlockJsEsbuild(name);
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      running = false;
+      return;
+    }
+  });
+  config.sources.classic_blocksJs.forEach((name) => {
+    running = true;
+    if (isClassicBlockTs(name)) {
+      const filename = name.split(/[\\/]/gi).at(-1);
+
+      const block = Object.values(config.sources.classic_blockSchemas).find((block) =>
         block.path.includes(name.replace(filename, ""))
       );
 
       if (block && !block.disabled) {
         try {
-          runBlockJsEsbuild(name);
+          runClassicBlockJsEsbuild(name);
         } catch (err) {
           console.log(err);
         }

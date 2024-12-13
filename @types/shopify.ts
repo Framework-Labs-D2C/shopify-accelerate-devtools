@@ -13,11 +13,7 @@ export type ShopifyParagraph = {
   info?: string;
 };
 
-export type ShopifyColorThemeGroupDefinition =
-  | ShopifyColor
-  | ShopifyColor_background
-  | ShopifyHeader
-  | ShopifyParagraph;
+export type ShopifyColorThemeGroupDefinition = ShopifyColor | ShopifyColor_background | ShopifyHeader | ShopifyParagraph;
 
 export type ShopifyColorThemeGroupRoles =
   | "background"
@@ -31,10 +27,7 @@ export type ShopifyColorThemeGroupRoles =
   | "links"
   | "icons";
 
-export type ShopifyColorThemeRole = Extract<
-  ShopifyColorThemeGroup["definition"][number],
-  { id: string }
->["id"];
+export type ShopifyColorThemeRole = Extract<ShopifyColorThemeGroup["definition"][number], { id: string }>["id"];
 
 export type ShopifyColorThemeOptionalGradientRole<T extends string> = T extends ReservedNames
   ? {
@@ -90,10 +83,7 @@ export type ShopifyColorTheme = {
   info?: string;
 };
 
-export type ShopifyStyleSettings =
-  | ShopifyStyleSizePanel
-  | ShopifyStyleSpacingPanel
-  | ShopifyStyleLayoutPanel;
+export type ShopifyStyleSettings = ShopifyStyleSizePanel | ShopifyStyleSpacingPanel | ShopifyStyleLayoutPanel;
 
 export type ShopifyStyleSizePanel = {
   id: string;
@@ -185,13 +175,7 @@ export type ShopifyStyleLayoutPanel = {
       | "space-evenly"
       | "baseline"
       | "normal";
-    "justify-content"?:
-      | "flex-start"
-      | "center"
-      | "flex-end"
-      | "space-around"
-      | "space-between"
-      | "space-evenly";
+    "justify-content"?: "flex-start" | "center" | "flex-end" | "space-around" | "space-between" | "space-evenly";
     "align-items"?: "flex-start" | "center" | "flex-end" | "baseline" | "stretch";
     "row-gap"?: `${number}%` | `${number}px`;
     "column-gap"?: `${number}%` | `${number}px`;
@@ -208,13 +192,7 @@ export type ShopifyStyleLayoutPanel = {
         | "space-evenly"
         | "baseline"
         | "normal";
-      "justify-content"?:
-        | "flex-start"
-        | "center"
-        | "flex-end"
-        | "space-around"
-        | "space-between"
-        | "space-evenly";
+      "justify-content"?: "flex-start" | "center" | "flex-end" | "space-around" | "space-between" | "space-evenly";
       "align-items"?: "flex-start" | "center" | "flex-end" | "baseline" | "stretch";
       "row-gap"?: `${number}%` | `${number}px`;
       "column-gap"?: `${number}%` | `${number}px`;
@@ -490,10 +468,7 @@ type ExtractSettings<T extends ShopifySection | ShopifySectionBlock> = Extract<
   { id: string; type: string }
 >;
 
-type ExtractSetting<T extends ShopifySection | ShopifySectionBlock, ID extends string> = Extract<
-  ExtractSettings<T>,
-  { id: ID }
->;
+type ExtractSetting<T extends ShopifySection | ShopifySectionBlock, ID extends string> = Extract<ExtractSettings<T>, { id: ID }>;
 
 type MapSettings<Section extends ShopifySection | ShopifySectionBlock> = {
   [ID in ExtractSettings<Section>["id"]]: ExtractSetting<Section, ID>["type"] extends "article"
@@ -574,9 +549,7 @@ type MapBlocksPreset<T extends { blocks: ShopifySectionBlock[] }> = {
 };
 
 export type ShopifySectionDefault<T = never> = {
-  blocks?: T extends { blocks: Array<any> }
-    ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] | undefined
-    : never;
+  blocks?: T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] | undefined : never;
   settings?: T extends never
     ? { [T: string]: string | number | boolean } | undefined
     : T extends { settings: any }
@@ -605,9 +578,7 @@ export type ShopifySectionDefaultGuaranteed<T = never> = {
 export type ShopifySectionPreset<T = unknown> = {
   name: string;
   category?: string;
-  blocks?: T extends { blocks: Array<any> }
-    ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][]
-    : never;
+  blocks?: T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never;
   settings?: T extends never
     ? { [T: string]: string | number | boolean } | undefined
     : T extends { settings: any }
@@ -621,23 +592,28 @@ export type PresetSchema<T = never> = {
   presets: {
     enabled_on?: string[];
     settings?: ShopifySectionPreset<T>["settings"];
-    blocks?: /* @ts-ignore */
-    Record<string, ShopifySectionPreset<T>["blocks"][number]> | ShopifySectionPreset<T>["blocks"];
+    blocks?: /* @ts-ignore */ Record<string, ShopifySectionPreset<T>["blocks"][number]> | ShopifySectionPreset<T>["blocks"];
     block_order?: string[];
     custom_css?: string[];
   }[];
 };
 
 export type ShopifySectionBlock =
-  | {
-      name: string;
-      disabled?: boolean;
-      type: string;
-      limit?: number;
-      settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
-    }
-  | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-  | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never };
+  | (
+      | {
+          name: string;
+          disabled?: boolean;
+          type: string;
+          limit?: number;
+          settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+        }
+      | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+      | { type: "@classic-theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+    )
+  | (
+      | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+      | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+    );
 
 export type HeadlessSectionBlock =
   | {
@@ -713,7 +689,7 @@ export type HeadlessSection<T = never> = {
   settings?: (HeadlessSettingsInput | ShopifyHeader | ShopifyParagraph)[];
 };
 
-export type ShopifyBlock<T = never> = {
+export type ShopifyThemeBlock<T = never> = {
   name: string;
   blocks?: ShopifySectionBlock[];
   class?: string;
@@ -721,6 +697,14 @@ export type ShopifyBlock<T = never> = {
   presets?: ShopifySectionPreset<T>[];
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
+};
+
+export type ShopifyBlock<T = never> = {
+  name: string;
+  class?: string;
+  disabled?: boolean;
+  presets?: ShopifySectionPreset<T>[];
+  settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
 };
 
 export type HeadlessBlock<T = never> = {
@@ -790,12 +774,7 @@ export type ShopifySettings = (
     ))
   | {
       name: string;
-      settings: (
-        | ShopifySettingsInput
-        | ShopifyHeader
-        | ShopifyParagraph
-        | ShopifyColorThemeGroup
-      )[];
+      settings: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph | ShopifyColorThemeGroup)[];
     }
 )[];
 
@@ -1063,13 +1042,7 @@ export type _Metafield_liquid_file_reference_force_image = {
 
 export type _Metafield_liquid =
   | {
-      type:
-        | "color"
-        | "date"
-        | "date_time"
-        | "single_line_text_field"
-        | "multi_line_text_field"
-        | "url";
+      type: "color" | "date" | "date_time" | "single_line_text_field" | "multi_line_text_field" | "url";
       value?: string;
     }
   | {

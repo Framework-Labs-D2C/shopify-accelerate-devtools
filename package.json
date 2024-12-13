@@ -90,7 +90,11 @@
       "import/no-anonymous-default-export": 0,
       "react/no-unescaped-entities": 0,
       "react/jsx-sort-props": 0,
-      "node/no-unpublished-require": 0
+      "node/no-unpublished-require": 0,
+      "max-len": ["off", {
+        "code": 130
+      }],
+      "no-irregular-whitespace": "off"
     }
   },
   "prettier": {
@@ -98,7 +102,7 @@
     "arrowParens": "always",
     "singleQuote": false,
     "bracketSpacing": true,
-    "printWidth": 100,
+    "printWidth": 130,
     "indentChains": true,
     "exportCurlySpacing": true,
     "importCurlySpacing": true,

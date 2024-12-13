@@ -121,8 +121,7 @@ export const sectionToTypes = (section, key) => {
   const settings: ShopifySettingsInput[] = section.settings
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
     .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
-  const hasNonThemeBlocks = section.blocks?.filter((b) => b.type !== "@app" && b.type !== "@theme")
-    ?.length;
+  const hasNonThemeBlocks = section.blocks?.filter((b) => b.type !== "@app" && b.type !== "@theme")?.length;
   const hasThemeBlocks = section.blocks?.some((block) => block.type === "@theme");
 
   arr.push(`export type ${capitalize(key)}Section = {`);
@@ -147,9 +146,7 @@ export const sectionToTypes = (section, key) => {
         .map(
           (setting) =>
             `    /** Input type: ${setting.type} */\n    ` +
-            `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(
-              setting
-            )};`
+            `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(setting)};`
         )
         .sort((a, b) => {
           const aX = a.split("\n")[1];
@@ -180,9 +177,7 @@ export const sectionToTypes = (section, key) => {
         .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
 
       arr.push("");
-      arr.push(
-        `export type ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))} = {`
-      );
+      arr.push(`export type ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))} = {`);
       arr.push(`  id${config.headless ? "?" : ""}: string;`);
 
       if (blockSettings?.length) {
@@ -192,9 +187,7 @@ export const sectionToTypes = (section, key) => {
             .map(
               (setting) =>
                 `    /** Input type: ${setting.type} */\n    ` +
-                `${
-                  /[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`
-                }${getSettingsType(setting)};`
+                `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(setting)};`
             )
             .sort((a, b) => {
               const aX = a.split("\n")[1];
@@ -224,9 +217,7 @@ export const sectionToTypes = (section, key) => {
   if (section.blocks?.length && section.blocks?.length === 1) {
     arr.push("");
     arr.push(
-      `export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(
-        section.blocks[0].type.replace("@", "")
-      )};`
+      `export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(section.blocks[0].type.replace("@", ""))};`
     );
   }
 
@@ -287,9 +278,7 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
     case "html":
       return "?: string";
     case "image_picker":
-      return config.headless
-        ? "?: { src?: string | null, alt?: string | null }"
-        : "?: _Image_liquid | string";
+      return config.headless ? "?: { src?: string | null, alt?: string | null }" : "?: _Image_liquid | string";
     case "link_list":
       return "?: _Linklist_liquid";
     case "liquid":

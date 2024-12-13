@@ -8,6 +8,7 @@ export const generateSchemaLocales = () => {
   const { theme_path, sources, disabled_locales } = config;
   const sections = sources.sectionSchemas;
   const blocks = sources.blockSchemas;
+  const classic_blocks = sources.classic_blockSchemas;
   const settings = sources.settingsSchema;
   const localesDuplicates = sources.locale_duplicates;
 
@@ -28,8 +29,7 @@ export const generateSchemaLocales = () => {
 
   Object.values(sections).forEach((section) => {
     returnObject = produce(returnObject, (current) => {
-      const blocks =
-        section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
+      const blocks = section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
 
       const settings = generateSectionSettings(section.settings, localesDuplicates);
 
@@ -41,9 +41,7 @@ export const generateSchemaLocales = () => {
               }
             : undefined;
 
-        if (
-          !Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length
-        ) {
+        if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
           delete acc[toLocaleFriendlySnakeCase(preset.name)];
         }
 
@@ -55,13 +53,9 @@ export const generateSchemaLocales = () => {
 
         acc[toLocaleFriendlySnakeCase(block.name)] = {
           name: block.name?.length > 25 ? block.name : undefined,
-          settings: Object.values(blockSettings ?? {})?.filter(Boolean)?.length
-            ? blockSettings
-            : undefined,
+          settings: Object.values(blockSettings ?? {})?.filter(Boolean)?.length ? blockSettings : undefined,
         };
-        if (
-          !Object.values(acc[toLocaleFriendlySnakeCase(block.name)] ?? {})?.filter(Boolean)?.length
-        ) {
+        if (!Object.values(acc[toLocaleFriendlySnakeCase(block.name)] ?? {})?.filter(Boolean)?.length) {
           delete acc[toLocaleFriendlySnakeCase(block.name)];
         }
 
@@ -71,18 +65,11 @@ export const generateSchemaLocales = () => {
       current.sections[toLocaleFriendlySnakeCase(section.name)] = {
         name: section?.name?.length <= 25 ? undefined : section.name,
         settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
-        blocks:
-          blocks.length && Object.values(translatedBlocks ?? {})?.filter(Boolean)?.length
-            ? translatedBlocks
-            : undefined,
+        blocks: blocks.length && Object.values(translatedBlocks ?? {})?.filter(Boolean)?.length ? translatedBlocks : undefined,
         presets: Object.values(presets ?? {})?.filter(Boolean)?.length ? presets : undefined,
       };
 
-      if (
-        !Object.values(current.sections[toLocaleFriendlySnakeCase(section.name)] ?? {})?.filter(
-          Boolean
-        )?.length
-      ) {
+      if (!Object.values(current.sections[toLocaleFriendlySnakeCase(section.name)] ?? {})?.filter(Boolean)?.length) {
         delete current.sections[toLocaleFriendlySnakeCase(section.name)];
       }
     });
@@ -90,8 +77,7 @@ export const generateSchemaLocales = () => {
 
   Object.values(blocks).forEach((schema) => {
     returnObject = produce(returnObject, (current) => {
-      const blocks =
-        schema.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
+      const blocks = schema.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
 
       const settings = generateSectionSettings(schema.settings, localesDuplicates);
 
@@ -103,9 +89,7 @@ export const generateSchemaLocales = () => {
               }
             : undefined;
 
-        if (
-          !Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length
-        ) {
+        if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
           delete acc[toLocaleFriendlySnakeCase(preset.name)];
         }
         return acc;
@@ -116,14 +100,10 @@ export const generateSchemaLocales = () => {
 
         acc[toLocaleFriendlySnakeCase(block.name)] = {
           name: block.name?.length > 25 ? block.name : undefined,
-          settings: Object.values(blockSettings ?? {})?.filter(Boolean)?.length
-            ? blockSettings
-            : undefined,
+          settings: Object.values(blockSettings ?? {})?.filter(Boolean)?.length ? blockSettings : undefined,
         };
 
-        if (
-          !Object.values(acc[toLocaleFriendlySnakeCase(block.name)] ?? {})?.filter(Boolean)?.length
-        ) {
+        if (!Object.values(acc[toLocaleFriendlySnakeCase(block.name)] ?? {})?.filter(Boolean)?.length) {
           delete acc[toLocaleFriendlySnakeCase(block.name)];
         }
 
@@ -133,18 +113,41 @@ export const generateSchemaLocales = () => {
       current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
         name: schema.name?.length > 25 ? schema.name : undefined,
         settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
-        blocks:
-          blocks.length && Object.values(translatedBlocks ?? {})?.filter(Boolean)?.length
-            ? translatedBlocks
-            : undefined,
+        blocks: blocks.length && Object.values(translatedBlocks ?? {})?.filter(Boolean)?.length ? translatedBlocks : undefined,
         presets: Object.values(presets ?? {})?.filter(Boolean)?.length ? presets : undefined,
       };
 
-      if (
-        !Object.values(current.blocks[toLocaleFriendlySnakeCase(schema.name)] ?? {})?.filter(
-          Boolean
-        )?.length
-      ) {
+      if (!Object.values(current.blocks[toLocaleFriendlySnakeCase(schema.name)] ?? {})?.filter(Boolean)?.length) {
+        delete current.blocks[toLocaleFriendlySnakeCase(schema.name)];
+      }
+    });
+  });
+
+  Object.values(classic_blocks).forEach((schema) => {
+    returnObject = produce(returnObject, (current) => {
+      const settings = generateSectionSettings(schema.settings, localesDuplicates);
+
+      const presets = schema.presets?.reduce((acc, preset) => {
+        acc[toLocaleFriendlySnakeCase(preset.name)] =
+          preset.name?.length > 25
+            ? {
+                name: preset.name,
+              }
+            : undefined;
+
+        if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
+          delete acc[toLocaleFriendlySnakeCase(preset.name)];
+        }
+        return acc;
+      }, {});
+
+      current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
+        name: schema.name?.length > 25 ? schema.name : undefined,
+        settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
+        presets: Object.values(presets ?? {})?.filter(Boolean)?.length ? presets : undefined,
+      };
+
+      if (!Object.values(current.blocks[toLocaleFriendlySnakeCase(schema.name)] ?? {})?.filter(Boolean)?.length) {
         delete current.blocks[toLocaleFriendlySnakeCase(schema.name)];
       }
     });
@@ -161,11 +164,7 @@ export const generateSchemaLocales = () => {
         settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
       };
 
-      if (
-        !Object.values(
-          current.settings_schema[toLocaleFriendlySnakeCase(settingsBlock.name)] ?? {}
-        )?.filter(Boolean)?.length
-      ) {
+      if (!Object.values(current.settings_schema[toLocaleFriendlySnakeCase(settingsBlock.name)] ?? {})?.filter(Boolean)?.length) {
         delete current.settings_schema[toLocaleFriendlySnakeCase(settingsBlock.name)];
       }
     });
@@ -231,8 +230,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
 
           current[setting.id] = {
             label:
-              localesDuplicates[toLocaleFriendlySnakeCase(setting?.label)]?.length > 1 ||
-              disabled_locales
+              localesDuplicates[toLocaleFriendlySnakeCase(setting?.label)]?.length > 1 || disabled_locales
                 ? undefined
                 : setting?.label,
             info:
@@ -241,8 +239,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
                 ? undefined
                 : setting?.info,
             placeholder:
-              localesDuplicates[toLocaleFriendlySnakeCase(setting?.placeholder)]?.length > 1 ||
-              disabled_locales
+              localesDuplicates[toLocaleFriendlySnakeCase(setting?.placeholder)]?.length > 1 || disabled_locales
                 ? undefined
                 : setting?.placeholder,
             ...options,
@@ -254,8 +251,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
         }
         current[setting.id] = {
           label:
-            localesDuplicates[toLocaleFriendlySnakeCase(setting?.label)]?.length > 1 ||
-            disabled_locales
+            localesDuplicates[toLocaleFriendlySnakeCase(setting?.label)]?.length > 1 || disabled_locales
               ? undefined
               : setting?.label,
           info:
@@ -264,8 +260,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
               ? undefined
               : setting?.info,
           placeholder:
-            localesDuplicates[toLocaleFriendlySnakeCase(setting?.placeholder)]?.length > 1 ||
-            disabled_locales
+            localesDuplicates[toLocaleFriendlySnakeCase(setting?.placeholder)]?.length > 1 || disabled_locales
               ? undefined
               : setting?.placeholder,
         };

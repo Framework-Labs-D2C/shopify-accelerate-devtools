@@ -36,9 +36,9 @@ export const watchTheme = () => {
       generateSettingTypes();
       generateLiquidFiles();
       console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(
-          `${Date.now() - startTime}ms`
-        )}] ${chalk.cyan(`File modified: ${name.replace(process.cwd(), "")}`)}`
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
+          `File modified: ${name.replace(process.cwd(), "")}`
+        )}`
       );
     }
     if (isAsset(name)) {
@@ -74,9 +74,9 @@ export const watchTheme = () => {
       generateSchemaVariables();
       generateLiquidFiles();
       console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(
-          `${Date.now() - startTime}ms`
-        )}] ${chalk.cyan(`File modified: ${name.replace(process.cwd(), "")}`)}`
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
+          `File modified: ${name.replace(process.cwd(), "")}`
+        )}`
       );
     }
     running = false;

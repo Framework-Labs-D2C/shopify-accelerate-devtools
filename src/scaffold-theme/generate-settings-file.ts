@@ -90,13 +90,7 @@ export const generateSettingsFile = () => {
 
   const schemaContent = JSON.stringify(localizedSettings, undefined, 2).split("\n");
   /* TODO: This should only be a temporary bugfix and not stay long !!!*/
-  schemaContent[schemaContent.length - 2] = schemaContent[schemaContent.length - 2].replace(
-    "}",
-    "},"
-  );
+  schemaContent[schemaContent.length - 2] = schemaContent[schemaContent.length - 2].replace("}", "},");
 
-  writeCompareFile(
-    path.join(process.cwd(), theme_path, "config", "settings_schema.json"),
-    schemaContent.join("\n")
-  );
+  writeCompareFile(path.join(process.cwd(), theme_path, "config", "settings_schema.json"), schemaContent.join("\n"));
 };

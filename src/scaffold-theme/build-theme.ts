@@ -1,3 +1,4 @@
+import { config } from "./../../shopify-accelerate";
 import { generateAssetFiles } from "./generate-asset-files";
 import { generateBaseTypes } from "./generate-base-types";
 import { generateBlocksTypes } from "./generate-blocks-types";

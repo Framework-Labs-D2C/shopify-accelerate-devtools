@@ -3,7 +3,7 @@
 import fs from "fs";
 import path from "path";
 import toml from "toml";
-import { PresetSchema, ShopifyBlock, ShopifySection, ShopifySettings } from "./@types/shopify";
+import { ShopifyBlock, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
@@ -48,7 +48,6 @@ const shopify_toml = tomlFile
           output?: "json";
           live?: boolean;
           "allow-live"?: boolean;
-          all_presets?: boolean;
           mode: "development" | "production";
           ignore_blocks: string;
           ignore_snippets: string;
@@ -66,7 +65,6 @@ export type GlobalsState = {
   package_templates: string;
   package_types: string;
   project_root: ReturnType<typeof process.cwd>;
-  all_presets: boolean;
   mode: "development" | "production";
   theme_id: number;
   theme_path: string;
@@ -84,19 +82,20 @@ export type GlobalsState = {
   delete_external_blocks?: boolean;
   delete_external_assets?: boolean;
   disabled_locales?: boolean;
-  disabled_theme_blocks?: boolean;
   sources: {
     snippets: string[];
     layouts: string[];
     sectionsLiquid: string[];
     sectionsSchemaFiles: string[];
     sectionsJs: string[];
-    sectionPresetSchemaFiles: string[];
-    sectionPresetSchemas: { [T: string]: PresetSchema & { path: string; folder: string } };
     blocksLiquid: string[];
     blocksSchemaFiles: string[];
     blocksJs: string[];
-    blockSchemas: { [T: string]: ShopifyBlock & { path: string; folder: string } };
+    blockSchemas: { [T: string]: ShopifyThemeBlock & { path: string; folder: string } };
+    classic_blocksLiquid: string[];
+    classic_blocksSchemaFiles: string[];
+    classic_blocksJs: string[];
+    classic_blockSchemas: { [T: string]: ShopifyBlock & { path: string; folder: string } };
     assets: string[];
     giftCards: string[];
     configs: string[];
@@ -127,9 +126,9 @@ export type GlobalsState = {
     types: string;
     utils: string;
     sections: string;
-    presets: string;
     layout: string;
     blocks: string;
+    classic_blocks: string;
     snippets: string;
     templates: string;
     assets: string;
@@ -138,33 +137,17 @@ export type GlobalsState = {
 };
 
 export const config: GlobalsState = {
-  ignore_blocks:
-    shopify_toml?.environments?.["development"]?.ignore_blocks
-      ?.split(",")
-      .map((str) => str.trim()) ?? [],
-  ignore_snippets:
-    shopify_toml?.environments?.["development"]?.ignore_snippets
-      ?.split(",")
-      .map((str) => str.trim()) ?? [],
-  ignore_layouts:
-    shopify_toml?.environments?.["development"]?.ignore_layouts
-      ?.split(",")
-      .map((str) => str.trim()) ?? [],
-  ignore_sections:
-    shopify_toml?.environments?.["development"]?.ignore_sections
-      ?.split(",")
-      .map((str) => str.trim()) ?? [],
-  ignore_assets:
-    shopify_toml?.environments?.["development"]?.ignore_assets
-      ?.split(",")
-      .map((str) => str.trim()) ?? [],
+  ignore_blocks: shopify_toml?.environments?.["development"]?.ignore_blocks?.split(",").map((str) => str.trim()) ?? [],
+  ignore_snippets: shopify_toml?.environments?.["development"]?.ignore_snippets?.split(",").map((str) => str.trim()) ?? [],
+  ignore_layouts: shopify_toml?.environments?.["development"]?.ignore_layouts?.split(",").map((str) => str.trim()) ?? [],
+  ignore_sections: shopify_toml?.environments?.["development"]?.ignore_sections?.split(",").map((str) => str.trim()) ?? [],
+  ignore_assets: shopify_toml?.environments?.["development"]?.ignore_assets?.split(",").map((str) => str.trim()) ?? [],
   delete_external_layouts: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_LAYOUTS === "true",
   delete_external_sections: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SECTIONS === "true",
   delete_external_snippets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SNIPPETS === "true",
   delete_external_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS === "true",
   delete_external_assets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_ASSETS === "true",
-  disabled_locales: process.env.SHOPIFY_ACCELERATE_DISABLED_LOCALES === "true",
-  disabled_theme_blocks: process.env.SHOPIFY_ACCELERATE_DISABLE_THEME_BLOCKS === "true",
+  disabled_locales: true,
   package_root: path.resolve(__dirname),
   project_root: root_dir,
   package_templates: path.join(path.resolve(__dirname), "./src/templates"),
@@ -172,14 +155,17 @@ export const config: GlobalsState = {
   sources: {
     snippets: [],
     layouts: [],
-    sectionPresetSchemaFiles: [],
-    sectionPresetSchemas: {},
     sectionsLiquid: [],
     sectionsSchemaFiles: [],
     sectionsJs: [],
     blocksLiquid: [],
     blocksSchemaFiles: [],
     blocksJs: [],
+    blockSchemas: {},
+    classic_blocksLiquid: [],
+    classic_blocksSchemaFiles: [],
+    classic_blocksJs: [],
+    classic_blockSchemas: {},
     assets: [],
     giftCards: [],
     configs: [],
@@ -190,7 +176,6 @@ export const config: GlobalsState = {
     locale_duplicates: {},
     settingsSchema: null,
     sectionSchemas: {},
-    blockSchemas: {},
   },
   targets: {
     assets: [],
@@ -217,15 +202,15 @@ export const config: GlobalsState = {
     sections: process.env.SHOPIFY_ACCELERATE_SECTIONS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_SECTIONS)
       : path.join(root_dir, "sections"),
-    presets: process.env.SHOPIFY_ACCELERATE_PRESETS
-      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_PRESETS)
-      : path.join(root_dir, "presets"),
     layout: process.env.SHOPIFY_ACCELERATE_LAYOUT
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_LAYOUT)
       : path.join(root_dir, "layout"),
     blocks: process.env.SHOPIFY_ACCELERATE_BLOCKS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_BLOCKS)
       : path.join(root_dir, "blocks"),
+    classic_blocks: process.env.SHOPIFY_ACCELERATE_CLASSIC_BLOCKS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_CLASSIC_BLOCKS)
+      : path.join(root_dir, "classic-blocks"),
     snippets: process.env.SHOPIFY_ACCELERATE_SNIPPETS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_SNIPPETS)
       : path.join(root_dir, "snippets"),
@@ -252,7 +237,6 @@ export const config: GlobalsState = {
   theme_id: +shopify_toml?.environments?.["development"]?.theme,
   theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
   store: shopify_toml?.environments?.["development"]?.store,
-  all_presets: shopify_toml?.environments?.["development"]?.all_presets,
   mode: shopify_toml?.environments?.["development"]?.mode ?? "production",
 };
 
@@ -352,9 +336,7 @@ program
     const imports = [`import type { FC } from "react";`];
     const renderBlocks = [];
     Object.entries(config.sources.sectionSchemas ?? {})?.forEach(([key, entry]) => {
-      imports.push(
-        `import { ${capitalize(key)} } from "sections/${entry.folder}/${entry.folder}";`
-      );
+      imports.push(`import { ${capitalize(key)} } from "sections/${entry.folder}/${entry.folder}";`);
       renderBlocks.push(`    case "${entry.folder}": {
       return <${capitalize(key)} {...section} />;
     }`);
@@ -363,9 +345,7 @@ program
         entry.path?.replace("schema.ts", `${entry.folder}.tsx`),
         `import type { ${capitalize(key)}Section } from "types/sections";
 
-export const ${capitalize(key)} = ({ id, type, settings, blocks, disabled }: ${capitalize(
-          key
-        )}Section) => {
+export const ${capitalize(key)} = ({ id, type, settings, blocks, disabled }: ${capitalize(key)}Section) => {
   if (disabled) return null
   
   return <>${capitalize(key)}</>;
@@ -383,10 +363,7 @@ export const ${capitalize(key)} = ({ id, type, settings, blocks, disabled }: ${c
     imports.push("  }");
     imports.push("};");
 
-    writeCompareFile(
-      path.join(process.cwd(), "./app/[...slug]/render-section.tsx"),
-      imports.join("\n")
-    );
+    writeCompareFile(path.join(process.cwd(), "./app/[...slug]/render-section.tsx"), imports.join("\n"));
 
     watchHeadless();
   });

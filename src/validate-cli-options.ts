@@ -29,7 +29,6 @@ export const validateCliOptions = async (
     store: store?.replace(/\.myshopify\.com/gi, ""),
     theme: theme_id,
     path: `./themes/${environment}`,
-    all_presets: false,
     mode: environment === "development" ? "development" : "production",
     ignore_blocks: "",
     ignore_snippets: "",
@@ -73,11 +72,7 @@ export const validateCliOptions = async (
 
   const prompts = [];
   if (!store && !currentEnvironment.store) {
-    console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
-        `Store handle missing.`
-      )}`
-    );
+    console.log(`[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Store handle missing.`)}`);
     const results = await userInput([
       {
         type: "text",
@@ -134,15 +129,7 @@ export const validateCliOptions = async (
 
           const cp = child_process.spawn(
             "npx",
-            [
-              "shopify",
-              "theme",
-              "share",
-              "-s",
-              currentEnvironment.store,
-              "--path",
-              `./themes/${environment}`,
-            ],
+            ["shopify", "theme", "share", "-s", currentEnvironment.store, "--path", `./themes/${environment}`],
             {
               shell: true,
               stdio: "inherit",
@@ -164,36 +151,27 @@ export const validateCliOptions = async (
           //   resolve(true);
           // });
 
-          const cp = child_process.spawn(
-            "npx",
-            ["shopify", "theme", "list", "-s", currentEnvironment.store],
-            {
-              shell: true,
-              stdio: "inherit",
-            }
-          );
+          const cp = child_process.spawn("npx", ["shopify", "theme", "list", "-s", currentEnvironment.store], {
+            shell: true,
+            stdio: "inherit",
+          });
           cp.on("exit", () => {
             resolve(true);
           });
         });
       }
     }
-    console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Theme ID missing.`)}`
-    );
+    console.log(`[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Theme ID missing.`)}`);
     prompts.push({
       type: "text",
       name: "theme_id",
-      message: `Shopify theme id. I.e. \`https://admin.shopify.com/store/${
-        currentEnvironment?.store ?? `<store_id>`
-      }/themes/${currentEnvironment?.store ? "current" : `<theme_id>`}/editor\``,
+      message: `Shopify theme id. I.e. \`https://admin.shopify.com/store/${currentEnvironment?.store ?? `<store_id>`}/themes/${
+        currentEnvironment?.store ? "current" : `<theme_id>`
+      }/editor\``,
     });
   }
 
-  if (
-    (store && currentEnvironment.store !== store) ||
-    (theme_id && currentEnvironment.theme !== +theme_id)
-  ) {
+  if ((store && currentEnvironment.store !== store) || (theme_id && currentEnvironment.theme !== +theme_id)) {
     prompts.push({
       type: "text",
       name: "environment",
@@ -218,15 +196,12 @@ export const validateCliOptions = async (
       currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   }
 
-  currentEnvironment.all_presets = !!currentEnvironment?.all_presets;
-  currentEnvironment.mode =
-    currentEnvironment.mode ?? (environment === "development" ? "development" : "production");
+  currentEnvironment.mode = currentEnvironment.mode ?? (environment === "development" ? "development" : "production");
   currentEnvironment.ignore_blocks = currentEnvironment.ignore_blocks ?? "";
   currentEnvironment.ignore_snippets = currentEnvironment.ignore_snippets ?? "";
   currentEnvironment.ignore_layouts = currentEnvironment.ignore_layouts ?? "";
   currentEnvironment.ignore_sections = currentEnvironment.ignore_sections ?? "";
-  currentEnvironment.ignore_assets =
-    currentEnvironment.ignore_assets ?? "custom.css.liquid,custom.css,custom.js";
+  currentEnvironment.ignore_assets = currentEnvironment.ignore_assets ?? "custom.css.liquid,custom.css,custom.js";
 
   console.log(currentEnvironment);
   process.env["SHOPIFY_ACCELERATE_STORE"] = currentEnvironment.store;
@@ -235,18 +210,12 @@ export const validateCliOptions = async (
   config.theme_path = currentEnvironment?.path;
   config.theme_id = +currentEnvironment?.theme;
   config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
-  config.all_presets = currentEnvironment?.all_presets;
   config.mode = currentEnvironment?.mode;
-  config.ignore_blocks =
-    currentEnvironment?.ignore_blocks?.split(",").map((str) => str.trim()) ?? [];
-  config.ignore_snippets =
-    currentEnvironment?.ignore_snippets?.split(",").map((str) => str.trim()) ?? [];
-  config.ignore_layouts =
-    currentEnvironment?.ignore_layouts?.split(",").map((str) => str.trim()) ?? [];
-  config.ignore_sections =
-    currentEnvironment?.ignore_sections?.split(",").map((str) => str.trim()) ?? [];
-  config.ignore_assets =
-    currentEnvironment?.ignore_assets?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_blocks = currentEnvironment?.ignore_blocks?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_snippets = currentEnvironment?.ignore_snippets?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_layouts = currentEnvironment?.ignore_layouts?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_sections = currentEnvironment?.ignore_sections?.split(",").map((str) => str.trim()) ?? [];
+  config.ignore_assets = currentEnvironment?.ignore_assets?.split(",").map((str) => str.trim()) ?? [];
 
   if (config.mode === "production") {
     config.ignore_layouts.push("theme.liquid");
@@ -259,17 +228,9 @@ export const validateCliOptions = async (
 
   const { project_root, package_templates } = config;
 
-  writeOnlyNew(
-    path.join(process.cwd(), ".env"),
-    readFile(path.join(package_templates, "/.env.template"))
-  );
+  writeOnlyNew(path.join(process.cwd(), ".env"), readFile(path.join(package_templates, "/.env.template")));
 
-  if (
-    !currentEnvironment?.store ||
-    !currentEnvironment?.theme ||
-    !currentEnvironment?.path ||
-    !environment
-  ) {
+  if (!currentEnvironment?.store || !currentEnvironment?.theme || !currentEnvironment?.path || !environment) {
     throw new Error("Missing information to initialize the theme environment");
   }
 

@@ -28,9 +28,7 @@ export const generateAssetFiles = () => {
   if (delete_external_assets) {
     targets.assets.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
-      const targetFile = sources.assets.find((sourcePath) =>
-        sourcePath.split(/[\\/]/gi).at(-1).includes(fileName)
-      );
+      const targetFile = sources.assets.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1).includes(fileName));
 
       if (
         /^replo/gi.test(fileName) ||

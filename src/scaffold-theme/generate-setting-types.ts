@@ -87,9 +87,7 @@ export const generateSettingTypes = () => {
         .map(
           (setting) =>
             `  /** Input type: ${setting.type} */\n  ` +
-            `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(
-              setting
-            )};`
+            `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(setting)};`
         )
         .sort((a, b) => {
           const aX = a.split("\n")[1];
@@ -111,9 +109,7 @@ export const generateSettingTypes = () => {
   }
   arr.push(`};`);
 
-  const typesContent = `import { ${localTypes.join(", ")} } from "./shopify";\n\n${arr.join(
-    "\n"
-  )}\n`;
+  const typesContent = `import { ${localTypes.join(", ")} } from "./shopify";\n\n${arr.join("\n")}\n`;
 
   const settingsTypesPath = process.env.SHOPIFY_ACCELERATE_TYPES
     ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_TYPES, "settings.ts")
