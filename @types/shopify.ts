@@ -90,6 +90,138 @@ export type ShopifyColorTheme = {
   info?: string;
 };
 
+export type ShopifyStyleSettings =
+  | ShopifyStyleSizePanel
+  | ShopifyStyleSpacingPanel
+  | ShopifyStyleLayoutPanel;
+
+export type ShopifyStyleSizePanel = {
+  id: string;
+  label: string;
+  info?: string;
+  type: "style.size_panel";
+  default: {
+    width?: `${number}%` | `${number}px` | "auto";
+    height?: `${number}%` | `${number}px` | "auto";
+    "max-width"?: `${number}%` | `${number}px` | "none";
+    "min-width"?: `${number}%` | `${number}px` | "auto";
+    "max-height"?: `${number}%` | `${number}px` | "none";
+    "min-height"?: `${number}%` | `${number}px` | "auto";
+    "flex-grow"?: `${number}`;
+    "flex-shrink"?: `${number}`;
+    "flex-basis"?: `${number}%` | `${number}px` | "auto";
+    "@media (--mobile)"?: {
+      width?: `${number}%` | `${number}px` | "auto";
+      height?: `${number}%` | `${number}px` | "auto";
+      "max-width"?: `${number}%` | `${number}px` | "none";
+      "min-width"?: `${number}%` | `${number}px` | "auto";
+      "max-height"?: `${number}%` | `${number}px` | "none";
+      "min-height"?: `${number}%` | `${number}px` | "auto";
+      "flex-grow"?: `${number}`;
+      "flex-shrink"?: `${number}`;
+      "flex-basis"?: `${number}%` | `${number}px` | "auto";
+    };
+  };
+};
+
+export type ShopifyStyleSpacingPanel = {
+  type: "style.spacing_panel";
+  id: string;
+  label: string;
+  info?: string;
+  default: {
+    /* padding-top */
+    "padding-block-start"?: `${number}%` | `${number}px`;
+    /* padding-bottom */
+    "padding-block-end"?: `${number}%` | `${number}px`;
+    /* padding-left */
+    "padding-inline-start"?: `${number}%` | `${number}px`;
+    /* padding-right */
+    "padding-inline-end"?: `${number}%` | `${number}px`;
+    /* margin-top */
+    "margin-block-start"?: `${number}%` | `${number}px`;
+    /* margin-bottom */
+    "margin-block-end"?: `${number}%` | `${number}px`;
+    /* margin-left */
+    "margin-inline-start"?: `${number}%` | `${number}px`;
+    /* margin-right */
+    "margin-inline-end"?: `${number}%` | `${number}px`;
+    "@media (--mobile)"?: {
+      /* padding-top */
+      "padding-block-start"?: `${number}%` | `${number}px`;
+      /* padding-bottom */
+      "padding-block-end"?: `${number}%` | `${number}px`;
+      /* padding-left */
+      "padding-inline-start"?: `${number}%` | `${number}px`;
+      /* padding-right */
+      "padding-inline-end"?: `${number}%` | `${number}px`;
+      /* margin-top */
+      "margin-block-start"?: `${number}%` | `${number}px`;
+      /* margin-bottom */
+      "margin-block-end"?: `${number}%` | `${number}px`;
+      /* margin-left */
+      "margin-inline-start"?: `${number}%` | `${number}px`;
+      /* margin-right */
+      "margin-inline-end"?: `${number}%` | `${number}px`;
+    };
+  };
+};
+
+export type ShopifyStyleLayoutPanel = {
+  type: "style.layout_panel";
+  id: string;
+  label: string;
+  info?: string;
+  default: {
+    display?: "flex";
+    "flex-direction"?: "row" | "column";
+    "flex-wrap"?: "wrap" | "nowrap";
+    "align-content"?:
+      | "flex-start"
+      | "center"
+      | "flex-end"
+      | "space-around"
+      | "space-between"
+      | "space-evenly"
+      | "baseline"
+      | "normal";
+    "justify-content"?:
+      | "flex-start"
+      | "center"
+      | "flex-end"
+      | "space-around"
+      | "space-between"
+      | "space-evenly";
+    "align-items"?: "flex-start" | "center" | "flex-end" | "baseline" | "stretch";
+    "row-gap"?: `${number}%` | `${number}px`;
+    "column-gap"?: `${number}%` | `${number}px`;
+    "@media (--mobile)"?: {
+      display?: "flex";
+      "flex-direction"?: "row" | "column";
+      "flex-wrap"?: "wrap" | "nowrap";
+      "align-content"?:
+        | "flex-start"
+        | "center"
+        | "flex-end"
+        | "space-around"
+        | "space-between"
+        | "space-evenly"
+        | "baseline"
+        | "normal";
+      "justify-content"?:
+        | "flex-start"
+        | "center"
+        | "flex-end"
+        | "space-around"
+        | "space-between"
+        | "space-evenly";
+      "align-items"?: "flex-start" | "center" | "flex-end" | "baseline" | "stretch";
+      "row-gap"?: `${number}%` | `${number}px`;
+      "column-gap"?: `${number}%` | `${number}px`;
+    };
+  };
+};
+
 export type ShopifyCheckbox = {
   id: string;
   label: string;
@@ -325,7 +457,8 @@ export type ShopifySettingsInput =
   | ShopifyVideo_url
   | ShopifyColorTheme
   | ShopifyColorThemeGroup
-  | ShopifyTextAlignment;
+  | ShopifyTextAlignment
+  | ShopifyStyleSettings;
 
 export type HeadlessSettingsInput =
   | ShopifyCheckbox
@@ -348,7 +481,8 @@ export type HeadlessSettingsInput =
   | ShopifyUrl
   | ShopifyVideo
   | ShopifyVideo_url
-  | ShopifyTextAlignment;
+  | ShopifyTextAlignment
+  | ShopifyStyleSettings;
 
 type ExtractSettings<T extends ShopifySection | ShopifySectionBlock> = Extract<
   /* @ts-ignore*/
