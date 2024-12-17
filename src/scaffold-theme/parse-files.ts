@@ -89,7 +89,7 @@ export const getSources = () => {
     if (isConfig(filePath)) {
       configs.push(filePath);
     }
-    if (isTemplate(filePath)) {
+    if (isTemplate(filePath) && !isCustomerTemplate(filePath)) {
       templates.push(filePath);
     }
     if (isCustomerTemplate(filePath)) {
