@@ -1,4 +1,5 @@
 import path from "path";
+import { toSnakeCase } from "../utils/to-snake-case";
 import { ShopifySettings, ShopifySettingsInput } from "../../@types/shopify";
 import { config, root_dir } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
@@ -6,8 +7,22 @@ import { getSettingsType } from "./generate-section-types";
 
 export const generateSettingTypes = () => {
   const { sources } = config;
+  const cards = sources.cardSchemas;
+  const sourceSettings = [...(sources.settingsSchema ?? [])];
+
+  for (const key in cards) {
+    const card = cards[key];
+    sourceSettings.push({
+      name: `Card: ${card.name}`,
+      settings:
+        card.settings?.map((setting) =>
+          "id" in setting ? { ...setting, id: `c_${toSnakeCase(card.folder)}__${setting.id}` } : setting
+        ) ?? [],
+    });
+  }
+
   const settings =
-    sources?.settingsSchema?.reduce((acc: ShopifySettingsInput[], group) => {
+    sourceSettings?.reduce((acc: ShopifySettingsInput[], group) => {
       if (!("settings" in group)) return acc;
 
       return [

@@ -19,6 +19,7 @@ export const getSources = () => {
     ...getAllFiles(folders.types),
     ...getAllFiles(folders.blocks),
     ...getAllFiles(folders.classic_blocks),
+    ...getAllFiles(folders.cards),
   ];
 
   const typeScriptSchema = [];
@@ -35,6 +36,9 @@ export const getSources = () => {
   const classic_blocksLiquid = [];
   const classic_blocksSchemaFiles = [];
   const classic_blocksJs = [];
+  const cardsLiquid = [];
+  const cardsSchemaFiles = [];
+  const cardsJs = [];
   const giftCards = [];
   const sectionGroups = [];
   const configs = [];
@@ -80,6 +84,16 @@ export const getSources = () => {
     if (isClassicBlockTs(filePath)) {
       classic_blocksJs.push(filePath);
     }
+    if (isCardsLiquid(filePath)) {
+      cardsLiquid.push(filePath);
+      snippets.push(filePath);
+    }
+    if (isCardsSchema(filePath)) {
+      cardsSchemaFiles.push(filePath);
+    }
+    if (isCardsTs(filePath)) {
+      cardsJs.push(filePath);
+    }
     if (isGiftCard(filePath)) {
       giftCards.push(filePath);
     }
@@ -114,6 +128,9 @@ export const getSources = () => {
   config.sources.classic_blocksLiquid = classic_blocksLiquid;
   config.sources.classic_blocksSchemaFiles = classic_blocksSchemaFiles;
   config.sources.classic_blocksJs = classic_blocksJs;
+  config.sources.cardsLiquid = cardsLiquid;
+  config.sources.cardsSchemaFiles = cardsSchemaFiles;
+  config.sources.cardsJs = cardsJs;
   config.sources.assets = assets;
   config.sources.giftCards = giftCards;
   config.sources.configs = configs;
@@ -185,6 +202,26 @@ export const getSources = () => {
     },
     {} as { [T: string]: ShopifyBlock }
   );
+  config.sources.cardSchemas = cardsSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
+
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifyBlock }
+  );
 };
 
 export const getSchemaSources = () => {
@@ -195,6 +232,7 @@ export const getSchemaSources = () => {
     ...getAllFiles(folders.snippets),
     ...getAllFiles(folders.blocks),
     ...getAllFiles(folders.classic_blocks),
+    ...getAllFiles(folders.cards),
     ...getAllFiles(folders.sections),
     ...getAllFiles(folders.config),
   ];
@@ -210,6 +248,8 @@ export const getSchemaSources = () => {
   const blocksSchemaFiles = [];
   const classic_blocksLiquid = [];
   const classic_blocksSchemaFiles = [];
+  const cardsLiquid = [];
+  const cardsSchemaFiles = [];
   const giftCards = [];
   const assets = [];
 
@@ -243,6 +283,13 @@ export const getSchemaSources = () => {
     if (isClassicBlockSchema(filePath)) {
       classic_blocksSchemaFiles.push(filePath);
     }
+    if (isCardsLiquid(filePath)) {
+      cardsLiquid.push(filePath);
+      snippets.push(filePath);
+    }
+    if (isCardsSchema(filePath)) {
+      cardsSchemaFiles.push(filePath);
+    }
     if (isAsset(filePath)) {
       assets.push(filePath);
     }
@@ -263,6 +310,7 @@ export const getSchemaSources = () => {
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.classic_blocksLiquid = classic_blocksLiquid;
+  config.sources.cardsLiquid = cardsLiquid;
   config.sources.giftCards = giftCards;
   config.sources.settingsFile = settingsFiles[0];
   config.sources.settingsSchema = settingsFiles?.[0]
@@ -311,6 +359,26 @@ export const getSchemaSources = () => {
   );
 
   config.sources.classic_blockSchemas = classic_blocksSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
+
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifyBlock }
+  );
+  config.sources.cardSchemas = cardsSchemaFiles.reduce(
     (acc, file) => {
       try {
         const data = importFresh(file);
@@ -449,6 +517,14 @@ export const isClassicBlockSchema = (name: string) =>
 export const isClassicBlockTs = (name: string) =>
   name.includes(config.folders.classic_blocks) && !isClassicBlockSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
 
+export const isCardsLiquid = (name: string) =>
+  name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/][^.\\/]*\.liquid$/gi.test(name);
+
+export const isCardsSchema = (name: string) => name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name);
+
+export const isCardsTs = (name: string) =>
+  name.includes(config.folders.cards) && !isCardsSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
+
 export const isLayout = (name: string) => {
   return name.includes(config.folders.layout) && /[\\/][^\\/]*\.liquid$/gi.test(name);
 };
@@ -469,4 +545,10 @@ export const isTargetDynamicJs = (name: string) =>
   /[\\/]assets[\\/](__section--|__block--|__classic-block--)[^\\/]*$/gi.test(name);
 
 export const isLiquid = (name: string) =>
-  isSectionLiquid(name) || isBlockLiquid(name) || isSnippet(name) || isLayout(name) || isGiftCard(name);
+  isSectionLiquid(name) ||
+  isBlockLiquid(name) ||
+  isClassicBlockLiquid(name) ||
+  isCardsLiquid(name) ||
+  isSnippet(name) ||
+  isLayout(name) ||
+  isGiftCard(name);

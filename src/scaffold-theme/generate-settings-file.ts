@@ -1,12 +1,25 @@
 import path from "path";
 import { config, root_dir } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
-import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
+import { toLocaleFriendlySnakeCase, toSnakeCase } from "../utils/to-snake-case";
 
 export const generateSettingsFile = () => {
   const { theme_path, sources, disabled_locales } = config;
   const localeDuplicates = sources.locale_duplicates;
-  const settingsSchema = sources.settingsSchema;
+  const settingsSchema = [...(sources.settingsSchema ?? [])];
+
+  const cards = sources.cardSchemas;
+  for (const key in cards) {
+    const card = cards[key];
+    settingsSchema.push({
+      name: `Card: ${card.name}`,
+      settings:
+        card.settings?.map((setting) =>
+          "id" in setting ? { ...setting, id: `c_${toSnakeCase(card.folder)}__${setting.id}` } : setting
+        ) ?? [],
+    });
+  }
+
   const localizedSettings = settingsSchema.map(({ name, ...settingsBlock }) => {
     if (!("settings" in settingsBlock)) return { name, ...settingsBlock };
     const settingsName = toLocaleFriendlySnakeCase(name);

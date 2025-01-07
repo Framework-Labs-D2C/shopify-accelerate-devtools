@@ -6,6 +6,8 @@ export function parseLocales() {
   const { sources } = config;
   const sections = sources.sectionSchemas;
   const blocks = sources.blockSchemas;
+  const classic_blocks = sources.classic_blockSchemas;
+  const cards = sources.cardSchemas;
   const settings = sources.settingsSchema;
   const entries: { [T: string]: string[] } = {};
 
@@ -79,6 +81,14 @@ export function parseLocales() {
     const blocks = section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
     mapSettings(section.settings);
     blocks.forEach((block) => mapSettings(block.settings));
+  });
+
+  Object.values(classic_blocks).forEach((section) => {
+    mapSettings(section.settings);
+  });
+
+  Object.values(cards).forEach((section) => {
+    mapSettings(section.settings);
   });
 
   settings.forEach((settingsSection) => {

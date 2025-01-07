@@ -2,14 +2,16 @@ import { produce } from "immer";
 import path from "path";
 import { config, root_dir } from "../../shopify-accelerate";
 import { writeCompareFile } from "../utils/fs";
-import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
+import { toLocaleFriendlySnakeCase, toSnakeCase } from "../utils/to-snake-case";
 
 export const generateSchemaLocales = () => {
   const { theme_path, sources, disabled_locales } = config;
   const sections = sources.sectionSchemas;
   const blocks = sources.blockSchemas;
   const classic_blocks = sources.classic_blockSchemas;
-  const settings = sources.settingsSchema;
+  const cards = sources.cardSchemas;
+  const settings = [...(sources.settingsSchema ?? [])];
+
   const localesDuplicates = sources.locale_duplicates;
 
   let returnObject = {
@@ -152,6 +154,17 @@ export const generateSchemaLocales = () => {
       }
     });
   });
+
+  for (const key in cards) {
+    const card = cards[key];
+    settings.push({
+      name: `Card: ${card.name}`,
+      settings:
+        card.settings?.map((setting) =>
+          "id" in setting ? { ...setting, id: `c_${toSnakeCase(card.folder)}__${setting.id}` } : setting
+        ) ?? [],
+    });
+  }
 
   settings?.forEach((settingsBlock) => {
     if (!("settings" in settingsBlock)) return;

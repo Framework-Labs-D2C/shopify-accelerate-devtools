@@ -31,6 +31,7 @@ export const generateLiquidFiles = () => {
   const sectionsSchemas = sources.sectionSchemas;
   const blockSchemas = sources.blockSchemas;
   const classic_blockSchemas = sources.classic_blockSchemas;
+  const cardSchemas = sources.cardSchemas;
 
   generateSettingsFile();
 
@@ -374,11 +375,82 @@ export const generateLiquidFiles = () => {
     translationArray.push(generateBlockFileSchema(schema));
   }
 
+  for (const key in cardSchemas) {
+    const schema = cardSchemas[key];
+
+    const sectionName = `${schema.folder}.liquid`;
+    const targetSectionName = `_card.${schema.folder}.liquid`;
+
+    if (schema.disabled) {
+      const targetFile = targets.snippets.find((target) => target.split(/[\\/]/gi).at(-1) === targetSectionName);
+      if (targetFile) {
+        config.targets.snippets = config.targets.snippets.filter((target) => target !== targetFile);
+        deleteFile(path.join(root_dir, targetFile));
+      }
+
+      continue;
+    }
+
+    const translationArray = [];
+
+    const rawContent = fs.readFileSync(path.join(folders.cards, schema.folder, sectionName), {
+      encoding: "utf-8",
+    });
+
+    if (rawContent) {
+      const translatedContent = rawContent.replace(/<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi, (str, group1, group2) => {
+        const group = toLocaleFriendlySnakeCase(schema.folder);
+        const content = toLocaleFriendlySnakeCase(group2?.split(" ")?.slice(0, 2)?.join("_") ?? "").trim();
+        const backupContent = toLocaleFriendlySnakeCase(group2).trim();
+        const id = toLocaleFriendlySnakeCase(group1?.replace(/id="(.*)"/gi, "$1") ?? "").trim();
+
+        if (!(group in translations)) {
+          translations[group] = {};
+        }
+
+        if (id && !(id in translations[group])) {
+          translations[group][id] = group2;
+          return `{{ "${group}.${id}" | t }}`;
+        }
+
+        if (!(content in translations[group])) {
+          translations[group][content] = group2;
+          return `{{ "${group}.${content}" | t }}`;
+        }
+
+        if (translations[group][content] !== group2) {
+          if (!(backupContent in translations[group])) {
+            translations[group][backupContent] = group2;
+            return `{{ "${group}.${backupContent}" | t }}`;
+          }
+          if (translations[group][backupContent] !== group2) {
+            translations[group][`${content}_2`] = group2;
+            return `{{ "${group}.${content}_2" | t }}`;
+          }
+        }
+
+        if (translations[group][content] === group2) {
+          return `{{ "${group}.${content}" | t }}`;
+        }
+
+        return group2;
+      });
+
+      translationArray.push(translatedContent);
+    }
+
+    translationArray.push(generateBlockFileSchema(schema));
+  }
+
   for (let i = 0; i < snippets.length; i++) {
     const snippet = snippets[i];
     const snippetName = snippet.split(/[\\/]/gi).at(-1);
 
-    const snippetTargetName = snippet?.includes(folders.classic_blocks) ? `_blocks.${snippetName}` : snippetName;
+    const snippetTargetName = snippet?.includes(folders.classic_blocks)
+      ? `_blocks.${snippetName}`
+      : snippet?.includes(folders.cards)
+      ? `_card.${snippetName}`
+      : snippetName;
 
     const section = Object.values(sectionsSchemas).find((section) => section.path.includes(snippet.replace(snippetName, "")));
     const sectionBlockSchemas = section?.blocks?.find((block) => new RegExp(`\\.${block.type}\\.`, "gi").test(snippetName));
@@ -831,6 +903,7 @@ declare global {
     targets.blocks.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
       const targetFile = sources.blocksLiquid.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName);
+
       if (!targetFile) {
         deleteFile(path.join(process.cwd(), file));
       }

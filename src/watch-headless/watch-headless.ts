@@ -2,6 +2,8 @@ import chalk from "chalk";
 import fs from "fs";
 import watch from "node-watch";
 import path from "path";
+import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
+import { generateClassicBlocksTypes } from "../scaffold-theme/generate-classic-blocks-types";
 import { config } from "../../shopify-accelerate";
 import { generateBlocksTypes } from "../scaffold-theme/generate-blocks-types";
 import { generateSectionsTypes } from "../scaffold-theme/generate-section-types";
@@ -25,6 +27,8 @@ export const watchHeadless = () => {
       getSchemaSources();
       generateSectionsTypes();
       generateBlocksTypes();
+      generateClassicBlocksTypes();
+      generateCardsTypes();
       generateSettingTypes();
 
       const imports = [`import type { FC } from "react";`];

@@ -1,11 +1,13 @@
-const toCamelCase = (str) =>
+export const toCamelCase = (str) =>
   str
+    .replace(/^_/g, "")
+    .replace(/_/gi, "-")
     .replace(/(?:^\w|[A-Z]|\b\w)/g, (word, index) => {
       return index === 0 ? word.toLowerCase() : word.toUpperCase();
     })
     .replace(/[\s-]+/gi, "");
 
-const capitalize = (string) => {
+export const capitalize = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 };
 

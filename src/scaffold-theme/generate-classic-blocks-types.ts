@@ -1,37 +1,35 @@
 import path from "path";
-import { ShopifySection, ShopifySettingsInput } from "../../@types/shopify";
+import { ShopifyBlock, ShopifySettingsInput, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { capitalize } from "../utils/capitalize";
 import { writeCompareFile } from "../utils/fs";
-import { toPascalCase } from "../utils/to-pascal-case";
 
-export const generateSectionsTypes = () => {
+export const generateClassicBlocksTypes = () => {
   const { folders, sources } = config;
-  const sections = sources.sectionSchemas;
+  const sections = sources.classic_blockSchemas;
 
-  const sectionTypesPath = path.join(folders.types, "sections.ts");
+  const blockTypesPath = path.join(folders.types, "classic-blocks.ts");
 
   const imports = getImports(sections);
-  let sectionUnionType = "export type Sections =";
+  let sectionUnionType = "export type ClassicThemeBlocks =";
   let typeContent = "";
   for (const key in sections) {
-    const schema = sections[key] as ShopifySection;
+    const schema = sections[key] as ShopifyBlock;
 
-    typeContent += `${sectionToTypes(schema, key)}\n`;
-    sectionUnionType += `\n  | ${capitalize(key)}Section`;
+    typeContent += `${blockToTypes(schema, key)}\n`;
+    sectionUnionType += `\n  | ${capitalize(key)}Block`;
   }
 
   if (!typeContent) return;
 
   const finalContent = `${imports + typeContent + sectionUnionType};\n`;
 
-  writeCompareFile(sectionTypesPath, finalContent);
+  writeCompareFile(blockTypesPath, finalContent);
 };
 
-export const getImports = (sections: { [T: string]: ShopifySection }) => {
+export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {
   const localTypes = [];
-  let themeBlocks = false;
-  let classicThemeBlocks = false;
+
   const analyseSetting = (setting) => {
     if (setting.type === "richtext") {
       if (localTypes.includes("_BlockTag")) return;
@@ -95,64 +93,31 @@ export const getImports = (sections: { [T: string]: ShopifySection }) => {
     const schema = sections[key];
 
     schema.settings?.forEach(analyseSetting, localTypes);
-    if (schema.blocks?.some((block) => block.type === "@theme")) {
-      themeBlocks = true;
-    }
-    if (schema.blocks?.some((block) => block.type === "@classic-theme")) {
-      classicThemeBlocks = true;
-    }
     schema.blocks?.forEach((block) => {
-      block?.settings?.forEach(analyseSetting, localTypes);
+      if ("settings" in block) {
+        block?.settings?.forEach(analyseSetting, localTypes);
+      }
     });
   }
 
-  const returnArr = [];
-
   if (localTypes.length) {
-    returnArr.push(`import { ${localTypes.join(", ")} } from "./shopify";`);
+    return `import { ${localTypes.join(", ")} } from "./shopify";\n\n`;
   }
-
-  if (themeBlocks) {
-    returnArr.push(`import { ThemeBlocks } from "./blocks";`);
-  }
-  if (classicThemeBlocks) {
-    returnArr.push(`import { ClassicThemeBlocks } from "./classic-blocks";`);
-  }
-  returnArr.push(``);
-  return returnArr.join("\n");
+  return ``;
 };
 
-export const sectionToTypes = (section, key) => {
+export const blockToTypes = (section, key) => {
   const filename = section.folder;
   const arr = [];
   const settings: ShopifySettingsInput[] = section.settings
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
     .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
-  const hasNonThemeBlocks = section.blocks?.filter((b) => b.type !== "@app" && b.type !== "@theme" && b.type !== "@classic-theme")
-    ?.length;
-  const hasThemeBlocks = section.blocks?.some((block) => block.type === "@theme");
-  const hasClassicThemeBlocks = section.blocks?.some((block) => block.type === "@classic-theme");
 
-  arr.push(`export type ${capitalize(key)}Section = {`);
-  if (hasNonThemeBlocks && !hasThemeBlocks && !hasClassicThemeBlocks) {
-    arr.push(`  blocks: ${capitalize(key)}Blocks[];`);
-  }
-  if (!hasNonThemeBlocks && hasThemeBlocks && !hasClassicThemeBlocks) {
-    arr.push(`  blocks: ThemeBlocks[];`);
-  }
-  if (!hasNonThemeBlocks && !hasThemeBlocks && hasClassicThemeBlocks) {
-    arr.push(`  blocks: ClassicThemeBlocks[];`);
-  }
-  if (hasNonThemeBlocks && !hasThemeBlocks && hasClassicThemeBlocks) {
-    arr.push(`  blocks: (${capitalize(key)}Blocks | ClassicThemeBlocks)[];`);
-  }
-  if (!hasNonThemeBlocks && !hasThemeBlocks && !hasClassicThemeBlocks) {
-    arr.push(`  blocks${config.headless ? "?" : ""}: never[];`);
-  }
+  arr.push(`export type ${capitalize(key)}Block = {`);
+
   arr.push(`  id${config.headless ? "?" : ""}: string;`);
-  arr.push(`  disabled?: boolean;`);
-  arr.push(`  settings${!settings?.length ? "?" : ""}: {`);
   if (settings?.length) {
+    arr.push(`  settings: {`);
     arr.push(
       settings
         .map(
@@ -177,78 +142,16 @@ export const sectionToTypes = (section, key) => {
         })
         .join("\n")
     );
+    arr.push(`  };`);
   }
-  arr.push(`  };`);
   arr.push(`  type: "${filename}";`);
   arr.push(`};`);
 
-  if (section.blocks?.length) {
-    section.blocks?.forEach((block) => {
-      const blockSettings: ShopifySettingsInput[] = block?.settings
-        ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
-        .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
-
-      arr.push("");
-      arr.push(`export type ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))} = {`);
-      arr.push(`  id${config.headless ? "?" : ""}: string;`);
-
-      if (blockSettings?.length) {
-        arr.push(`  settings: {`);
-        arr.push(
-          blockSettings
-            .map(
-              (setting) =>
-                `    /** Input type: ${setting.type} */\n    ` +
-                `${/[^\w_]/gi.test(setting.id) ? `"${setting.id}"` : `${setting.id}`}${getSettingsType(setting)};`
-            )
-            .sort((a, b) => {
-              const aX = a.split("\n")[1];
-              const bX = b.split("\n")[1];
-              if (aX.includes("?") && !bX.includes("?")) {
-                return 1;
-              } else if (!aX.includes("?") && bX.includes("?")) {
-                return -1;
-              } else if (aX > bX) {
-                return 1;
-              } else if (aX < bX) {
-                return -1;
-              } else {
-                return 0;
-              }
-            })
-            .join("\n")
-        );
-        arr.push(`  };`);
-      }
-
-      arr.push(`  type: "${block.type}";`);
-      arr.push(`};`);
-    });
-  }
-
-  if (section.blocks?.length && section.blocks?.length === 1) {
-    arr.push("");
-    arr.push(
-      `export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(section.blocks[0].type.replace("@", ""))};`
-    );
-  }
-
-  if (section.blocks?.length && section.blocks?.length > 1) {
-    arr.push("");
-    arr.push(`export type ${capitalize(key)}Blocks =`);
-
-    section.blocks?.forEach((block, i) => {
-      if (section.blocks?.length - 1 === i) {
-        arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
-      } else {
-        arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))}`);
-      }
-    });
-  }
   arr.push("");
   return arr.join("\n");
 };
 
+/* TODO: Update for Style settings in future*/
 export const getSettingsType = (setting: ShopifySettingsInput) => {
   switch (setting.type) {
     case "article":
@@ -282,15 +185,15 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
       return "?: _Collection_liquid[]";
     }
     case "color":
-      return config.headless ? "?: string" : "?: _Color_liquid | string";
+      return "?: _Color_liquid | string";
     case "color_background":
       return "?: string";
     case "font_picker":
-      return config.headless ? ": string" : ": _Font_liquid | _Font_options";
+      return ": _Font_liquid | _Font_options";
     case "html":
       return "?: string";
     case "image_picker":
-      return config.headless ? "?: { src?: string | null, alt?: string | null }" : "?: _Image_liquid | string";
+      return "?: _Image_liquid | string";
     case "link_list":
       return "?: _Linklist_liquid";
     case "liquid":
@@ -298,13 +201,13 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
     case "page":
       return "?: _Page_liquid | string";
     case "product": {
-      if (setting.id.includes("__handle_only") || config.headless) {
+      if (setting.id.includes("__handle_only")) {
         return "?: string";
       }
       return "?: _Product_liquid";
     }
     case "product_list": {
-      if (setting.id.includes("__handle_only") || config.headless) {
+      if (setting.id.includes("__handle_only")) {
         return "?: string[]";
       }
       return "?: _Product_liquid[]";
@@ -325,9 +228,7 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
     case "url":
       return "?: string";
     case "video":
-      return config.headless
-        ? "?:  { src?: string | null,  mimeType?: string | null, alt?: string | null }"
-        : "?:  _Video_liquid";
+      return "?:  _Video_liquid";
     case "video_url":
       return "?:  `${string}youtube${string}` | `${string}vimeo${string}`";
     case "font":

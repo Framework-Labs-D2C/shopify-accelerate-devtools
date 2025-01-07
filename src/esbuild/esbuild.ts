@@ -42,7 +42,7 @@ const runEsBuild = () => {
     // splitting: true,
   })
     .then((e) => {
-      console.log("theme.js - bundled");
+      console.log("theme.js/editor.js - bundled");
       const content = fs.readFileSync(path.join(root_dir, "assets", "editor.js"), {
         encoding: "utf-8",
       });

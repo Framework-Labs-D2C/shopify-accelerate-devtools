@@ -1,8 +1,11 @@
+import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
+import { generateClassicBlocksTypes } from "../scaffold-theme/generate-classic-blocks-types";
 import { config } from "./../../shopify-accelerate";
 import { generateAssetFiles } from "./generate-asset-files";
 import { generateBaseTypes } from "./generate-base-types";
 import { generateBlocksTypes } from "./generate-blocks-types";
 import { generateLiquidFiles } from "./generate-liquid-files";
+import { generateAllMissingSchemaFiles } from "./generate-schema-files";
 import { generateSchemaLocales } from "./generate-schema-locales";
 import { generateSchemaVariables } from "./generate-schema-variables";
 import { generateSectionsTypes } from "./generate-section-types";
@@ -15,10 +18,13 @@ export const buildTheme = () => {
   getSources();
   getTargets();
   parseLocales();
+  generateAllMissingSchemaFiles();
   generateSchemaVariables();
   generateSchemaLocales();
   generateSectionsTypes();
   generateBlocksTypes();
+  generateClassicBlocksTypes();
+  generateCardsTypes();
   generateSettingTypes();
   generateLiquidFiles();
   generateAssetFiles();

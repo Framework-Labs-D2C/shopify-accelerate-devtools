@@ -2,8 +2,13 @@ import chalk from "chalk";
 import fs from "fs";
 import watch from "node-watch";
 import path from "path";
-import { config, root_dir } from "../../shopify-accelerate";
+import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
+import { delay } from "../utils/delay";
+import { generateSchemaFiles } from "../scaffold-theme/generate-schema-files";
+
+import { config } from "../../shopify-accelerate";
 import { generateBlocksTypes } from "../scaffold-theme/generate-blocks-types";
+import { generateClassicBlocksTypes } from "../scaffold-theme/generate-classic-blocks-types";
 import { generateLiquidFiles } from "../scaffold-theme/generate-liquid-files";
 import { generateSchemaLocales } from "../scaffold-theme/generate-schema-locales";
 import { generateSchemaVariables } from "../scaffold-theme/generate-schema-variables";
@@ -17,35 +22,71 @@ export const watchTheme = () => {
   const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
 
   let running = false;
-  watch(Object.values(folders), { recursive: true }, (event, name) => {
-    if (running) return;
+  watch(Object.values(folders), { recursive: true }, async (event, name) => {
     const startTime = Date.now();
-    running = true;
-    if (event === "remove") {
-      getSources();
-      getTargets();
-    }
-    if (isTypeScriptSchema(name)) {
-      getTargets();
-      getSchemaSources();
-      parseLocales();
-      generateSchemaVariables();
-      generateSchemaLocales();
-      generateSectionsTypes();
-      generateBlocksTypes();
-      generateSettingTypes();
-      generateLiquidFiles();
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
-          `File modified: ${name.replace(process.cwd(), "")}`
-        )}`
-      );
-    }
-    if (isAsset(name)) {
-      const fileName = name.split(/[\\/]/gi).at(-1);
-      const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
+    try {
+      if (running) return;
+      const fileName = name.split(/[/\\]/gi).at(-1);
 
-      if (event !== "remove") {
+      running = true;
+
+      if (event === "remove") {
+        getSources();
+        getTargets();
+
+        if (isAsset(name) && !/\.ts$/gi.test(name)) {
+          const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
+
+          if (event === "remove" && delete_external_assets) {
+            const targetFile = fs.existsSync(targetPath);
+
+            if (targetFile) {
+              deleteFile(targetPath);
+            }
+          }
+        }
+
+        if (/^schema\.ts$/gi.test(fileName)) {
+          await delay(20);
+          if (fs.existsSync(name.replace(/[\\/]schema.ts$/gi, ""))) {
+            generateSchemaFiles(name.replace(/[\\/]schema.ts$/gi, ""));
+          }
+        }
+        running = false;
+        return;
+      }
+
+      if (/^schema\.ts$/gi.test(fileName)) {
+        generateSchemaFiles(name.replace(/[\\/]schema.ts$/gi, ""));
+      }
+
+      if (fs.statSync(name).isDirectory() && !fs.existsSync(path.join(name, "schema.ts"))) {
+        if (fs.existsSync(name)) {
+          generateSchemaFiles(name);
+        }
+      }
+
+      if (isTypeScriptSchema(name)) {
+        getTargets();
+        getSchemaSources();
+        parseLocales();
+        generateSchemaVariables();
+        generateSchemaLocales();
+        generateSectionsTypes();
+        generateBlocksTypes();
+        generateClassicBlocksTypes();
+        generateCardsTypes();
+        generateSettingTypes();
+        generateLiquidFiles();
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
+            `File modified: ${name.replace(process.cwd(), "")}`
+          )}`
+        );
+      }
+      if (isAsset(name) && !/\.ts$/gi.test(name)) {
+        const fileName = name.split(/[\\/]/gi).at(-1);
+        const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
         const rawContent = fs.readFileSync(name, { encoding: "utf-8" });
 
         if (ignore_assets?.includes(targetPath.split(/[/\\]/)?.at(-1))) {
@@ -59,26 +100,25 @@ export const watchTheme = () => {
           writeCompareFile(targetPath, rawContent);
         }
       }
-
-      if (event === "remove" && delete_external_assets) {
-        const targetFile = fs.existsSync(targetPath);
-
-        if (targetFile) {
-          deleteFile(targetPath);
-        }
+      if (isLiquid(name) || isSectionTs(name) || isBlockTs(name)) {
+        getTargets();
+        getSources();
+        generateSchemaVariables();
+        generateLiquidFiles();
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
+            `File modified: ${name.replace(process.cwd(), "")}`
+          )}`
+        );
       }
-    }
-    if (isLiquid(name) || isSectionTs(name) || isBlockTs(name)) {
-      getTargets();
-      getSources();
-      generateSchemaVariables();
-      generateLiquidFiles();
+      running = false;
+    } catch (err) {
       console.log(
         `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
           `File modified: ${name.replace(process.cwd(), "")}`
-        )}`
+        )}`,
+        err
       );
     }
-    running = false;
   });
 };

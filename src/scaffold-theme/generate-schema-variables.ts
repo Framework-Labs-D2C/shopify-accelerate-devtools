@@ -1,7 +1,8 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { ShopifyBlock, ShopifySection, ShopifyThemeBlock } from "../../@types/shopify";
+import { toSnakeCase } from "../utils/to-snake-case";
+import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 
 export const generateSchemaVariables = () => {
@@ -228,7 +229,7 @@ export const generateSchemaVariables = () => {
       }
     }
 
-    schema.blocks?.forEach((block) => {
+    /*schema.blocks?.forEach((block) => {
       if (block.type === "@app") return;
       if (block.type === "@theme") return;
 
@@ -270,7 +271,7 @@ export const generateSchemaVariables = () => {
         if (blockContent.includes(start) && blockContent.includes(end)) {
           const newContent = blockContent.replace(
             // eslint-disable-next-line max-len
-            /({%- comment -%} Auto Generated Variables start {%- endcomment -%})(.|\n|\r)*({%- comment -%} Auto Generated Variables end {%- endcomment -%})(\r|\n|\s)*/gim,
+            /({%- comment -%} Auto Generated Variables start {%- endcomment -%})(.|\n|\r)*({%- comment -%} Auto Generated Variables end {%- endcomment -%})(\r|\n|\s)*!/gim,
             variableContent
           );
 
@@ -295,7 +296,7 @@ export const generateSchemaVariables = () => {
           fs.writeFileSync(blockPath, newContent);
         }
       }
-    });
+    });*/
   }
 
   const classic_blocks = sources.classic_blockSchemas as {
@@ -371,6 +372,86 @@ export const generateSchemaVariables = () => {
           )}`
         );
         fs.writeFileSync(itemLiquid, newContent);
+      }
+    }
+  }
+
+  const cards = sources.cardSchemas as {
+    [T: string]: ShopifyCard<{ settings: any }> & { path: string; folder: string };
+  };
+
+  for (const key in cards) {
+    const schema = cards[key];
+
+    const liquidFilePath = path.join(folders.cards, schema.folder, `${schema.folder}.liquid`);
+
+    const start = "{%- comment -%} Auto Generated Variables start {%- endcomment -%}";
+    const end = "{%- comment -%} Auto Generated Variables end {%- endcomment -%}";
+
+    const variables = [start];
+    variables.push("{%- liquid");
+    variables.push(`  comment`);
+    variables.push(`    Call via:  {% render "_card.${schema.folder}" %}`);
+    variables.push(`  endcomment`);
+    variables.push(`  assign card_type = "${schema.folder}"`);
+
+    schema.settings?.forEach((setting) => {
+      if (setting.type === "header" || setting.type === "paragraph") return;
+      variables.push(
+        `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = settings.c_${toSnakeCase(
+          schema.folder
+        )}__${setting.id}`
+      );
+    });
+
+    variables.push("-%}");
+    variables.push(end);
+    variables.push("");
+    variables.push("");
+
+    const variableContent = schema.settings && schema.settings.length ? variables.join("\n") : "";
+
+    if (!fs.existsSync(liquidFilePath)) {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
+          `Created: ${liquidFilePath.replace(process.cwd(), "")}`
+        )}`
+      );
+      fs.writeFileSync(liquidFilePath, schema.settings ? variables.join("\n") : "");
+      config.sources.cardsLiquid = [...new Set([...config.sources.cardsLiquid, liquidFilePath])];
+    }
+
+    if (fs.existsSync(liquidFilePath)) {
+      const cardContent = fs.readFileSync(liquidFilePath, {
+        encoding: "utf-8",
+      });
+
+      if (cardContent.includes(start) && cardContent.includes(end)) {
+        const newContent = cardContent.replace(
+          // eslint-disable-next-line max-len
+          /({%- comment -%} Auto Generated Variables start {%- endcomment -%})(.|\n|\r)*({%- comment -%} Auto Generated Variables end {%- endcomment -%})(\r|\n|\s)*/gim,
+          variableContent
+        );
+
+        if (cardContent !== newContent) {
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+              `Updated: ${liquidFilePath.replace(process.cwd(), "")}`
+            )}`
+          );
+          fs.writeFileSync(liquidFilePath, newContent);
+        }
+      }
+
+      if (!cardContent.includes(start) && !cardContent.includes(end) && variableContent) {
+        const newContent = variableContent + cardContent;
+
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+            `Updated: ${liquidFilePath.replace(process.cwd(), "")}`
+          )}`
+        );
+        fs.writeFileSync(liquidFilePath, newContent);
       }
     }
   }

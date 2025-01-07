@@ -19,9 +19,7 @@ export const writeCompareFile = (file_path, content, successCallback = () => {})
 
     fs.writeFileSync(file_path, content);
     console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-        `Created: ${file_path.replace(process.cwd(), "")}`
-      )}`
+      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(`Created: ${file_path.replace(process.cwd(), "")}`)}`
     );
     successCallback();
     return;
@@ -33,9 +31,7 @@ export const writeCompareFile = (file_path, content, successCallback = () => {})
 
   if (contentVerification !== content) {
     console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-        `Updated: ${file_path.replace(process.cwd(), "")}`
-      )}`
+      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(`Updated: ${file_path.replace(process.cwd(), "")}`)}`
     );
     fs.writeFileSync(file_path, content);
     successCallback();
@@ -52,9 +48,7 @@ export const writeOnlyNew = (file_path, content, successCallback = () => {}) => 
 
     fs.writeFileSync(file_path, content);
     console.log(
-      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-        `Created: ${file_path.replace(process.cwd(), "")}`
-      )}`
+      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(`Created: ${file_path.replace(process.cwd(), "")}`)}`
     );
   }
   successCallback();
@@ -75,13 +69,26 @@ export const getAllFiles = (dirname) => {
   }, []);
 };
 
+export const getAllDirectories = (dirname) => {
+  if (!fs.existsSync(dirname)) {
+    if (config.headless) {
+      return [];
+    }
+    fs.mkdirSync(dirname, { recursive: true });
+  }
+  return fs.readdirSync(dirname).reduce((acc, file) => {
+    const name = path.join(dirname, file);
+
+    const isDirectory = fs.statSync(name).isDirectory();
+    return isDirectory ? [...acc, name] : acc;
+  }, []);
+};
+
 export const deleteFile = (file_path: string) => {
   if (!fs.existsSync(file_path)) return;
 
   fs.unlinkSync(file_path);
   console.log(
-    `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
-      `Deleted: ${file_path.replace(process.cwd(), "")}`
-    )}`
+    `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file_path.replace(process.cwd(), "")}`)}`
   );
 };

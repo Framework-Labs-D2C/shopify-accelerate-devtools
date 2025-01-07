@@ -2,8 +2,10 @@
 
 import fs from "fs";
 import path from "path";
+import { generateCardsTypes } from "./src/scaffold-theme/generate-card-types";
+import { generateClassicBlocksTypes } from "./src/scaffold-theme/generate-classic-blocks-types";
 import toml from "toml";
-import { ShopifyBlock, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
+import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
@@ -80,6 +82,7 @@ export type GlobalsState = {
   delete_external_sections?: boolean;
   delete_external_snippets?: boolean;
   delete_external_blocks?: boolean;
+  delete_external_classic_blocks?: boolean;
   delete_external_assets?: boolean;
   disabled_locales?: boolean;
   sources: {
@@ -96,6 +99,10 @@ export type GlobalsState = {
     classic_blocksSchemaFiles: string[];
     classic_blocksJs: string[];
     classic_blockSchemas: { [T: string]: ShopifyBlock & { path: string; folder: string } };
+    cardsLiquid: string[];
+    cardsSchemaFiles: string[];
+    cardsJs: string[];
+    cardSchemas: { [T: string]: ShopifyCard & { path: string; folder: string } };
     assets: string[];
     giftCards: string[];
     configs: string[];
@@ -129,6 +136,7 @@ export type GlobalsState = {
     layout: string;
     blocks: string;
     classic_blocks: string;
+    cards: string;
     snippets: string;
     templates: string;
     assets: string;
@@ -146,6 +154,7 @@ export const config: GlobalsState = {
   delete_external_sections: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SECTIONS === "true",
   delete_external_snippets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SNIPPETS === "true",
   delete_external_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_BLOCKS === "true",
+  delete_external_classic_blocks: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_CLASSIC_BLOCKS === "true",
   delete_external_assets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_ASSETS === "true",
   disabled_locales: true,
   package_root: path.resolve(__dirname),
@@ -166,6 +175,10 @@ export const config: GlobalsState = {
     classic_blocksSchemaFiles: [],
     classic_blocksJs: [],
     classic_blockSchemas: {},
+    cardsLiquid: [],
+    cardsSchemaFiles: [],
+    cardsJs: [],
+    cardSchemas: {},
     assets: [],
     giftCards: [],
     configs: [],
@@ -211,6 +224,9 @@ export const config: GlobalsState = {
     classic_blocks: process.env.SHOPIFY_ACCELERATE_CLASSIC_BLOCKS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_CLASSIC_BLOCKS)
       : path.join(root_dir, "classic-blocks"),
+    cards: process.env.SHOPIFY_ACCELERATE_CARDS
+      ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_CARDS)
+      : path.join(root_dir, "cards"),
     snippets: process.env.SHOPIFY_ACCELERATE_SNIPPETS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_SNIPPETS)
       : path.join(root_dir, "snippets"),
@@ -332,6 +348,8 @@ program
     generateSectionsTypes();
     generateSettingTypes();
     generateBlocksTypes();
+    generateClassicBlocksTypes();
+    generateCardsTypes();
 
     const imports = [`import type { FC } from "react";`];
     const renderBlocks = [];

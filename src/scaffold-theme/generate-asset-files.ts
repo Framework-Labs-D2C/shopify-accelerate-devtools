@@ -8,11 +8,11 @@ export const generateAssetFiles = () => {
   const { theme_path, sources, targets, delete_external_assets, ignore_assets } = config;
 
   sources.assets.forEach((file) => {
+    if (/\.ts$/gi.test(file)) return;
     const fileName = file.split(/[\\/]/gi).at(-1);
     const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
 
     const rawContent = fs.readFileSync(file, { encoding: "utf-8" });
-
     if (ignore_assets?.includes(targetPath.split(/[/\\]/)?.at(-1))) {
       console.log(
         `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(

@@ -1,3 +1,4 @@
+import { ThemeBlocks } from "./blocks";
 import { _Article_metafields, _Blog_metafields, _Collection_metafields, _Page_metafields, _Product_metafields, _Shop_metafields, _Variant_metafields } from "./metafields";
 import { Sections } from "./sections";
 import { SettingsSchema } from "./settings";
@@ -603,6 +604,7 @@ export type ShopifySectionBlock =
       | {
           name: string;
           disabled?: boolean;
+          theme_block: never;
           type: string;
           limit?: number;
           settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
@@ -611,8 +613,27 @@ export type ShopifySectionBlock =
       | { type: "@classic-theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
     )
   | (
+      | {
+          name: string;
+          /* The theme_block setting has to be active on all blocks. Mixing normal blocks with Theme blocks is not possible*/
+          theme_block: true;
+          disabled?: boolean;
+          type: string;
+          limit?: number;
+          settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+          blocks?: (
+            | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+            | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+            | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never }
+          )[];
+        }
+      | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+      | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+    )
+  | (
       | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
       | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+      | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never }
     );
 
 export type HeadlessSectionBlock =
@@ -697,6 +718,8 @@ export type ShopifyThemeBlock<T = never> = {
   presets?: ShopifySectionPreset<T>[];
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
+  /* Used for direct dynamic block use only */
+  type?: string;
 };
 
 export type ShopifyBlock<T = never> = {
@@ -704,6 +727,14 @@ export type ShopifyBlock<T = never> = {
   class?: string;
   disabled?: boolean;
   presets?: ShopifySectionPreset<T>[];
+  settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+  /* Used for direct dynamic block use only */
+  type?: string;
+};
+
+export type ShopifyCard<T = never> = {
+  name: string;
+  disabled?: boolean;
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
 };
 
