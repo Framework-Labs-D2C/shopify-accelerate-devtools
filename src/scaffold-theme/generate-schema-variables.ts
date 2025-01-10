@@ -85,7 +85,9 @@ export const generateSchemaVariables = () => {
     schema.blocks?.forEach((block) => {
       if (block.type === "@app") return;
       if (block.type === "@theme") return;
-      if (Array.isArray(schema.generate_block_files) && !schema.generate_block_files.includes(block.type)) {
+      if (!block.name) return;
+      // @ts-ignore
+      if (Array.isArray(schema.generate_block_files) && !schema.generate_block_files?.includes(block.type)) {
         return;
       }
 
@@ -117,7 +119,7 @@ export const generateSchemaVariables = () => {
           )}`
         );
         fs.writeFileSync(blockPath, block?.settings ? blockVariables.join("\n") : "");
-        config.sources.snippets = [...new Set([...config.sources.snippets, blockPath])];
+        config.sources.snippets.add(blockPath);
       }
 
       if (fs.existsSync(blockPath)) {
@@ -338,7 +340,7 @@ export const generateSchemaVariables = () => {
       );
       fs.writeFileSync(itemLiquid, schema.settings ? variables.join("\n") : "");
       config.sources.classic_blocksLiquid = [...new Set([...config.sources.classic_blocksLiquid, itemLiquid])];
-      config.sources.snippets = [...new Set([...config.sources.snippets, itemLiquid])];
+      config.sources.snippets.add(itemLiquid);
     }
 
     if (fs.existsSync(itemLiquid)) {

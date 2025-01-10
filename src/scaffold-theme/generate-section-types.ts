@@ -95,7 +95,14 @@ export const getImports = (sections: { [T: string]: ShopifySection }) => {
     const schema = sections[key];
 
     schema.settings?.forEach(analyseSetting, localTypes);
-    if (schema.blocks?.some((block) => block.type === "@theme")) {
+    if (
+      schema.blocks?.some(
+        (block) =>
+          block.type === "@theme" ||
+          `theme_block` in block ||
+          (!block.name && block.type && block.type !== "@app" && block.type !== "@theme" && block.type !== "@classic-theme")
+      )
+    ) {
       themeBlocks = true;
     }
     if (schema.blocks?.some((block) => block.type === "@classic-theme")) {
@@ -184,6 +191,9 @@ export const sectionToTypes = (section, key) => {
 
   if (section.blocks?.length) {
     section.blocks?.forEach((block) => {
+      if (!block.name || block.theme_block) {
+        return;
+      }
       const blockSettings: ShopifySettingsInput[] = block?.settings
         ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
         .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
@@ -227,10 +237,18 @@ export const sectionToTypes = (section, key) => {
   }
 
   if (section.blocks?.length && section.blocks?.length === 1) {
-    arr.push("");
-    arr.push(
-      `export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(section.blocks[0].type.replace("@", ""))};`
-    );
+    const block = section.blocks[0];
+    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+    } else if (!block.name && block.type) {
+      arr.push("");
+      arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
+    } else if (block.theme_block) {
+      arr.push("");
+      arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${section.folder}__${block.type}" }>;`);
+    } else {
+      arr.push("");
+      arr.push(`export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
+    }
   }
 
   if (section.blocks?.length && section.blocks?.length > 1) {
@@ -238,10 +256,25 @@ export const sectionToTypes = (section, key) => {
     arr.push(`export type ${capitalize(key)}Blocks =`);
 
     section.blocks?.forEach((block, i) => {
-      if (section.blocks?.length - 1 === i) {
-        arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
+      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+      } else if (!block.name && block.type) {
+        if (section.blocks?.length - 1 === i) {
+          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
+        } else {
+          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>`);
+        }
+      } else if (block.theme_block) {
+        if (section.blocks?.length - 1 === i) {
+          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder}__${block.type}" }>;`);
+        } else {
+          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder}__${block.type}" }>`);
+        }
       } else {
-        arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))}`);
+        if (section.blocks?.length - 1 === i) {
+          arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
+        } else {
+          arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))}`);
+        }
       }
     });
   }

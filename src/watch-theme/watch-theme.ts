@@ -7,7 +7,7 @@ import { delay } from "../utils/delay";
 import { generateSchemaFiles } from "../scaffold-theme/generate-schema-files";
 
 import { config } from "../../shopify-accelerate";
-import { generateBlocksTypes } from "../scaffold-theme/generate-blocks-types";
+import { generateThemeBlocksTypes } from "../scaffold-theme/generate-theme-blocks-types";
 import { generateClassicBlocksTypes } from "../scaffold-theme/generate-classic-blocks-types";
 import { generateLiquidFiles } from "../scaffold-theme/generate-liquid-files";
 import { generateSchemaLocales } from "../scaffold-theme/generate-schema-locales";
@@ -73,7 +73,7 @@ export const watchTheme = () => {
         generateSchemaVariables();
         generateSchemaLocales();
         generateSectionsTypes();
-        generateBlocksTypes();
+        generateThemeBlocksTypes();
         generateClassicBlocksTypes();
         generateCardsTypes();
         generateSettingTypes();

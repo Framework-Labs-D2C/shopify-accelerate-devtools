@@ -3,7 +3,7 @@ import { generateClassicBlocksTypes } from "../scaffold-theme/generate-classic-b
 import { config } from "./../../shopify-accelerate";
 import { generateAssetFiles } from "./generate-asset-files";
 import { generateBaseTypes } from "./generate-base-types";
-import { generateBlocksTypes } from "./generate-blocks-types";
+import { generateThemeBlocksTypes } from "./generate-theme-blocks-types";
 import { generateLiquidFiles } from "./generate-liquid-files";
 import { generateAllMissingSchemaFiles } from "./generate-schema-files";
 import { generateSchemaLocales } from "./generate-schema-locales";
@@ -22,7 +22,7 @@ export const buildTheme = () => {
   generateSchemaVariables();
   generateSchemaLocales();
   generateSectionsTypes();
-  generateBlocksTypes();
+  generateThemeBlocksTypes();
   generateClassicBlocksTypes();
   generateCardsTypes();
   generateSettingTypes();

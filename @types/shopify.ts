@@ -600,41 +600,42 @@ export type PresetSchema<T = never> = {
 };
 
 export type ShopifySectionBlock =
-  | (
-      | {
-          name: string;
-          disabled?: boolean;
-          theme_block: never;
-          type: string;
-          limit?: number;
-          settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
-        }
-      | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-      | { type: "@classic-theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-    )
-  | (
-      | {
-          name: string;
-          /* The theme_block setting has to be active on all blocks. Mixing normal blocks with Theme blocks is not possible*/
-          theme_block: true;
-          disabled?: boolean;
-          type: string;
-          limit?: number;
-          settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
-          blocks?: (
-            | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-            | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-            | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never }
-          )[];
-        }
-      | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-      | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-    )
-  | (
-      | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-      | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-      | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never }
-    );
+  | {
+      name: string;
+      disabled?: boolean;
+      theme_block?: never;
+      type: string;
+      limit?: number;
+      settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+    }
+  | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never; theme_block?: never }
+  | {
+      type: "@classic-theme";
+      disabled?: boolean;
+      limit?: never;
+      name?: never;
+      settings?: never;
+      theme_block?: never;
+    };
+export type ShopifySectionGeneratedThemeBlock =
+  | {
+      name: string;
+      /* The theme_block setting has to be active on all blocks. Mixing normal blocks with Theme blocks is not possible*/
+      theme_block: true;
+      disabled?: boolean;
+      tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
+      type: string;
+      settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
+      blocks?: (
+        | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+        | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+        | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never }
+      )[];
+      presets?: ShopifySectionPreset[];
+    }
+  | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+  | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
+  | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never };
 
 export type HeadlessSectionBlock =
   | {
@@ -669,11 +670,15 @@ export type ShopifyTemplateTypes =
 
 export type ShopifySection<T = never> = {
   name: string;
-  blocks?: ShopifySectionBlock[];
+  blocks?: ShopifySectionBlock[] | ShopifySectionGeneratedThemeBlock[];
   class?: string;
   default?: ShopifySectionDefault<T>;
   disabled?: boolean;
-  generate_block_files?: T extends { blocks: any } ? T["blocks"][number]["type"][] : string[];
+  generate_block_files?: T extends { blocks: { theme_block: true }[] }
+    ? never
+    : T extends { blocks: { type: string }[] }
+    ? T["blocks"][number]["type"][]
+    : string[];
   limit?: number;
   locales?: {
     [T: string]: {
@@ -712,7 +717,7 @@ export type HeadlessSection<T = never> = {
 
 export type ShopifyThemeBlock<T = never> = {
   name: string;
-  blocks?: ShopifySectionBlock[];
+  blocks?: ShopifySectionGeneratedThemeBlock[];
   class?: string;
   disabled?: boolean;
   presets?: ShopifySectionPreset<T>[];

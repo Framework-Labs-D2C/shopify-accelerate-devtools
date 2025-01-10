@@ -64,7 +64,7 @@ export const generateLiquidFiles = () => {
     }
 
     schema?.blocks?.forEach((block) => {
-      if (block.disabled) {
+      if (block.disabled || "theme_block" in block) {
         const targetFile = targets.snippets.find(
           (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${block.type}.liquid`
         );
@@ -73,9 +73,91 @@ export const generateLiquidFiles = () => {
           deleteFile(path.join(root_dir, targetFile));
         }
       }
+
+      if ("theme_block" in block) {
+        const blockSchema = { ...block, presets: "presets" in block ? block.presets : [{ name: block.name }] };
+
+        const blockName = `${schema.folder}.${blockSchema.type}.liquid`;
+        const blockPath = path.join(process.cwd(), theme_path, "blocks", `_${schema.folder}__${blockSchema.type}.liquid`);
+        const targetSnippet = [...snippets].find((snippet) => snippet.includes(blockName));
+
+        if (targetSnippet) {
+          snippets.delete(targetSnippet);
+        }
+        if (blockSchema.disabled) {
+          const targetFile = targets.blocks.find((target) => target.split(/[\\/]/gi).at(-1) === `_${blockName}`);
+          if (targetFile) {
+            config.targets.blocks = config.targets.blocks.filter((target) => target !== targetFile);
+            deleteFile(path.join(root_dir, targetFile));
+          }
+
+          return;
+        }
+
+        const translationArray = [];
+
+        const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, blockName), {
+          encoding: "utf-8",
+        });
+
+        if (rawContent) {
+          const translatedContent = rawContent.replace(/<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi, (str, group1, group2) => {
+            const group = toLocaleFriendlySnakeCase(schema.folder);
+            const content = toLocaleFriendlySnakeCase(group2?.split(" ")?.slice(0, 2)?.join("_") ?? "").trim();
+            const backupContent = toLocaleFriendlySnakeCase(group2).trim();
+            const id = toLocaleFriendlySnakeCase(group1?.replace(/id="(.*)"/gi, "$1") ?? "").trim();
+
+            if (!(group in translations)) {
+              translations[group] = {};
+            }
+
+            if (id && !(id in translations[group])) {
+              translations[group][id] = group2;
+              return `{{ "${group}.${id}" | t }}`;
+            }
+
+            if (!(content in translations[group])) {
+              translations[group][content] = group2;
+              return `{{ "${group}.${content}" | t }}`;
+            }
+
+            if (translations[group][content] !== group2) {
+              if (!(backupContent in translations[group])) {
+                translations[group][backupContent] = group2;
+                return `{{ "${group}.${backupContent}" | t }}`;
+              }
+              if (translations[group][backupContent] !== group2) {
+                translations[group][`${content}_2`] = group2;
+                return `{{ "${group}.${content}_2" | t }}`;
+              }
+            }
+
+            if (translations[group][content] === group2) {
+              return `{{ "${group}.${content}" | t }}`;
+            }
+
+            return group2;
+          });
+
+          translationArray.push(translatedContent);
+        }
+
+        translationArray.push(generateBlockFileSchema(blockSchema));
+
+        if (config.ignore_blocks?.includes(blockPath.split(/[/\\]/)?.at(-1))) {
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+              `Ignored: ${blockPath.replace(process.cwd(), "")}`
+            )}`
+          );
+          writeOnlyNew(blockPath, translationArray.join("\n"));
+        } else {
+          writeCompareFile(blockPath, translationArray.join("\n"));
+        }
+      }
     });
 
-    let translationArray = [];
+    const translationArray = [];
 
     const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, sectionName), {
       encoding: "utf-8",
@@ -199,7 +281,7 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
-    const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
+    /*const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
 
     if (config.ignore_snippets?.includes(snippetPath.split(/[/\\]/)?.at(-1))) {
       console.log(
@@ -212,9 +294,9 @@ export const generateLiquidFiles = () => {
       writeCompareFile(snippetPath, translationArray.join("\n"));
     }
 
-    snippets.push(snippetPath);
+    snippets.add(snippetPath);
 
-    translationArray = [`{%- render "${schema.folder}" -%}`];
+    translationArray = [ `{%- render "${schema.folder}" -%}`];*/
 
     translationArray.push(generateSectionFiles(schema));
 
@@ -442,8 +524,8 @@ export const generateLiquidFiles = () => {
     translationArray.push(generateBlockFileSchema(schema));
   }
 
-  for (let i = 0; i < snippets.length; i++) {
-    const snippet = snippets[i];
+  for (let i = 0; i < snippets.size; i++) {
+    const snippet = [...snippets][i];
     const snippetName = snippet.split(/[\\/]/gi).at(-1);
 
     const snippetTargetName = snippet?.includes(folders.classic_blocks)
@@ -850,7 +932,7 @@ declare global {
   if (delete_external_snippets) {
     targets.snippets.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
-      const targetFile = snippets.find((sourcePath) =>
+      const targetFile = [...snippets].find((sourcePath) =>
         sourcePath?.includes(folders.classic_blocks)
           ? `_blocks.${sourcePath.split(/[\\/]/gi).at(-1)}` === fileName
           : sourcePath.split(/[\\/]/gi).at(-1) === fileName
@@ -902,8 +984,12 @@ declare global {
   if (delete_external_blocks) {
     targets.blocks.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
-      const targetFile = sources.blocksLiquid.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName);
-
+      const targetFile =
+        sources.blocksLiquid.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName) ||
+        Object.values(sources.sectionSchemas)?.find(
+          (schema) =>
+            schema.blocks?.some((block) => "theme_block" in block && `_${schema.folder}__${block.type}.liquid` === fileName)
+        );
       if (!targetFile) {
         deleteFile(path.join(process.cwd(), file));
       }

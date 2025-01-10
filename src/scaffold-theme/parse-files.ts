@@ -24,7 +24,7 @@ export const getSources = () => {
 
   const typeScriptSchema = [];
 
-  const snippets = [];
+  const snippets = new Set<string>();
   const layouts = [];
   const sectionsLiquid = [];
   const sectionsSchemaFiles = [];
@@ -51,7 +51,7 @@ export const getSources = () => {
       typeScriptSchema.push(filePath);
     }
     if (isSnippet(filePath)) {
-      snippets.push(filePath);
+      snippets.add(filePath);
     }
     if (isLayout(filePath)) {
       layouts.push(filePath);
@@ -76,7 +76,7 @@ export const getSources = () => {
     }
     if (isClassicBlockLiquid(filePath)) {
       classic_blocksLiquid.push(filePath);
-      snippets.push(filePath);
+      snippets.add(filePath);
     }
     if (isClassicBlockSchema(filePath)) {
       classic_blocksSchemaFiles.push(filePath);
@@ -86,7 +86,7 @@ export const getSources = () => {
     }
     if (isCardsLiquid(filePath)) {
       cardsLiquid.push(filePath);
-      snippets.push(filePath);
+      snippets.add(filePath);
     }
     if (isCardsSchema(filePath)) {
       cardsSchemaFiles.push(filePath);
@@ -239,7 +239,7 @@ export const getSchemaSources = () => {
 
   const typeScriptSchema = [];
 
-  const snippets = [];
+  const snippets = new Set<string>();
   const layouts = [];
   const sectionsLiquid = [];
   const sectionsSchemaFiles = [];
@@ -258,7 +258,7 @@ export const getSchemaSources = () => {
       typeScriptSchema.push(filePath);
     }
     if (isSnippet(filePath)) {
-      snippets.push(filePath);
+      snippets.add(filePath);
     }
 
     if (isLayout(filePath)) {
@@ -278,14 +278,14 @@ export const getSchemaSources = () => {
     }
     if (isClassicBlockLiquid(filePath)) {
       classic_blocksLiquid.push(filePath);
-      snippets.push(filePath);
+      snippets.add(filePath);
     }
     if (isClassicBlockSchema(filePath)) {
       classic_blocksSchemaFiles.push(filePath);
     }
     if (isCardsLiquid(filePath)) {
       cardsLiquid.push(filePath);
-      snippets.push(filePath);
+      snippets.add(filePath);
     }
     if (isCardsSchema(filePath)) {
       cardsSchemaFiles.push(filePath);

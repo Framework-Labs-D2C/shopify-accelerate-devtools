@@ -5,6 +5,8 @@ import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 export const generateSectionFiles = ({
   name,
   generate_block_files,
+  /* @ts-ignore */
+  theme_block,
   disabled,
   path,
   folder,
@@ -13,6 +15,7 @@ export const generateSectionFiles = ({
   const sectionName = toLocaleFriendlySnakeCase(name);
   const { sources, disabled_locales } = config;
   const localeDuplicates = sources.locale_duplicates;
+
   let paragraphCount = 1;
   let headerCount = 1;
 
@@ -95,6 +98,10 @@ export const generateSectionFiles = ({
 
         if (block.type === "@app") {
           acc.push({ name, ...block });
+          return acc;
+        }
+        if ("theme_block" in block) {
+          acc.push({ type: `_${folder}__${block.type}` });
           return acc;
         }
         if (block.type === "@classic-theme") {
@@ -180,9 +187,6 @@ export const generateSectionFiles = ({
               }),
             });
           }
-          return acc;
-
-          acc.push({ name, ...block });
           return acc;
         }
 

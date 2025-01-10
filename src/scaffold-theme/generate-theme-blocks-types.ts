@@ -1,23 +1,37 @@
 import path from "path";
-import { ShopifyBlock, ShopifySettingsInput, ShopifyThemeBlock } from "../../@types/shopify";
+import { toPascalCase } from "../utils/to-pascal-case";
+import { ShopifyBlock, ShopifySection, ShopifySettingsInput, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { capitalize } from "../utils/capitalize";
 import { writeCompareFile } from "../utils/fs";
 
-export const generateBlocksTypes = () => {
+export const generateThemeBlocksTypes = () => {
   const { folders, sources } = config;
-  const sections = sources.blockSchemas;
+  const blocks = sources.blockSchemas;
+  const sections = sources.sectionSchemas;
 
   const blockTypesPath = path.join(folders.types, "blocks.ts");
 
-  const imports = getImports(sections);
+  const imports = getImports(blocks, sections);
   let sectionUnionType = "export type ThemeBlocks =";
   let typeContent = "";
-  for (const key in sections) {
-    const schema = sections[key] as ShopifyBlock;
+  for (const key in blocks) {
+    const schema = blocks[key] as ShopifyBlock;
 
     typeContent += `${blockToTypes(schema, key)}\n`;
     sectionUnionType += `\n  | ${capitalize(key)}Block`;
+  }
+  for (const key in sections) {
+    const schema = sections[key];
+
+    schema.blocks?.forEach((block) => {
+      if ("theme_block" in block) {
+        const newBlock = { ...block, folder: `_${schema.folder}__${block.type}` };
+
+        typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
+        sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
+      }
+    });
   }
 
   if (!typeContent) return;
@@ -27,7 +41,7 @@ export const generateBlocksTypes = () => {
   writeCompareFile(blockTypesPath, finalContent);
 };
 
-export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {
+export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections: { [T: string]: ShopifySection }) => {
   const localTypes = [];
 
   const analyseSetting = (setting) => {
@@ -89,12 +103,22 @@ export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {
     }
   };
 
-  for (const key in sections) {
-    const schema = sections[key];
+  for (const key in blocks) {
+    const schema = blocks[key];
 
     schema.settings?.forEach(analyseSetting, localTypes);
     schema.blocks?.forEach((block) => {
       block?.settings?.forEach(analyseSetting, localTypes);
+    });
+  }
+
+  for (const key in sections) {
+    const schema = sections[key];
+
+    schema.blocks?.forEach((block) => {
+      if ("theme_block" in block) {
+        block?.settings?.forEach(analyseSetting, localTypes);
+      }
     });
   }
 
@@ -104,18 +128,21 @@ export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {
   return ``;
 };
 
-export const blockToTypes = (section, key) => {
-  const filename = section.folder;
+export const blockToTypes = (block, key, isSectionBlock = false) => {
+  const filename = block.folder;
   const arr = [];
-  const settings: ShopifySettingsInput[] = section.settings
+  const settings: ShopifySettingsInput[] = block.settings
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
     .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
 
   arr.push(`export type ${capitalize(key)}Block = {`);
-  if (section.blocks?.some((block) => block.type === "@theme")) {
+  if (block.blocks?.some((block) => block.type === "@theme")) {
     arr.push(`  blocks: ThemeBlocks[];`);
   }
   arr.push(`  id${config.headless ? "?" : ""}: string;`);
+  if (isSectionBlock) {
+    arr.push(`  theme_block: true;`);
+  }
   if (settings?.length) {
     arr.push(`  settings: {`);
     arr.push(

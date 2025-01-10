@@ -9,7 +9,7 @@ import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThem
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
-import { generateBlocksTypes } from "./src/scaffold-theme/generate-blocks-types";
+import { generateThemeBlocksTypes } from "./src/scaffold-theme/generate-theme-blocks-types";
 import { generateConfigFiles } from "./src/scaffold-theme/generate-config-files";
 import { generateSectionsTypes } from "./src/scaffold-theme/generate-section-types";
 import { generateSettingTypes } from "./src/scaffold-theme/generate-setting-types";
@@ -86,7 +86,7 @@ export type GlobalsState = {
   delete_external_assets?: boolean;
   disabled_locales?: boolean;
   sources: {
-    snippets: string[];
+    snippets: Set<string>;
     layouts: string[];
     sectionsLiquid: string[];
     sectionsSchemaFiles: string[];
@@ -162,7 +162,7 @@ export const config: GlobalsState = {
   package_templates: path.join(path.resolve(__dirname), "./src/templates"),
   package_types: path.join(path.resolve(__dirname), "./@types"),
   sources: {
-    snippets: [],
+    snippets: new Set(),
     layouts: [],
     sectionsLiquid: [],
     sectionsSchemaFiles: [],
@@ -347,7 +347,7 @@ program
     getSchemaSources();
     generateSectionsTypes();
     generateSettingTypes();
-    generateBlocksTypes();
+    generateThemeBlocksTypes();
     generateClassicBlocksTypes();
     generateCardsTypes();
 

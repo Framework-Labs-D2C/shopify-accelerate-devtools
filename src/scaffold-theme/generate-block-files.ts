@@ -7,9 +7,12 @@ export const generateBlockFileSchema = ({
   disabled,
   path,
   folder,
+  /* @ts-ignore */
+  theme_block,
   type,
+  tag,
   ...section
-}: ShopifyThemeBlock & { path: string; folder: string }) => {
+}: ShopifyThemeBlock & { path?: string; folder?: string }) => {
   const sectionName = toLocaleFriendlySnakeCase(name);
   const { sources, disabled_locales } = config;
   const localeDuplicates = sources.locale_duplicates;
@@ -19,6 +22,7 @@ export const generateBlockFileSchema = ({
   const localizedSection = {
     name: name ? (sectionName?.length <= 25 ? name : `t:blocks.${sectionName}.name`) : undefined,
     ...section,
+    tag: tag ?? null,
     settings: section?.settings?.map((setting) => {
       const settingsBase = `t:blocks.${sectionName}.settings`;
       if (setting.type === "paragraph") {

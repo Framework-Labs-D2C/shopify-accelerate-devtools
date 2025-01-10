@@ -5,7 +5,7 @@ import path from "path";
 import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
 import { generateClassicBlocksTypes } from "../scaffold-theme/generate-classic-blocks-types";
 import { config } from "../../shopify-accelerate";
-import { generateBlocksTypes } from "../scaffold-theme/generate-blocks-types";
+import { generateThemeBlocksTypes } from "../scaffold-theme/generate-theme-blocks-types";
 import { generateSectionsTypes } from "../scaffold-theme/generate-section-types";
 import { generateSettingTypes } from "../scaffold-theme/generate-setting-types";
 import { getSchemaSources, getSources, isTypeScriptSchema } from "../scaffold-theme/parse-files";
@@ -26,7 +26,7 @@ export const watchHeadless = () => {
     if (isTypeScriptSchema(name)) {
       getSchemaSources();
       generateSectionsTypes();
-      generateBlocksTypes();
+      generateThemeBlocksTypes();
       generateClassicBlocksTypes();
       generateCardsTypes();
       generateSettingTypes();
