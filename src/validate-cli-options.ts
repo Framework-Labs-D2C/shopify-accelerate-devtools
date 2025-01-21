@@ -121,10 +121,10 @@ export const validateCliOptions = async (
           config.theme_id = +currentEnvironment?.theme;
           config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
 
-          buildTheme();
+          await buildTheme();
           generateConfigFiles();
           await delay(350);
-          buildTheme();
+          await buildTheme();
           generateConfigFiles();
 
           const cp = child_process.spawn(

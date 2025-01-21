@@ -5,6 +5,7 @@ import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 export const generateSectionFiles = ({
   name,
   generate_block_files,
+  section_as_snippet,
   /* @ts-ignore */
   theme_block,
   disabled,

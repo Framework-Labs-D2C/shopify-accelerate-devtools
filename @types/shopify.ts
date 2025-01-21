@@ -546,6 +546,18 @@ type MapBlocksPreset<T extends { blocks: ShopifySectionBlock[] }> = {
   [B in Extract<T["blocks"][number], { type: string }>["type"]]: {
     type: B;
     settings?: Partial<MapSettings<Extract<T["blocks"][number], { type: B }>>>;
+    blocks?:
+      | (T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never)
+      | (T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never);
+  };
+};
+type MapBlocksPresetObject<T extends { blocks: Record<string, ShopifySectionBlock> }> = {
+  [B in Extract<T["blocks"], { type: string }>["type"]]: {
+    type: B;
+    settings?: Partial<MapSettings<Extract<T["blocks"][keyof T["blocks"]], { type: B }>>>;
+    blocks?:
+      | (T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never)
+      | (T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never);
   };
 };
 
@@ -563,6 +575,7 @@ type MapBlockContent<T extends { blocks: ShopifySectionBlock[] }> = {
     id: string;
     settings: Partial<MapSettings<Extract<T["blocks"][number], { type: B }>>>;
     type: B;
+    blocks?: T extends { blocks: Array<any> } ? MapBlockContent<T>[keyof MapBlockContent<T>][] : [];
   };
 };
 
@@ -579,7 +592,10 @@ export type ShopifySectionDefaultGuaranteed<T = never> = {
 export type ShopifySectionPreset<T = unknown> = {
   name: string;
   category?: string;
-  blocks?: T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never;
+  blocks?:
+    | (T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never)
+    | (T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never);
+  block_order?: string[];
   settings?: T extends never
     ? { [T: string]: string | number | boolean } | undefined
     : T extends { settings: any }
@@ -587,17 +603,19 @@ export type ShopifySectionPreset<T = unknown> = {
     : { [T: string]: string | number | boolean } | undefined;
 };
 
+/*
 export type PresetSchema<T = never> = {
   type: T extends { type: string } ? T["type"] : Sections["type"];
   name: string;
   presets: {
     enabled_on?: string[];
     settings?: ShopifySectionPreset<T>["settings"];
-    blocks?: /* @ts-ignore */ Record<string, ShopifySectionPreset<T>["blocks"][number]> | ShopifySectionPreset<T>["blocks"];
+    blocks?: /!* @ts-ignore *!/ Record<string, ShopifySectionPreset<T>["blocks"][number]> | ShopifySectionPreset<T>["blocks"];
     block_order?: string[];
     custom_css?: string[];
   }[];
 };
+*/
 
 export type ShopifySectionBlock =
   | {
@@ -679,6 +697,7 @@ export type ShopifySection<T = never> = {
     : T extends { blocks: { type: string }[] }
     ? T["blocks"][number]["type"][]
     : string[];
+  section_as_snippet?: boolean;
   limit?: number;
   locales?: {
     [T: string]: {

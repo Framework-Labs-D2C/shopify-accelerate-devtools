@@ -1,11 +1,12 @@
 import chalk from "chalk";
 import importFresh from "import-fresh";
 import path from "path";
+import { importAndTransformSchema } from "./import-and-transform-schema";
 import { ShopifyBlock, ShopifySection, ShopifySettings } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { getAllFiles } from "../utils/fs";
 
-export const getSources = () => {
+export const getSources = async () => {
   const { folders } = config;
 
   const sourceFiles = [
@@ -142,25 +143,34 @@ export const getSources = () => {
     ? (importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings })?.settingsSchema
     : [];
 
-  config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
-    (acc, file) => {
-      try {
-        const data = importFresh(file);
-        return {
-          ...acc,
-          ...Object.entries(data).reduce((acc2, [key, val]) => {
-            // @ts-ignore
-            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
-            return acc2;
-          }, {}),
-        };
-      } catch (err) {
-        console.log(chalk.redBright(err.message));
-        return acc;
-      }
-    },
-    {} as { [T: string]: ShopifySection }
-  );
+  let acc: { [T: string]: ShopifySection & { path: string; folder: string } } = {};
+  for (let i = 0; i < sectionsSchemaFiles.length; i++) {
+    const file = sectionsSchemaFiles[i];
+    try {
+      const data = await importAndTransformSchema(file);
+
+      acc = {
+        ...acc,
+        ...Object.entries(data).reduce((acc2, [key, val]) => {
+          // @ts-ignore
+          acc2[key] = {
+            ...val,
+            blocks: val?.blocks?.some((block) => block.theme_block)
+              ? val.blocks.map((block) => ({ ...block, presets: block.presets?.length ? block.presets : [{ name: block.name }] }))
+              : val?.blocks,
+            folder: file.split(/[\\/]/gi).at(-2),
+            path: file,
+          };
+          return acc2;
+        }, {}),
+      };
+    } catch (err) {
+      console.log(chalk.redBright(err.message));
+      return acc;
+    }
+  }
+
+  config.sources.sectionSchemas = acc;
 
   config.sources.blockSchemas = blocksSchemaFiles.reduce(
     (acc, file) => {
@@ -224,7 +234,7 @@ export const getSources = () => {
   );
 };
 
-export const getSchemaSources = () => {
+export const getSchemaSources = async () => {
   const { folders } = config;
 
   const sourceFiles = [
@@ -316,26 +326,35 @@ export const getSchemaSources = () => {
   config.sources.settingsSchema = settingsFiles?.[0]
     ? (importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings })?.settingsSchema
     : [];
-  config.sources.sectionSchemas = sectionsSchemaFiles.reduce(
-    (acc, file) => {
-      try {
-        const data = importFresh(file);
 
-        return {
-          ...acc,
-          ...Object.entries(data).reduce((acc2, [key, val]) => {
-            // @ts-ignore
-            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
-            return acc2;
-          }, {}),
-        };
-      } catch (err) {
-        console.log(chalk.redBright(err.message));
-        return acc;
-      }
-    },
-    {} as { [T: string]: ShopifySection }
-  );
+  let acc: { [T: string]: ShopifySection & { path: string; folder: string } } = {};
+  for (let i = 0; i < sectionsSchemaFiles.length; i++) {
+    const file = sectionsSchemaFiles[i];
+    try {
+      const data = await importAndTransformSchema(file);
+
+      acc = {
+        ...acc,
+        ...Object.entries(data).reduce((acc2, [key, val]) => {
+          // @ts-ignore
+          acc2[key] = {
+            ...val,
+            blocks: val?.blocks?.some((block) => block.theme_block)
+              ? val.blocks.map((block) => ({ ...block, presets: block.presets?.length ? block.presets : [{ name: block.name }] }))
+              : val?.blocks,
+            folder: file.split(/[\\/]/gi).at(-2),
+            path: file,
+          };
+          return acc2;
+        }, {}),
+      };
+    } catch (err) {
+      console.log(chalk.redBright(err.message));
+      return acc;
+    }
+  }
+
+  config.sources.sectionSchemas = acc;
 
   config.sources.blockSchemas = blocksSchemaFiles.reduce(
     (acc, file) => {

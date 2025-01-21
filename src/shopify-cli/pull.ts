@@ -28,11 +28,7 @@ export const shopifyCliPull = async () => {
         if (fs.existsSync(workspace)) {
           if (fs.existsSync(vcsPath)) {
             const vcsContent = fs.readFileSync(vcsPath, { encoding: "utf-8" });
-            if (
-              !vcsContent.includes(
-                `<mapping directory="$PROJECT_DIR$/${cleanThemePath}" vcs="Git" />`
-              )
-            ) {
+            if (!vcsContent.includes(`<mapping directory="$PROJECT_DIR$/${cleanThemePath}" vcs="Git" />`)) {
               const newVcsContent = vcsContent.replace(
                 "</component>",
                 `    <mapping directory="$PROJECT_DIR$/${cleanThemePath}" vcs="Git" />\n  </component>`
@@ -52,26 +48,17 @@ export const shopifyCliPull = async () => {
             );
           }
         }
-        if (
-          stderr &&
-          stderr.includes(`doesn't exist`) &&
-          stderr.includes(`Theme`) &&
-          !second_attempt
-        ) {
+        if (stderr && stderr.includes(`doesn't exist`) && stderr.includes(`Theme`) && !second_attempt) {
           clearInterval(interval);
           second_attempt = true;
           console.log(stderr);
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
-              `Error - Theme not Found`
-            )}`
-          );
+          console.log(`[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Error - Theme not Found`)}`);
           await validateCliOptions({
             store,
             environment,
             reset_theme_id: true,
           });
-          buildTheme();
+          await buildTheme();
           generateConfigFiles();
           await shopifyCliPull();
 
@@ -81,19 +68,13 @@ export const shopifyCliPull = async () => {
         if (stderr && stderr.includes(`doesn't exist`) && stderr.includes(`Theme`)) {
           console.log(stderr);
           console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
-              `Error - Could not initialize the Theme`
-            )}`
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Error - Could not initialize the Theme`)}`
           );
 
           clearInterval(interval);
           resolve(true);
         }
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
-            `Theme Files & Git Initialized`
-          )}`
-        );
+        console.log(`[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(`Theme Files & Git Initialized`)}`);
 
         clearInterval(interval);
         resolve(true);

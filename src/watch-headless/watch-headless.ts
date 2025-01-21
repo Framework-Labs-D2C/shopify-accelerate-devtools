@@ -16,15 +16,15 @@ export const watchHeadless = () => {
   const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
 
   let running = false;
-  watch(Object.values(folders)?.filter((folder) => fs.existsSync(folder)), { recursive: true }, (event, name) => {
+  watch(Object.values(folders)?.filter((folder) => fs.existsSync(folder)), { recursive: true }, async (event, name) => {
     if (running) return;
     const startTime = Date.now();
     running = true;
     if (event === "remove") {
-      getSources();
+      await getSources();
     }
     if (isTypeScriptSchema(name)) {
-      getSchemaSources();
+      await getSchemaSources();
       generateSectionsTypes();
       generateThemeBlocksTypes();
       generateClassicBlocksTypes();

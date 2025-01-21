@@ -31,7 +31,7 @@ export const watchTheme = () => {
       running = true;
 
       if (event === "remove") {
-        getSources();
+        await getSources();
         getTargets();
 
         if (isAsset(name) && !/\.ts$/gi.test(name)) {
@@ -68,7 +68,7 @@ export const watchTheme = () => {
 
       if (isTypeScriptSchema(name)) {
         getTargets();
-        getSchemaSources();
+        await getSchemaSources();
         parseLocales();
         generateSchemaVariables();
         generateSchemaLocales();
@@ -102,7 +102,7 @@ export const watchTheme = () => {
       }
       if (isLiquid(name) || isSectionTs(name) || isBlockTs(name)) {
         getTargets();
-        getSources();
+        await getSources();
         generateSchemaVariables();
         generateLiquidFiles();
         console.log(

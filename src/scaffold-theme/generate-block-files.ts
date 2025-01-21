@@ -20,7 +20,7 @@ export const generateBlockFileSchema = ({
   let headerCount = 1;
 
   const localizedSection = {
-    name: name ? (sectionName?.length <= 25 ? name : `t:blocks.${sectionName}.name`) : undefined,
+    name: name ? (name?.length <= 25 ? name : `t:blocks.${sectionName}.name`) : undefined,
     ...section,
     tag: tag ?? null,
     settings: section?.settings?.map((setting) => {

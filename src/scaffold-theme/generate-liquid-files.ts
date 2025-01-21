@@ -1,13 +1,10 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { PresetSchema, ShopifySectionPreset } from "../../@types/shopify";
 import { config, root_dir } from "../../shopify-accelerate";
 import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { isObject } from "../utils/is-object";
-import { JSONParse } from "../utils/json";
-import { toCamelCase } from "../utils/to-camel-case";
-import { toLocaleFriendlySnakeCase, toSnakeCase } from "../utils/to-snake-case";
+import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 import { generateBlockFileSchema } from "./generate-block-files";
 import { generateSectionFiles } from "./generate-section-files";
 import { generateSettingsFile } from "./generate-settings-file";
@@ -142,6 +139,8 @@ export const generateLiquidFiles = () => {
           translationArray.push(translatedContent);
         }
 
+        blockSchema.limit = undefined;
+
         translationArray.push(generateBlockFileSchema(blockSchema));
 
         if (config.ignore_blocks?.includes(blockPath.split(/[/\\]/)?.at(-1))) {
@@ -157,7 +156,7 @@ export const generateLiquidFiles = () => {
       }
     });
 
-    const translationArray = [];
+    let translationArray = [];
 
     const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, sectionName), {
       encoding: "utf-8",
@@ -281,22 +280,24 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
-    /*const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
+    if (schema.section_as_snippet) {
+      const snippetPath = path.join(process.cwd(), theme_path, "snippets", sectionName);
 
-    if (config.ignore_snippets?.includes(snippetPath.split(/[/\\]/)?.at(-1))) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
-          `Ignored: ${snippetPath.replace(process.cwd(), "")}`
-        )}`
-      );
-      writeOnlyNew(snippetPath, translationArray.join("\n"));
-    } else {
-      writeCompareFile(snippetPath, translationArray.join("\n"));
+      if (config.ignore_snippets?.includes(snippetPath.split(/[/\\]/)?.at(-1))) {
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+            `Ignored: ${snippetPath.replace(process.cwd(), "")}`
+          )}`
+        );
+        writeOnlyNew(snippetPath, translationArray.join("\n"));
+      } else {
+        writeCompareFile(snippetPath, translationArray.join("\n"));
+      }
+
+      snippets.add(snippetPath);
+
+      translationArray = [`{%- render "${schema.folder}" -%}`];
     }
-
-    snippets.add(snippetPath);
-
-    translationArray = [ `{%- render "${schema.folder}" -%}`];*/
 
     translationArray.push(generateSectionFiles(schema));
 

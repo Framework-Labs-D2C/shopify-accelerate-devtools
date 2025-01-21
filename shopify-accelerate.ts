@@ -276,7 +276,7 @@ program
   )
   .action(async (options) => {
     await validateCliOptions(options);
-    buildTheme();
+    await buildTheme();
     generateConfigFiles();
     await shopifyCliPull();
   });
@@ -296,7 +296,7 @@ program
   )
   .action(async (options) => {
     await validateCliOptions(options);
-    buildTheme();
+    await buildTheme();
     generateConfigFiles();
     runEsbuild();
     runTailwindCSSWatcher();
@@ -343,8 +343,8 @@ program
   .action(async (options) => {
     config.headless = true;
     generateBaseTypes();
-    getSources();
-    getSchemaSources();
+    await getSources();
+    await getSchemaSources();
     generateSectionsTypes();
     generateSettingTypes();
     generateThemeBlocksTypes();

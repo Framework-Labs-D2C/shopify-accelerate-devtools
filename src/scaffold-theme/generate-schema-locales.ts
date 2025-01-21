@@ -32,6 +32,7 @@ export const generateSchemaLocales = () => {
   Object.values(sections).forEach((section) => {
     returnObject = produce(returnObject, (current) => {
       const blocks = section.blocks?.filter((block) => block.type !== "@app" && block.type !== "@theme") ?? [];
+      const isThemeBlocks = section.blocks?.some((block) => block?.theme_block);
 
       const settings = generateSectionSettings(section.settings, localesDuplicates);
 
@@ -53,6 +54,39 @@ export const generateSchemaLocales = () => {
       const translatedBlocks = blocks?.reduce((acc, block) => {
         const blockSettings = generateSectionSettings(block.settings, localesDuplicates);
 
+        if (isThemeBlocks) {
+          const schema = block;
+
+          const settings = generateSectionSettings(schema.settings, localesDuplicates);
+
+          // @ts-ignore
+          const presets = schema?.presets?.reduce((acc, preset) => {
+            acc[toLocaleFriendlySnakeCase(preset.name)] =
+              preset.name?.length > 25
+                ? {
+                    name: preset.name,
+                  }
+                : undefined;
+
+            if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
+              delete acc[toLocaleFriendlySnakeCase(preset.name)];
+            }
+            return acc;
+          }, {});
+
+          current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
+            name: schema.name?.length > 25 ? schema.name : undefined,
+            settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
+            presets: Object.values(presets ?? {})?.filter(Boolean)?.length ? presets : undefined,
+          };
+
+          if (!Object.values(current.blocks[toLocaleFriendlySnakeCase(schema.name)] ?? {})?.filter(Boolean)?.length) {
+            delete current.blocks[toLocaleFriendlySnakeCase(schema.name)];
+          }
+
+          return acc;
+        }
+
         acc[toLocaleFriendlySnakeCase(block.name)] = {
           name: block.name?.length > 25 ? block.name : undefined,
           settings: Object.values(blockSettings ?? {})?.filter(Boolean)?.length ? blockSettings : undefined,
@@ -67,7 +101,10 @@ export const generateSchemaLocales = () => {
       current.sections[toLocaleFriendlySnakeCase(section.name)] = {
         name: section?.name?.length <= 25 ? undefined : section.name,
         settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
-        blocks: blocks.length && Object.values(translatedBlocks ?? {})?.filter(Boolean)?.length ? translatedBlocks : undefined,
+        blocks:
+          blocks.length && Object.values(translatedBlocks ?? {})?.filter(Boolean)?.length && !isThemeBlocks
+            ? translatedBlocks
+            : undefined,
         presets: Object.values(presets ?? {})?.filter(Boolean)?.length ? presets : undefined,
       };
 

@@ -13,9 +13,9 @@ import { generateSettingTypes } from "./generate-setting-types";
 import { getSources, getTargets } from "./parse-files";
 import { parseLocales } from "./parse-locales";
 
-export const buildTheme = () => {
+export const buildTheme = async () => {
   generateBaseTypes();
-  getSources();
+  await getSources();
   getTargets();
   parseLocales();
   generateAllMissingSchemaFiles();
