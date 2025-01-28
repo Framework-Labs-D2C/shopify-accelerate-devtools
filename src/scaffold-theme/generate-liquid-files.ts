@@ -60,7 +60,7 @@ export const generateLiquidFiles = () => {
       continue;
     }
 
-    schema?.blocks?.forEach((block) => {
+    const createBlockSchemas = (block) => {
       if (block.disabled || "theme_block" in block) {
         const targetFile = targets.snippets.find(
           (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${block.type}.liquid`
@@ -72,7 +72,11 @@ export const generateLiquidFiles = () => {
       }
 
       if ("theme_block" in block) {
-        const blockSchema = { ...block, presets: "presets" in block ? block.presets : [{ name: block.name }] };
+        const blockSchema = {
+          ...block,
+          presets: "presets" in block ? block.presets : [{ name: block.name }],
+          folder: schema.folder,
+        };
 
         const blockName = `${schema.folder}.${blockSchema.type}.liquid`;
         const blockPath = path.join(process.cwd(), theme_path, "blocks", `_${schema.folder}__${blockSchema.type}.liquid`);
@@ -81,6 +85,9 @@ export const generateLiquidFiles = () => {
         if (targetSnippet) {
           snippets.delete(targetSnippet);
         }
+
+        block.blocks?.forEach(createBlockSchemas);
+
         if (blockSchema.disabled) {
           const targetFile = targets.blocks.find((target) => target.split(/[\\/]/gi).at(-1) === `_${blockName}`);
           if (targetFile) {
@@ -154,7 +161,9 @@ export const generateLiquidFiles = () => {
           writeCompareFile(blockPath, translationArray.join("\n"));
         }
       }
-    });
+    };
+
+    schema?.blocks?.forEach(createBlockSchemas);
 
     let translationArray = [];
 
@@ -876,7 +885,7 @@ declare global {
   sources.classic_blocksJs.forEach((name) => {
     const filename = name.split(/[\\/]/gi).at(-1);
     const block = Object.values(classic_blockSchemas).find((section) => section.path.includes(name.replace(filename, "")));
-    const targetName = `__classic-block--${filename.replace(/\.(ts)x?$/gi, ".js")}`;
+    const targetName = `__classic_block--${filename.replace(/\.(ts)x?$/gi, ".js")}`;
     const targetFile = targets.dynamicJs.find((file) => file.includes(targetName));
 
     if (block && !block.disabled) {
@@ -921,6 +930,24 @@ declare global {
       }
       return;
     }
+    const classicBlockFile = sources.classic_blocksJs.find((section) =>
+      section.includes(targetName.replace(/__classic_block--/gi, ""))
+    );
+
+    if (classicBlockFile) {
+      const filename = classicBlockFile?.split(/[\\/]/gi)?.at(-1);
+
+      const block = Object.values(classic_blockSchemas).find((section) =>
+        section.path.includes(classicBlockFile.replace(filename, ""))
+      );
+
+      if (!block || block.disabled) {
+        deleteFile(path.join(root_dir, name));
+        config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
+      }
+      return;
+    }
+
     deleteFile(path.join(root_dir, name));
     config.targets.dynamicJs = config.targets.dynamicJs.filter((target) => target !== name);
   });
@@ -987,10 +1014,15 @@ declare global {
       const fileName = file.split(/[\\/]/gi).at(-1);
       const targetFile =
         sources.blocksLiquid.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName) ||
-        Object.values(sources.sectionSchemas)?.find(
-          (schema) =>
-            schema.blocks?.some((block) => "theme_block" in block && `_${schema.folder}__${block.type}.liquid` === fileName)
-        );
+        Object.values(sources.sectionSchemas)?.find((schema) => {
+          const hasMatchingBlock = (block) => {
+            if ("theme_block" in block && !block.disabled && `_${schema.folder}__${block.type}.liquid` === fileName) {
+              return true;
+            }
+            return block?.blocks?.some(hasMatchingBlock) || false;
+          };
+          return schema.blocks?.some(hasMatchingBlock);
+        });
       if (!targetFile) {
         deleteFile(path.join(process.cwd(), file));
       }

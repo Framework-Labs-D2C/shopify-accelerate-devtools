@@ -29,7 +29,6 @@ import { ${toPascalCase(fileName)}Section } from "types/sections";
 
 export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}Section> = {
   name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",
-  generate_block_files: undefined,
   settings: [],
   presets: [
     {

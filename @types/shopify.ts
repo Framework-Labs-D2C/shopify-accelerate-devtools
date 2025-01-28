@@ -592,6 +592,7 @@ export type ShopifySectionDefaultGuaranteed<T = never> = {
 export type ShopifySectionPreset<T = unknown> = {
   name: string;
   category?: string;
+  development_only?: boolean;
   blocks?:
     | (T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never)
     | (T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never);
@@ -644,12 +645,8 @@ export type ShopifySectionGeneratedThemeBlock =
       tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
       type: string;
       settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
-      blocks?: (
-        | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-        | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-        | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never }
-      )[];
-      presets?: ShopifySectionPreset[];
+      blocks?: ShopifySectionGeneratedThemeBlock[];
+      presets?: ShopifySectionPreset<{ blocks: Array<any> }>[];
     }
   | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
   | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }

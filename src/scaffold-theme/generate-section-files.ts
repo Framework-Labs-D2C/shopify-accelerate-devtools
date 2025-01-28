@@ -273,12 +273,14 @@ export const generateSectionFiles = ({
 
         return acc;
       }, []),
-    presets: section.presets?.map(({ name, ...preset }) => {
-      return {
-        name: name?.length <= 25 ? name : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
-        ...preset,
-      };
-    }),
+    presets: section.presets
+      ?.filter(({ development_only }) => !development_only || config?.all_presets)
+      ?.map(({ name, development_only, ...preset }) => {
+        return {
+          name: name?.length <= 25 ? name : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+          ...preset,
+        };
+      }),
   };
 
   return `{% schema %}

@@ -156,7 +156,10 @@ export const getSources = async () => {
           acc2[key] = {
             ...val,
             blocks: val?.blocks?.some((block) => block.theme_block)
-              ? val.blocks.map((block) => ({ ...block, presets: block.presets?.length ? block.presets : [{ name: block.name }] }))
+              ? val.blocks.map((block) => ({
+                  ...block,
+                  presets: block.presets && Array.isArray(block.presets) ? block.presets : [{ name: block.name }],
+                }))
               : val?.blocks,
             folder: file.split(/[\\/]/gi).at(-2),
             path: file,
@@ -340,7 +343,10 @@ export const getSchemaSources = async () => {
           acc2[key] = {
             ...val,
             blocks: val?.blocks?.some((block) => block.theme_block)
-              ? val.blocks.map((block) => ({ ...block, presets: block.presets?.length ? block.presets : [{ name: block.name }] }))
+              ? val.blocks.map((block) => ({
+                  ...block,
+                  presets: block.presets && Array.isArray(block.presets) ? block.presets : [{ name: block.name }],
+                }))
               : val?.blocks,
             folder: file.split(/[\\/]/gi).at(-2),
             path: file,
@@ -561,7 +567,7 @@ export const isCustomerTemplate = (name: string) =>
 export const isGiftCard = (name: string) => name.includes(config.folders.templates) && /[\\/]gift_card\.liquid$/gi.test(name);
 
 export const isTargetDynamicJs = (name: string) =>
-  /[\\/]assets[\\/](__section--|__block--|__classic-block--)[^\\/]*$/gi.test(name);
+  /[\\/]assets[\\/](__section--|__block--|__classic_block--)[^\\/]*$/gi.test(name);
 
 export const isLiquid = (name: string) =>
   isSectionLiquid(name) ||

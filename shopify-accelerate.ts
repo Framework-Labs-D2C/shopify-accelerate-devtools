@@ -50,6 +50,7 @@ const shopify_toml = tomlFile
           output?: "json";
           live?: boolean;
           "allow-live"?: boolean;
+          all_presets?: boolean;
           mode: "development" | "production";
           ignore_blocks: string;
           ignore_snippets: string;
@@ -67,6 +68,7 @@ export type GlobalsState = {
   package_templates: string;
   package_types: string;
   project_root: ReturnType<typeof process.cwd>;
+  all_presets: boolean;
   mode: "development" | "production";
   theme_id: number;
   theme_path: string;
@@ -253,6 +255,7 @@ export const config: GlobalsState = {
   theme_id: +shopify_toml?.environments?.["development"]?.theme,
   theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
   store: shopify_toml?.environments?.["development"]?.store,
+  all_presets: shopify_toml?.environments?.["development"]?.all_presets,
   mode: shopify_toml?.environments?.["development"]?.mode ?? "production",
 };
 

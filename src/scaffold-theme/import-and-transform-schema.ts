@@ -4,6 +4,7 @@ import chalk from "chalk";
 import { exec } from "child_process";
 import fs from "fs";
 import importFresh from "import-fresh";
+import { writeCompareFile } from "../utils/fs";
 import { delay } from "../utils/delay";
 
 // Recursive function to transform `blocks` and remove `block_order`
@@ -58,106 +59,107 @@ export const importAndTransformSchema = async (file: any) => {
 
   const presets = Object.values(importedData)?.[0]?.presets;
   if (Array.isArray(presets) && presets.some((preset) => typeof preset?.blocks === "object" && !Array.isArray(preset?.blocks))) {
-    const data = fs.readFileSync(file, { encoding: "utf-8" });
+    try {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.magentaBright(
+          `/${file.split(/[\\/]/).at(-2)}/schema.ts Block Schema Transformation Started`
+        )}`
+      );
+      const data = fs.readFileSync(file, { encoding: "utf-8" });
 
-    const ast = tsParser.parse(data, {
-      loc: true,
-      range: true,
-      comment: true,
-      tokens: true,
-      ecmaFeatures: {
-        jsx: false,
-        globalReturn: false,
-      },
-    });
+      const splitter = data.match(/export\s+const\s+[^\n]*?\n/gi).at(0);
 
-    let presetsNode = null;
-    let exportTypeAnnotation = null;
+      const parts = data.split(splitter);
 
-    // Traverse the AST to find the `presets` array and export type annotations
-    tsParser.simpleTraverse(ast, {
-      enter(node, parent) {
-        if (
-          node.type === "Property" &&
-          node.key.type === "Identifier" &&
-          node.key.name === "presets" &&
-          node.value.type === "ArrayExpression"
-        ) {
-          presetsNode = node.value;
-        }
+      const [schemaContent, presets] = parts[1]?.split(/\n\s*"?presets"?\s*:/gi) ?? [];
 
-        // Capture the type annotation of the export
-        if (
-          parent?.type === "VariableDeclarator" &&
-          parent.id.type === "Identifier" &&
-          parent.id.typeAnnotation?.type === "TSTypeAnnotation"
-        ) {
-          exportTypeAnnotation = parent.id.typeAnnotation;
-        }
-      },
-    });
+      const parseableData = `${splitter}presets:${presets}`;
 
-    if (!presetsNode) {
-      console.error("No presets array found in the file.");
-      return;
-    }
-
-    // Transform each preset object in the array
-    presetsNode.elements.forEach((element, index) => {
-      if (element.type === "ObjectExpression") {
-        // Convert the AST ObjectExpression into a JavaScript object
-        const obj = eval(`(${escodegen.generate(element)})`);
-
-        // Apply the transformation
-        const transformed = transformBlocks(obj);
-
-        // Replace the existing element with the transformed object
-        presetsNode.elements[index] = createObjectExpression(transformed);
-      }
-    });
-
-    // Generate the transformed code
-    let transformedData = escodegen.generate(ast, {
-      comment: true,
-      format: {
-        quotes: "double", // Use double quotes
-        semicolons: false, // Omit semicolons
-        compact: false, // Keep formatting readable
-        retainLines: true, // Retain existing line structure where possible
-        indent: {
-          style: "  ", // Use double spaces for indentation
+      const ast = tsParser.parse(parseableData, {
+        loc: true,
+        range: true,
+        comment: true,
+        tokens: true,
+        ecmaFeatures: {
+          jsx: false,
+          globalReturn: false,
         },
-        newline: "\n", // Use Unix-style line endings
-        trailingComma: true, // Add trailing commas where applicable
-      },
-    });
+      });
+      let presetsNode = null;
+      fs.writeFileSync("C:/test.json", JSON.stringify(ast, null, 2));
+      // Traverse the AST to find the `presets` array and export type annotations
+      tsParser.simpleTraverse(ast, {
+        enter(node, parent) {
+          if (
+            node.type === "Property" &&
+            node.key.type === "Identifier" &&
+            node.key.name === "presets" &&
+            node.value.type === "ArrayExpression"
+          ) {
+            presetsNode = node.value;
+          }
+        },
+      });
+      if (!presetsNode) {
+        console.error("No presets array found in the file.");
+        return;
+      }
 
-    // Reinsert the type annotation manually
-    if (exportTypeAnnotation) {
-      const typeAnnotationCode = data.slice(exportTypeAnnotation.range[0], exportTypeAnnotation.range[1]);
-      transformedData = transformedData.replace(/export const (\w+)\s*=/, `export const $1 ${typeAnnotationCode} =`);
-    }
+      // Transform each preset object in the array
+      presetsNode.elements.forEach((element, index) => {
+        if (element.type === "ObjectExpression") {
+          // Convert the AST ObjectExpression into a JavaScript object
+          const obj = eval(`(${escodegen.generate(element)})`);
 
-    fs.writeFileSync(`${file}`, transformedData.split("export const ").join("\nexport const "), { encoding: "utf-8" });
+          // Apply the transformation
+          const transformed = transformBlocks(obj);
 
-    await new Promise((resolve, reject) => {
-      exec(`eslint ${file} --fix`, (error, stdout, stderr) => {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
-            `/${file.split(/[\\/]/).at(-2)}/schema.ts Prettified`
-          )}`
-        );
-        resolve(true);
-        if (error) {
-          console.log(`error: ${error.message}`);
-          reject();
+          // Replace the existing element with the transformed object
+          presetsNode.elements[index] = createObjectExpression(transformed);
         }
       });
-    });
-    await delay(500);
-    importedData = importFresh(file);
 
-    console.log(importedData, transformedData);
+      // Generate the transformed code
+      const transformedData = escodegen.generate(ast, {
+        comment: true,
+        format: {
+          quotes: "double", // Use double quotes
+          semicolons: false, // Omit semicolons
+          compact: false, // Keep formatting readable
+          retainLines: true, // Retain existing line structure where possible
+          indent: {
+            style: "  ", // Use double spaces for indentation
+          },
+          newline: "\n", // Use Unix-style line endings
+          trailingComma: true, // Add trailing commas where applicable
+        },
+      });
+
+      const secondSplitter = transformedData.match(/export\s+const\s+[^\n]*?\n/gi).at(0);
+
+      const finalContent = parts[0] + splitter + schemaContent + transformedData.split(secondSplitter).at(1);
+
+      writeCompareFile(`${file}`, finalContent);
+
+      await new Promise((resolve, reject) => {
+        exec(`eslint ${file} --fix`, (error, stdout, stderr) => {
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+              `/${file.split(/[\\/]/).at(-2)}/schema.ts Prettified`
+            )}`
+          );
+          resolve(true);
+          if (error) {
+            console.log(`error: ${error.message}`);
+            reject();
+          }
+        });
+      });
+      await delay(500);
+      importedData = importFresh(file);
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   return importedData;

@@ -26,6 +26,7 @@ export const watchTheme = () => {
     const startTime = Date.now();
     try {
       if (running) return;
+      if (fs.statSync(name).isDirectory()) return;
       const fileName = name.split(/[/\\]/gi).at(-1);
 
       running = true;

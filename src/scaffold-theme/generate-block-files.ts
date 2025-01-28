@@ -98,6 +98,12 @@ export const generateBlockFileSchema = ({
       if (block.type === "@app") return { name, ...block };
       if (block.type === "@theme") return { name, ...block };
 
+      if ("theme_block" in block) {
+        return {
+          type: `_${folder}__${block.type}`,
+        };
+      }
+
       return {
         name: name
           ? name?.length <= 25
@@ -106,7 +112,8 @@ export const generateBlockFileSchema = ({
           : undefined,
         ...block,
         settings: block?.settings
-          ? block?.settings?.map((setting) => {
+          ? // @ts-ignore
+            block?.settings?.map((setting) => {
               const settingsBase = `t:blocks.${sectionName}.blocks.${toLocaleFriendlySnakeCase(name)}.settings`;
 
               if (setting.type === "paragraph") {
@@ -178,12 +185,14 @@ export const generateBlockFileSchema = ({
           : undefined,
       };
     }),
-    presets: section.presets?.map(({ name, ...preset }) => {
-      return {
-        name: name?.length <= 25 ? name : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
-        ...preset,
-      };
-    }),
+    presets: section.presets
+      ?.filter(({ development_only }) => !development_only || config?.all_presets)
+      ?.map(({ name, development_only, ...preset }) => {
+        return {
+          name: name?.length <= 25 ? name : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+          ...preset,
+        };
+      }),
   };
 
   return `{% schema %}

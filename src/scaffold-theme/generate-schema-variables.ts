@@ -82,7 +82,7 @@ export const generateSchemaVariables = () => {
       }
     }
 
-    schema.blocks?.forEach((block) => {
+    const generateSectionBlocks = (block) => {
       if (block.type === "@app") return;
       if (block.type === "@theme") return;
       if (!block.name) return;
@@ -95,9 +95,14 @@ export const generateSchemaVariables = () => {
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
-      blockVariables.push(`  assign block_type = "${block.type}"`);
-      blockVariables.push(`  assign section_type = "${schema.folder}"`);
 
+      if ("theme_block" in block) {
+        blockVariables.push(`  assign block_type = "_${schema.folder}__${block.type}"`);
+      } else {
+        blockVariables.push(`  assign block_type = "${block.type}"`);
+      }
+
+      blockVariables.push(`  assign section_type = "${schema.folder}"`);
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
         blockVariables.push(
@@ -154,7 +159,11 @@ export const generateSchemaVariables = () => {
           fs.writeFileSync(blockPath, newContent);
         }
       }
-    });
+
+      block.blocks?.forEach(generateSectionBlocks);
+    };
+
+    schema.blocks?.forEach(generateSectionBlocks);
   }
 
   const blocks = sources.blockSchemas as {

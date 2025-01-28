@@ -36,20 +36,22 @@ export const generateSchemaLocales = () => {
 
       const settings = generateSectionSettings(section.settings, localesDuplicates);
 
-      const presets = section.presets?.reduce((acc, preset) => {
-        acc[toLocaleFriendlySnakeCase(preset.name)] =
-          preset.name?.length > 25
-            ? {
-                name: preset.name,
-              }
-            : undefined;
+      const presets = section.presets
+        ?.filter(({ development_only }) => !development_only || config?.all_presets)
+        ?.reduce((acc, preset) => {
+          acc[toLocaleFriendlySnakeCase(preset.name)] =
+            preset.name?.length > 25
+              ? {
+                  name: preset.name,
+                }
+              : undefined;
 
-        if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
-          delete acc[toLocaleFriendlySnakeCase(preset.name)];
-        }
+          if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
+            delete acc[toLocaleFriendlySnakeCase(preset.name)];
+          }
 
-        return acc;
-      }, {});
+          return acc;
+        }, {});
 
       const translatedBlocks = blocks?.reduce((acc, block) => {
         const blockSettings = generateSectionSettings(block.settings, localesDuplicates);
@@ -60,19 +62,21 @@ export const generateSchemaLocales = () => {
           const settings = generateSectionSettings(schema.settings, localesDuplicates);
 
           // @ts-ignore
-          const presets = schema?.presets?.reduce((acc, preset) => {
-            acc[toLocaleFriendlySnakeCase(preset.name)] =
-              preset.name?.length > 25
-                ? {
-                    name: preset.name,
-                  }
-                : undefined;
+          const presets = schema?.presets
+            ?.filter(({ development_only }) => !development_only || config?.all_presets)
+            ?.reduce((acc, preset) => {
+              acc[toLocaleFriendlySnakeCase(preset.name)] =
+                preset.name?.length > 25
+                  ? {
+                      name: preset.name,
+                    }
+                  : undefined;
 
-            if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
-              delete acc[toLocaleFriendlySnakeCase(preset.name)];
-            }
-            return acc;
-          }, {});
+              if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
+                delete acc[toLocaleFriendlySnakeCase(preset.name)];
+              }
+              return acc;
+            }, {});
 
           current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
             name: schema.name?.length > 25 ? schema.name : undefined,
@@ -120,19 +124,21 @@ export const generateSchemaLocales = () => {
 
       const settings = generateSectionSettings(schema.settings, localesDuplicates);
 
-      const presets = schema.presets?.reduce((acc, preset) => {
-        acc[toLocaleFriendlySnakeCase(preset.name)] =
-          preset.name?.length > 25
-            ? {
-                name: preset.name,
-              }
-            : undefined;
+      const presets = schema.presets
+        ?.filter(({ development_only }) => !development_only || config?.all_presets)
+        ?.reduce((acc, preset) => {
+          acc[toLocaleFriendlySnakeCase(preset.name)] =
+            preset.name?.length > 25
+              ? {
+                  name: preset.name,
+                }
+              : undefined;
 
-        if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
-          delete acc[toLocaleFriendlySnakeCase(preset.name)];
-        }
-        return acc;
-      }, {});
+          if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
+            delete acc[toLocaleFriendlySnakeCase(preset.name)];
+          }
+          return acc;
+        }, {});
 
       const translatedBlocks = blocks?.reduce((acc, block) => {
         const blockSettings = generateSectionSettings(block.settings, localesDuplicates);
@@ -166,19 +172,21 @@ export const generateSchemaLocales = () => {
     returnObject = produce(returnObject, (current) => {
       const settings = generateSectionSettings(schema.settings, localesDuplicates);
 
-      const presets = schema.presets?.reduce((acc, preset) => {
-        acc[toLocaleFriendlySnakeCase(preset.name)] =
-          preset.name?.length > 25
-            ? {
-                name: preset.name,
-              }
-            : undefined;
+      const presets = schema.presets
+        ?.filter(({ development_only }) => !development_only || config?.all_presets)
+        ?.reduce((acc, preset) => {
+          acc[toLocaleFriendlySnakeCase(preset.name)] =
+            preset.name?.length > 25
+              ? {
+                  name: preset.name,
+                }
+              : undefined;
 
-        if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
-          delete acc[toLocaleFriendlySnakeCase(preset.name)];
-        }
-        return acc;
-      }, {});
+          if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
+            delete acc[toLocaleFriendlySnakeCase(preset.name)];
+          }
+          return acc;
+        }, {});
 
       current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
         name: schema.name?.length > 25 ? schema.name : undefined,
