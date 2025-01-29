@@ -71,7 +71,7 @@ export const generateLiquidFiles = () => {
         }
       }
 
-      if ("theme_block" in block) {
+      if ("theme_block" in block && block.theme_block) {
         const blockSchema = {
           ...block,
           presets: "presets" in block ? block.presets : [{ name: block.name }],
@@ -1016,7 +1016,12 @@ declare global {
         sources.blocksLiquid.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName) ||
         Object.values(sources.sectionSchemas)?.find((schema) => {
           const hasMatchingBlock = (block) => {
-            if ("theme_block" in block && !block.disabled && `_${schema.folder}__${block.type}.liquid` === fileName) {
+            if (
+              "theme_block" in block &&
+              block.theme_block &&
+              !block.disabled &&
+              `_${schema.folder}__${block.type}.liquid` === fileName
+            ) {
               return true;
             }
             return block?.blocks?.some(hasMatchingBlock) || false;

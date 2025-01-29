@@ -25,7 +25,7 @@ export const generateThemeBlocksTypes = () => {
     const schema = sections[key];
 
     schema.blocks?.forEach((block) => {
-      if ("theme_block" in block) {
+      if ("theme_block" in block && block.theme_block) {
         const newBlock = { ...block, folder: `_${schema.folder}__${block.type}` };
 
         typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
@@ -116,7 +116,7 @@ export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections:
     const schema = sections[key];
 
     schema.blocks?.forEach((block) => {
-      if ("theme_block" in block) {
+      if ("theme_block" in block && block.theme_block) {
         block?.settings?.forEach(analyseSetting, localTypes);
       }
     });

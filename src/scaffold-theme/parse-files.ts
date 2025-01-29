@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import importFresh from "import-fresh";
 import path from "path";
+import { JSONParse } from "../utils/json";
 import { importAndTransformSchema } from "./import-and-transform-schema";
 import { ShopifyBlock, ShopifySection, ShopifySettings } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
@@ -158,12 +159,19 @@ export const getSources = async () => {
             blocks: val?.blocks?.some((block) => block.theme_block)
               ? val.blocks.map((block) => ({
                   ...block,
-                  presets: block.presets && Array.isArray(block.presets) ? block.presets : [{ name: block.name }],
+                  theme_block: block.name ? true : undefined,
+                  presets:
+                    block.presets && Array.isArray(block.presets)
+                      ? block.presets
+                      : block.name
+                      ? [{ name: block.name }]
+                      : undefined,
                 }))
               : val?.blocks,
             folder: file.split(/[\\/]/gi).at(-2),
             path: file,
           };
+
           return acc2;
         }, {}),
       };
@@ -345,7 +353,13 @@ export const getSchemaSources = async () => {
             blocks: val?.blocks?.some((block) => block.theme_block)
               ? val.blocks.map((block) => ({
                   ...block,
-                  presets: block.presets && Array.isArray(block.presets) ? block.presets : [{ name: block.name }],
+                  theme_block: block.name ? true : undefined,
+                  presets:
+                    block.presets && Array.isArray(block.presets)
+                      ? block.presets
+                      : block.name
+                      ? [{ name: block.name }]
+                      : undefined,
                 }))
               : val?.blocks,
             folder: file.split(/[\\/]/gi).at(-2),

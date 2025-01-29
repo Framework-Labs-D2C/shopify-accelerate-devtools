@@ -101,7 +101,7 @@ export const generateSectionFiles = ({
           acc.push({ name, ...block });
           return acc;
         }
-        if ("theme_block" in block) {
+        if ("theme_block" in block && block.theme_block) {
           acc.push({ type: `_${folder}__${block.type}` });
           return acc;
         }

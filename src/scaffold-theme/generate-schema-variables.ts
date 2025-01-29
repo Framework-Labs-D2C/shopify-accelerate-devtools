@@ -96,7 +96,7 @@ export const generateSchemaVariables = () => {
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
 
-      if ("theme_block" in block) {
+      if ("theme_block" in block && block.theme_block) {
         blockVariables.push(`  assign block_type = "_${schema.folder}__${block.type}"`);
       } else {
         blockVariables.push(`  assign block_type = "${block.type}"`);

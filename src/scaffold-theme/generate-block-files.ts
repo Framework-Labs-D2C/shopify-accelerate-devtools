@@ -98,7 +98,7 @@ export const generateBlockFileSchema = ({
       if (block.type === "@app") return { name, ...block };
       if (block.type === "@theme") return { name, ...block };
 
-      if ("theme_block" in block) {
+      if ("theme_block" in block && block.theme_block) {
         return {
           type: `_${folder}__${block.type}`,
         };
