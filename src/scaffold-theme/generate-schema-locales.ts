@@ -37,7 +37,7 @@ export const generateSchemaLocales = () => {
       const settings = generateSectionSettings(section.settings, localesDuplicates);
 
       const presets = section.presets
-        ?.filter(({ development_only }) => !development_only || config?.all_presets)
+        ?.filter(({ development_only }) => !development_only || (config?.all_presets && !section.hide_development_presets))
         ?.reduce((acc, preset) => {
           acc[toLocaleFriendlySnakeCase(preset.name)] =
             preset.name?.length > 25
@@ -63,7 +63,12 @@ export const generateSchemaLocales = () => {
 
           // @ts-ignore
           const presets = schema?.presets
-            ?.filter(({ development_only }) => !development_only || config?.all_presets)
+            ?.filter(
+              ({ development_only }) =>
+                !development_only ||
+                /* @ts-ignore */
+                (config?.all_presets && !schema.hide_development_presets && !section.hide_development_presets)
+            )
             ?.reduce((acc, preset) => {
               acc[toLocaleFriendlySnakeCase(preset.name)] =
                 preset.name?.length > 25
@@ -125,7 +130,7 @@ export const generateSchemaLocales = () => {
       const settings = generateSectionSettings(schema.settings, localesDuplicates);
 
       const presets = schema.presets
-        ?.filter(({ development_only }) => !development_only || config?.all_presets)
+        ?.filter(({ development_only }) => !development_only || (config?.all_presets && !schema.hide_development_presets))
         ?.reduce((acc, preset) => {
           acc[toLocaleFriendlySnakeCase(preset.name)] =
             preset.name?.length > 25
@@ -173,7 +178,7 @@ export const generateSchemaLocales = () => {
       const settings = generateSectionSettings(schema.settings, localesDuplicates);
 
       const presets = schema.presets
-        ?.filter(({ development_only }) => !development_only || config?.all_presets)
+        ?.filter(({ development_only }) => !development_only || (config?.all_presets && !schema.hide_development_presets))
         ?.reduce((acc, preset) => {
           acc[toLocaleFriendlySnakeCase(preset.name)] =
             preset.name?.length > 25

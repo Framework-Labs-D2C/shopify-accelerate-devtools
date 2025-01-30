@@ -11,6 +11,7 @@ export const generateSectionFiles = ({
   disabled,
   path,
   folder,
+  hide_development_presets,
   ...section
 }: ShopifySection & { path: string; folder: string }) => {
   const sectionName = toLocaleFriendlySnakeCase(name);
@@ -93,7 +94,7 @@ export const generateSectionFiles = ({
     }),
     blocks: section?.blocks
       ?.filter((block) => !block?.disabled)
-      ?.reduce((acc, { name, disabled, ...block }) => {
+      ?.reduce((acc, { name, disabled, hide_development_presets, ...block }) => {
         let paragraphCount = 1;
         let headerCount = 1;
 
@@ -274,7 +275,7 @@ export const generateSectionFiles = ({
         return acc;
       }, []),
     presets: section.presets
-      ?.filter(({ development_only }) => !development_only || config?.all_presets)
+      ?.filter(({ development_only }) => !development_only || (config?.all_presets && !hide_development_presets))
       ?.map(({ name, development_only, ...preset }) => {
         return {
           name: name?.length <= 25 ? name : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,

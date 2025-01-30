@@ -622,20 +622,31 @@ export type ShopifySectionBlock =
   | {
       name: string;
       disabled?: boolean;
+      hide_development_presets?: boolean;
       theme_block?: never;
       type: string;
       limit?: number;
       settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
     }
-  | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never; theme_block?: never }
   | {
-      type: "@classic-theme";
+      type: "@app";
       disabled?: boolean;
       limit?: never;
       name?: never;
       settings?: never;
       theme_block?: never;
+      hide_development_presets?: boolean;
+    }
+  | {
+      type: "@classic-theme";
+      disabled?: boolean;
+      hide_development_presets?: boolean;
+      limit?: never;
+      name?: never;
+      settings?: never;
+      theme_block?: never;
     };
+
 export type ShopifySectionGeneratedThemeBlock =
   | {
       name: string;
@@ -644,13 +655,14 @@ export type ShopifySectionGeneratedThemeBlock =
       disabled?: boolean;
       tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
       type: string;
+      hide_development_presets?: boolean;
       settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
       blocks?: ShopifySectionGeneratedThemeBlock[];
       presets?: ShopifySectionPreset<{ blocks: Array<any> }>[];
     }
-  | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-  | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never }
-  | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never };
+  | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never; hide_development_presets?: boolean }
+  | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never; hide_development_presets?: boolean }
+  | { type: ThemeBlocks["type"]; disabled?: boolean; name?: never; settings?: never; hide_development_presets?: boolean };
 
 export type HeadlessSectionBlock =
   | {
@@ -685,6 +697,7 @@ export type ShopifyTemplateTypes =
 
 export type ShopifySection<T = never> = {
   name: string;
+  hide_development_presets?: boolean;
   blocks?: ShopifySectionBlock[] | ShopifySectionGeneratedThemeBlock[];
   class?: string;
   default?: ShopifySectionDefault<T>;
@@ -733,6 +746,7 @@ export type HeadlessSection<T = never> = {
 
 export type ShopifyThemeBlock<T = never> = {
   name: string;
+  hide_development_presets?: boolean;
   blocks?: ShopifySectionGeneratedThemeBlock[];
   class?: string;
   disabled?: boolean;
@@ -747,6 +761,7 @@ export type ShopifyBlock<T = never> = {
   name: string;
   class?: string;
   disabled?: boolean;
+  hide_development_presets?: boolean;
   presets?: ShopifySectionPreset<T>[];
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   /* Used for direct dynamic block use only */

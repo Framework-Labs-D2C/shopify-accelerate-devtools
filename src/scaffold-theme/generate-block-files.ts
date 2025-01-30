@@ -186,7 +186,7 @@ export const generateBlockFileSchema = ({
       };
     }),
     presets: section.presets
-      ?.filter(({ development_only }) => !development_only || config?.all_presets)
+      ?.filter(({ development_only }) => !development_only || (config?.all_presets && !section.hide_development_presets))
       ?.map(({ name, development_only, ...preset }) => {
         return {
           name: name?.length <= 25 ? name : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
