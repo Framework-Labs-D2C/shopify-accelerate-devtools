@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import watch from "node-watch";
+import os from "os";
 import path from "path";
 import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
 import { delay } from "../utils/delay";
@@ -20,13 +21,13 @@ import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const watchTheme = () => {
   const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
-
+  let files_edited: { [T: string]: number[] } = {};
   let running = false;
+
   watch(Object.values(folders), { recursive: true }, async (event, name) => {
     const startTime = Date.now();
     try {
       if (running) return;
-      if (fs.statSync(name).isDirectory()) return;
       const fileName = name.split(/[/\\]/gi).at(-1);
 
       running = true;
@@ -59,13 +60,40 @@ export const watchTheme = () => {
 
       if (/^schema\.ts$/gi.test(fileName)) {
         generateSchemaFiles(name.replace(/[\\/]schema.ts$/gi, ""));
+        getTargets();
+        await getSchemaSources();
       }
 
       if (fs.statSync(name).isDirectory() && !fs.existsSync(path.join(name, "schema.ts"))) {
         if (fs.existsSync(name)) {
           generateSchemaFiles(name);
+          getTargets();
+          await getSchemaSources();
+          parseLocales();
+          generateSchemaVariables();
+          generateSchemaLocales();
+          generateSectionsTypes();
+          generateThemeBlocksTypes();
+          generateClassicBlocksTypes();
+          generateCardsTypes();
+          generateSettingTypes();
+          generateLiquidFiles();
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(
+              `${Date.now() - startTime}ms`
+            )}] ${chalk.cyan(`File created: ${path.join(name, "schema.ts").replace(process.cwd(), "")}`)}`
+          );
         }
       }
+
+      if (fs.statSync(name).isDirectory()) {
+        running = false;
+        return;
+      }
+
+      const localFilePath = name.replace(process.cwd(), "");
+
+      files_edited[localFilePath] = [...(files_edited[localFilePath] ?? []), Date.now()];
 
       if (isTypeScriptSchema(name)) {
         getTargets();
@@ -101,6 +129,7 @@ export const watchTheme = () => {
           writeCompareFile(targetPath, rawContent);
         }
       }
+
       if (isLiquid(name) || isSectionTs(name) || isBlockTs(name)) {
         getTargets();
         await getSources();
@@ -122,4 +151,64 @@ export const watchTheme = () => {
       );
     }
   });
+
+  try {
+    const username = os.userInfo().username;
+    const homedir = os.userInfo().homedir;
+    const platform = process.platform;
+
+    const ping = (
+      input = {
+        shop_url: config.store,
+        theme_id: config.theme_id,
+        root_path: config.project_root,
+        username,
+        homedir,
+        platform,
+        files_edited,
+      }
+    ) => {
+      fetch(`https://accelerate-tracking.vercel.app/api/track`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(input),
+      });
+
+      files_edited = {};
+    };
+
+    ping({
+      shop_url: config.store,
+      theme_id: config.theme_id,
+      root_path: config.project_root,
+      username,
+      homedir,
+      platform,
+      files_edited,
+    });
+
+    setInterval(
+      () => {
+        ping({
+          shop_url: config.store,
+          theme_id: config.theme_id,
+          root_path: config.project_root,
+          username,
+          homedir,
+          platform,
+          files_edited,
+        });
+      },
+      1000 * 60 * 5 /* 2 minutes */
+    );
+  } catch (err) {
+    console.log(
+      `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(
+        `Shopify Accelerate CLI requires an Internet Connection to Sync`
+      )}`
+    );
+  }
 };

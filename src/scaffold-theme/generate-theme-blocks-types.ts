@@ -26,7 +26,7 @@ export const generateThemeBlocksTypes = () => {
 
     schema.blocks?.forEach((block) => {
       if ("theme_block" in block && block.theme_block) {
-        const newBlock = { ...block, folder: `_${schema.folder}__${block.type}` };
+        const newBlock = { ...block, folder: `_${schema.folder?.replace(/^_*/gi, "")}__${block.type}` };
 
         typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
         sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
@@ -130,6 +130,7 @@ export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections:
 
 export const blockToTypes = (block, key, isSectionBlock = false) => {
   const filename = block.folder;
+
   const arr = [];
   const settings: ShopifySettingsInput[] = block.settings
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")

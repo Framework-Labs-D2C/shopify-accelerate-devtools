@@ -86,7 +86,7 @@ export const importAndTransformSchema = async (file: any) => {
         },
       });
       let presetsNode = null;
-      fs.writeFileSync("C:/test.json", JSON.stringify(ast, null, 2));
+      // fs.writeFileSync("C:/test.json", JSON.stringify(ast, null, 2));
       // Traverse the AST to find the `presets` array and export type annotations
       tsParser.simpleTraverse(ast, {
         enter(node, parent) {

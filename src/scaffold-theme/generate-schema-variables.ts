@@ -15,14 +15,16 @@ export const generateSchemaVariables = () => {
   for (const key in sections) {
     const schema = sections[key];
 
-    const sectionLiquid = path.join(folders.sections, schema.folder, `${schema.folder}.liquid`);
+    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
+    const sectionLiquid = path.join(folders.sections, schema.folder, `${schema_file_path}.liquid`);
 
     const start = "{%- comment -%} Auto Generated Variables start {%- endcomment -%}";
     const end = "{%- comment -%} Auto Generated Variables end {%- endcomment -%}";
 
     const variables = [start];
     variables.push("{%- liquid");
-    variables.push(`  assign section_type = "${schema.folder}"`);
+    variables.push(`  assign section_type = "${schema_file_path}"`);
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
@@ -91,18 +93,18 @@ export const generateSchemaVariables = () => {
         return;
       }
 
-      const blockPath = path.join(folders.sections, schema.folder, `${schema.folder}.${block.type}.liquid`);
+      const blockPath = path.join(folders.sections, schema.folder, `${schema_file_path}.${block.type}.liquid`);
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
 
       if ("theme_block" in block && block.theme_block) {
-        blockVariables.push(`  assign block_type = "_${schema.folder}__${block.type}"`);
+        blockVariables.push(`  assign block_type = "_${schema_file_path}__${block.type}"`);
       } else {
         blockVariables.push(`  assign block_type = "${block.type}"`);
       }
 
-      blockVariables.push(`  assign section_type = "${schema.folder}"`);
+      blockVariables.push(`  assign section_type = "${schema_file_path}"`);
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
         blockVariables.push(
@@ -172,15 +174,16 @@ export const generateSchemaVariables = () => {
 
   for (const key in blocks) {
     const schema = blocks[key];
+    const schema_file_path = schema.folder;
 
-    const itemLiquid = path.join(folders.blocks, schema.folder, `${schema.folder}.liquid`);
+    const itemLiquid = path.join(folders.blocks, schema.folder, `${schema_file_path}.liquid`);
 
     const start = "{%- comment -%} Auto Generated Variables start {%- endcomment -%}";
     const end = "{%- comment -%} Auto Generated Variables end {%- endcomment -%}";
 
     const variables = [start];
     variables.push("{%- liquid");
-    variables.push(`  assign block_type = "${schema.folder}"`);
+    variables.push(`  assign block_type = "${schema_file_path}"`);
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
@@ -316,8 +319,8 @@ export const generateSchemaVariables = () => {
 
   for (const key in classic_blocks) {
     const schema = classic_blocks[key];
-
-    const itemLiquid = path.join(folders.classic_blocks, schema.folder, `${schema.folder}.liquid`);
+    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+    const itemLiquid = path.join(folders.classic_blocks, schema.folder, `${schema_file_path}.liquid`);
 
     const start = "{%- comment -%} Auto Generated Variables start {%- endcomment -%}";
     const end = "{%- comment -%} Auto Generated Variables end {%- endcomment -%}";
@@ -325,7 +328,7 @@ export const generateSchemaVariables = () => {
     const variables = [start];
     variables.push("{%- liquid");
 
-    variables.push(`  assign block_type = "_blocks.${schema.folder}"`);
+    variables.push(`  assign block_type = "_blocks.${schema_file_path}"`);
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
@@ -393,8 +396,8 @@ export const generateSchemaVariables = () => {
 
   for (const key in cards) {
     const schema = cards[key];
-
-    const liquidFilePath = path.join(folders.cards, schema.folder, `${schema.folder}.liquid`);
+    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+    const liquidFilePath = path.join(folders.cards, schema.folder, `${schema_file_path}.liquid`);
 
     const start = "{%- comment -%} Auto Generated Variables start {%- endcomment -%}";
     const end = "{%- comment -%} Auto Generated Variables end {%- endcomment -%}";
@@ -402,9 +405,9 @@ export const generateSchemaVariables = () => {
     const variables = [start];
     variables.push("{%- liquid");
     variables.push(`  comment`);
-    variables.push(`    Call via:  {% render "_card.${schema.folder}" %}`);
+    variables.push(`    Call via:  {% render "_card.${schema_file_path}" %}`);
     variables.push(`  endcomment`);
-    variables.push(`  assign card_type = "${schema.folder}"`);
+    variables.push(`  assign card_type = "${schema_file_path}"`);
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;

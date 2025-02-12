@@ -87,7 +87,15 @@ export const generateSettingsFile = () => {
           options:
             "options" in setting
               ? disabled_locales
-                ? setting.options
+                ? setting.options.map((option, index) => ({
+                    ...option,
+                    label:
+                      option.label.length <= 50
+                        ? option.label
+                        : localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                        ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
+                        : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
+                  }))
                 : setting.options.map((option, index) => ({
                     ...option,
                     label:

@@ -657,7 +657,26 @@ export type ShopifySectionGeneratedThemeBlock =
       type: string;
       hide_development_presets?: boolean;
       settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
-      blocks?: ShopifySectionGeneratedThemeBlock[];
+      blocks?: (
+        | ShopifySectionGeneratedThemeBlock
+        | {
+            type: "@section-blocks";
+            disabled?: boolean;
+            limit?: never;
+            name?: never;
+            settings?: never;
+            hide_development_presets?: boolean;
+          }
+        | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never; hide_development_presets?: boolean }
+        | {
+            type: "@theme";
+            disabled?: boolean;
+            limit?: never;
+            name?: never;
+            settings?: never;
+            hide_development_presets?: boolean;
+          }
+      )[];
       presets?: ShopifySectionPreset<{ blocks: Array<any> }>[];
     }
   | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never; hide_development_presets?: boolean }

@@ -80,8 +80,16 @@ export const generateSectionFiles = ({
             : undefined,
         options:
           "options" in setting
-            ? disabled_locales && setting.options.every((option) => option.label.length <= 50)
-              ? setting.options
+            ? disabled_locales
+              ? setting.options.map((option, index) => ({
+                  ...option,
+                  label:
+                    option.label.length <= 50
+                      ? option.label
+                      : localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                      ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
+                      : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
+                }))
               : setting.options.map((option, index) => ({
                   ...option,
                   label:
@@ -103,7 +111,19 @@ export const generateSectionFiles = ({
           return acc;
         }
         if ("theme_block" in block && block.theme_block) {
-          acc.push({ type: `_${folder}__${block.type}` });
+          acc.push({ type: `_${folder.replace(/^_*/gi, "")}__${block.type}` });
+          return acc;
+        }
+        if (block.type === "@section-blocks") {
+          section.blocks.forEach((rootBlock) => {
+            if (block.type && !name) {
+              acc.push({ type: block.type });
+            } else {
+              acc.push({ type: `_${folder.replace(/^_*/gi, "")}__${block.type}` });
+            }
+          });
+
+          acc = acc.filter((a, i, arr) => arr.findIndex((b) => a.type === b.type) === i);
           return acc;
         }
         if (block.type === "@classic-theme") {
@@ -175,8 +195,16 @@ export const generateSectionFiles = ({
                       : undefined,
                   options:
                     "options" in setting
-                      ? disabled_locales && setting.options.every((option) => option.label.length <= 50)
-                        ? setting.options
+                      ? disabled_locales
+                        ? setting.options.map((option, index) => ({
+                            ...option,
+                            label:
+                              option.label.length <= 50
+                                ? option.label
+                                : localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                                ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
+                                : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
+                          }))
                         : setting.options.map((option, index) => ({
                             ...option,
                             label:
@@ -257,8 +285,16 @@ export const generateSectionFiles = ({
                       : undefined,
                   options:
                     "options" in setting
-                      ? disabled_locales && setting.options.every((option) => option.label.length <= 50)
-                        ? setting.options
+                      ? disabled_locales
+                        ? setting.options.map((option, index) => ({
+                            ...option,
+                            label:
+                              option.label.length <= 50
+                                ? option.label
+                                : localeDuplicates[toLocaleFriendlySnakeCase(option.label)]?.length > 1
+                                ? `t:all.${toLocaleFriendlySnakeCase(option.label)}`
+                                : `${settingsBase}.${setting.id}.options__${index + 1}.label`,
+                          }))
                         : setting.options.map((option, index) => ({
                             ...option,
                             label:

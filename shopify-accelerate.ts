@@ -63,6 +63,7 @@ const shopify_toml = tomlFile
   : { environments: {} };
 
 export type GlobalsState = {
+  options?: string;
   headless?: boolean;
   package_root: string;
   package_templates: string;
@@ -278,6 +279,7 @@ program
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
+    config.options = options;
     await validateCliOptions(options);
     await buildTheme();
     generateConfigFiles();
@@ -298,12 +300,31 @@ program
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
+    config.options = options;
     await validateCliOptions(options);
     await buildTheme();
     generateConfigFiles();
     runEsbuild();
     runTailwindCSSWatcher();
     watchTheme();
+
+    process.on("uncaughtException", (error) => {
+      console.error("Global uncaughtException error caught");
+      console.error(error.message);
+      console.log("Killing server with restart...");
+      // process.exit(0);
+    });
+
+    process.on("exit", () => {
+      console.log("on exit detected");
+      const exec = require("child_process").exec;
+      // const command = "node app.js";
+      // exec(command, (error, stdout, stderr) => {
+      //   console.log(`error:  ${error.message}`);
+      //   console.log(`stdout: ${stdout}`);
+      //   console.log(`stderr: ${stderr}`);
+      // });
+    });
   });
 
 program
@@ -319,6 +340,7 @@ program
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
+    config.options = options;
     await validateCliOptions(options);
     runTailwindCSSWatcher();
   });
@@ -336,6 +358,7 @@ program
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
   .action(async (options) => {
+    config.options = options;
     await validateCliOptions(options);
     runEsbuild();
   });
@@ -344,6 +367,7 @@ program
   .command("headless")
   .description("Shopify Headless Development")
   .action(async (options) => {
+    config.options = options;
     config.headless = true;
     generateBaseTypes();
     await getSources();

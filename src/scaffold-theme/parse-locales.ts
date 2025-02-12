@@ -95,9 +95,6 @@ export function parseLocales() {
     if (!("settings" in settingsSection)) return;
     mapSettings(settingsSection.settings);
   });
-  /*  fs.writeFileSync(path.join(process.cwd(), "/test.json"), JSON.stringify(entries, null, 2), {
-    encoding: "utf-8",
-  });*/
 
   config.sources.locale_duplicates = entries;
 }

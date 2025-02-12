@@ -279,7 +279,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
           const options = setting.options.reduce(
             (acc, option, index) => {
               const key = toLocaleFriendlySnakeCase(option.label);
-              if (localesDuplicates[key]?.length > 1 || disabled_locales) {
+              if (localesDuplicates[key]?.length > 1 || (disabled_locales && option.label.length <= 50)) {
                 return acc;
               }
               acc[`options__${index + 1}`] = {

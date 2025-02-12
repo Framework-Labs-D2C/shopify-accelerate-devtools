@@ -244,7 +244,11 @@ export const sectionToTypes = (section, key) => {
       arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
     } else if (block.theme_block) {
       arr.push("");
-      arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${section.folder}__${block.type}" }>;`);
+      arr.push(
+        `export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${section.folder.replace(/^_*/gi, "")}__${
+          block.type
+        }" }>;`
+      );
     } else {
       arr.push("");
       arr.push(`export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
@@ -265,9 +269,9 @@ export const sectionToTypes = (section, key) => {
         }
       } else if (block.theme_block) {
         if (section.blocks?.length - 1 === i) {
-          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder}__${block.type}" }>;`);
+          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder.replace(/^_*/gi, "")}__${block.type}" }>;`);
         } else {
-          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder}__${block.type}" }>`);
+          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder.replace(/^_*/gi, "")}__${block.type}" }>`);
         }
       } else {
         if (section.blocks?.length - 1 === i) {

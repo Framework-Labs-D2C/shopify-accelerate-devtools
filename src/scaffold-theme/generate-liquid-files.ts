@@ -35,7 +35,9 @@ export const generateLiquidFiles = () => {
   for (const key in sectionsSchemas) {
     const schema = sectionsSchemas[key];
 
-    const sectionName = `${schema.folder}.liquid`;
+    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
+    const sectionName = `${schema_file_path}.liquid`;
     const sectionPath = path.join(process.cwd(), theme_path, "sections", sectionName);
 
     if (schema.disabled) {
@@ -78,8 +80,8 @@ export const generateLiquidFiles = () => {
           folder: schema.folder,
         };
 
-        const blockName = `${schema.folder}.${blockSchema.type}.liquid`;
-        const blockPath = path.join(process.cwd(), theme_path, "blocks", `_${schema.folder}__${blockSchema.type}.liquid`);
+        const blockName = `${schema_file_path}.${blockSchema.type}.liquid`;
+        const blockPath = path.join(process.cwd(), theme_path, "blocks", `_${schema_file_path}__${blockSchema.type}.liquid`);
         const targetSnippet = [...snippets].find((snippet) => snippet.includes(blockName));
 
         if (targetSnippet) {
@@ -148,7 +150,7 @@ export const generateLiquidFiles = () => {
 
         blockSchema.limit = undefined;
 
-        translationArray.push(generateBlockFileSchema(blockSchema));
+        translationArray.push(generateBlockFileSchema(blockSchema, schema));
 
         if (config.ignore_blocks?.includes(blockPath.split(/[/\\]/)?.at(-1))) {
           console.log(
@@ -219,9 +221,9 @@ export const generateLiquidFiles = () => {
           for (const key in blockSchemas) {
             const schema = blockSchemas[key];
             if (schema.disabled) continue;
-            arr.push(`${match}    if block.type == "${schema.folder}"`);
+            arr.push(`${match}    if block.type == "${schema_file_path}"`);
             arr.push(
-              `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+              `${match}      render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
             );
             arr.push(`${match}    endif`);
           }
@@ -239,9 +241,9 @@ export const generateLiquidFiles = () => {
         for (const key in blockSchemas) {
           const schema = blockSchemas[key];
           if (schema.disabled) continue;
-          arr.push(`${match}  if block.type == "${schema.folder}"`);
+          arr.push(`${match}  if block.type == "${schema_file_path}"`);
           arr.push(
-            `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+            `${match}    render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
           );
           arr.push(`${match}  endif`);
         }
@@ -259,9 +261,9 @@ export const generateLiquidFiles = () => {
           for (const key in blockSchemas) {
             const schema = blockSchemas[key];
             if (schema.disabled) continue;
-            arr.push(`${match}  if block.type == "${schema.folder}"`);
+            arr.push(`${match}  if block.type == "${schema_file_path}"`);
             arr.push(
-              `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+              `${match}    render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
             );
             arr.push(`${match}  endif`);
           }
@@ -276,9 +278,9 @@ export const generateLiquidFiles = () => {
         for (const key in blockSchemas) {
           const schema = blockSchemas[key];
           if (schema.disabled) continue;
-          arr.push(`${match}if block.type == "${schema.folder}"`);
+          arr.push(`${match}if block.type == "${schema_file_path}"`);
           arr.push(
-            `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+            `${match}  render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
           );
           arr.push(`${match}endif`);
         }
@@ -305,7 +307,7 @@ export const generateLiquidFiles = () => {
 
       snippets.add(snippetPath);
 
-      translationArray = [`{%- render "${schema.folder}" -%}`];
+      translationArray = [`{%- render "${schema_file_path}" -%}`];
     }
 
     translationArray.push(generateSectionFiles(schema));
@@ -325,7 +327,9 @@ export const generateLiquidFiles = () => {
   for (const key in blockSchemas) {
     const schema = blockSchemas[key];
 
-    const sectionName = `${schema.folder}.liquid`;
+    const schema_file_path = schema.folder;
+
+    const sectionName = `${schema_file_path}.liquid`;
     const blockPath = path.join(process.cwd(), theme_path, "blocks", sectionName);
 
     if (schema.disabled) {
@@ -403,8 +407,10 @@ export const generateLiquidFiles = () => {
   for (const key in classic_blockSchemas) {
     const schema = classic_blockSchemas[key];
 
-    const sectionName = `${schema.folder}.liquid`;
-    const targetSectionName = `_blocks.${schema.folder}.liquid`;
+    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
+    const sectionName = `${schema_file_path}.liquid`;
+    const targetSectionName = `_blocks.${schema_file_path}.liquid`;
 
     if (schema.disabled) {
       const targetFile = targets.snippets.find((target) => target.split(/[\\/]/gi).at(-1) === targetSectionName);
@@ -470,8 +476,9 @@ export const generateLiquidFiles = () => {
   for (const key in cardSchemas) {
     const schema = cardSchemas[key];
 
-    const sectionName = `${schema.folder}.liquid`;
-    const targetSectionName = `_card.${schema.folder}.liquid`;
+    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+    const sectionName = `${schema_file_path}.liquid`;
+    const targetSectionName = `_card.${schema_file_path}.liquid`;
 
     if (schema.disabled) {
       const targetFile = targets.snippets.find((target) => target.split(/[\\/]/gi).at(-1) === targetSectionName);
@@ -611,10 +618,12 @@ export const generateLiquidFiles = () => {
           arr.push(`${match}  for block in section.blocks`);
           for (const key in classic_blockSchemas) {
             const schema = classic_blockSchemas[key];
+            const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
             if (schema.disabled) continue;
-            arr.push(`${match}    if block.type == "${schema.folder}"`);
+            arr.push(`${match}    if block.type == "${schema_file_path}"`);
             arr.push(
-              `${match}      render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+              `${match}      render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
             );
             arr.push(`${match}    endif`);
           }
@@ -631,10 +640,12 @@ export const generateLiquidFiles = () => {
         arr.push(`${match}for block in section.blocks`);
         for (const key in classic_blockSchemas) {
           const schema = classic_blockSchemas[key];
+          const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
           if (schema.disabled) continue;
-          arr.push(`${match}  if block.type == "${schema.folder}"`);
+          arr.push(`${match}  if block.type == "${schema_file_path}"`);
           arr.push(
-            `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+            `${match}    render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
           );
           arr.push(`${match}  endif`);
         }
@@ -651,10 +662,12 @@ export const generateLiquidFiles = () => {
           const arr = [`\n${match}{% liquid`];
           for (const key in classic_blockSchemas) {
             const schema = classic_blockSchemas[key];
+            const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
             if (schema.disabled) continue;
-            arr.push(`${match}  if block.type == "${schema.folder}"`);
+            arr.push(`${match}  if block.type == "${schema_file_path}"`);
             arr.push(
-              `${match}    render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+              `${match}    render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
             );
             arr.push(`${match}  endif`);
           }
@@ -668,10 +681,12 @@ export const generateLiquidFiles = () => {
         const arr = [`\n${match}`];
         for (const key in classic_blockSchemas) {
           const schema = classic_blockSchemas[key];
+          const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
           if (schema.disabled) continue;
-          arr.push(`${match}if block.type == "${schema.folder}"`);
+          arr.push(`${match}if block.type == "${schema_file_path}"`);
           arr.push(
-            `${match}  render "_blocks.${schema.folder}", block: block, forloop: forloop, section_type: section_type, form: form`
+            `${match}  render "_blocks.${schema_file_path}", block: block, forloop: forloop, section_type: section_type, form: form`
           );
           arr.push(`${match}endif`);
         }
@@ -1015,12 +1030,14 @@ declare global {
       const targetFile =
         sources.blocksLiquid.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName) ||
         Object.values(sources.sectionSchemas)?.find((schema) => {
+          const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
           const hasMatchingBlock = (block) => {
             if (
               "theme_block" in block &&
               block.theme_block &&
               !block.disabled &&
-              `_${schema.folder}__${block.type}.liquid` === fileName
+              `_${schema_file_path}__${block.type}.liquid` === fileName
             ) {
               return true;
             }
