@@ -2,6 +2,7 @@ import chalk from "chalk";
 import fs from "fs";
 import os from "os";
 import path from "path";
+import { readFile } from "../utils/fs";
 import toml from "toml";
 
 export const telemetry = () => {
@@ -13,15 +14,11 @@ export const telemetry = () => {
     let theme_id_prod = "";
 
     try {
-      const shopifySettings = fs.readFileSync(path.join(root, "shopify.theme.toml"), {
+      const shopifySettings = readFile(path.join(root, "shopify.theme.toml"), {
         encoding: "utf-8",
       });
       const userSettings = JSON.parse(JSON.stringify(toml.parse(shopifySettings)));
-      if (
-        typeof userSettings === "object" &&
-        "environments" in userSettings &&
-        "development" in userSettings.environments
-      ) {
+      if (typeof userSettings === "object" && "environments" in userSettings && "development" in userSettings.environments) {
         theme_id = userSettings.environments.development.theme;
         shop_url = userSettings.environments.development.store;
         theme_id_prod = userSettings.environments.production.theme;

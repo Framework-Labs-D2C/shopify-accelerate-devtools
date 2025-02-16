@@ -2,7 +2,7 @@ import chalk from "chalk";
 import fs from "fs";
 import path from "path";
 import { config, root_dir } from "../../shopify-accelerate";
-import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
+import { deleteFile, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { isObject } from "../utils/is-object";
 import { toLocaleFriendlySnakeCase } from "../utils/to-snake-case";
 import { generateBlockFileSchema } from "./generate-block-files";
@@ -102,7 +102,7 @@ export const generateLiquidFiles = () => {
 
         const translationArray = [];
 
-        const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, blockName), {
+        const rawContent = readFile(path.join(folders.sections, schema.folder, blockName), {
           encoding: "utf-8",
         });
 
@@ -169,7 +169,7 @@ export const generateLiquidFiles = () => {
 
     let translationArray = [];
 
-    const rawContent = fs.readFileSync(path.join(folders.sections, schema.folder, sectionName), {
+    const rawContent = readFile(path.join(folders.sections, schema.folder, sectionName), {
       encoding: "utf-8",
     });
 
@@ -342,9 +342,120 @@ export const generateLiquidFiles = () => {
       continue;
     }
 
+    const createBlockSchemas = (block) => {
+      if (block.disabled || "theme_block" in block) {
+        const targetFile = targets.snippets.find(
+          (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${block.type}.liquid`
+        );
+        if (targetFile) {
+          config.targets.snippets = config.targets.snippets.filter((target) => target !== targetFile);
+          deleteFile(path.join(root_dir, targetFile));
+        }
+      }
+
+      if ("theme_block" in block && block.theme_block) {
+        const blockSchema = {
+          ...block,
+          presets: "presets" in block ? block.presets : [{ name: block.name }],
+          folder: schema.folder,
+        };
+
+        const blockName = `${schema_file_path}.${blockSchema.type}.liquid`;
+        const blockPath = path.join(
+          process.cwd(),
+          theme_path,
+          "blocks",
+          `_${schema_file_path}__${blockSchema.type}.liquid`.replace(/^_+/gi, "_")
+        );
+
+        const targetSnippet = [...snippets].find((snippet) => snippet.includes(blockName));
+
+        if (targetSnippet) {
+          snippets.delete(targetSnippet);
+        }
+
+        block.blocks?.forEach(createBlockSchemas);
+
+        if (blockSchema.disabled) {
+          const targetFile = targets.blocks.find((target) => target.split(/[\\/]/gi).at(-1) === `_${blockName}`);
+          if (targetFile) {
+            config.targets.blocks = config.targets.blocks.filter((target) => target !== targetFile);
+            deleteFile(path.join(root_dir, targetFile));
+          }
+
+          return;
+        }
+
+        const translationArray = [];
+
+        const rawContent = readFile(path.join(folders.blocks, schema.folder, blockName), {
+          encoding: "utf-8",
+        });
+
+        if (rawContent) {
+          const translatedContent = rawContent.replace(/<t(\s+[^>]*)*>((.|\r|\n)*?)<\/t>/gi, (str, group1, group2) => {
+            const group = toLocaleFriendlySnakeCase(schema.folder);
+            const content = toLocaleFriendlySnakeCase(group2?.split(" ")?.slice(0, 2)?.join("_") ?? "").trim();
+            const backupContent = toLocaleFriendlySnakeCase(group2).trim();
+            const id = toLocaleFriendlySnakeCase(group1?.replace(/id="(.*)"/gi, "$1") ?? "").trim();
+
+            if (!(group in translations)) {
+              translations[group] = {};
+            }
+
+            if (id && !(id in translations[group])) {
+              translations[group][id] = group2;
+              return `{{ "${group}.${id}" | t }}`;
+            }
+
+            if (!(content in translations[group])) {
+              translations[group][content] = group2;
+              return `{{ "${group}.${content}" | t }}`;
+            }
+
+            if (translations[group][content] !== group2) {
+              if (!(backupContent in translations[group])) {
+                translations[group][backupContent] = group2;
+                return `{{ "${group}.${backupContent}" | t }}`;
+              }
+              if (translations[group][backupContent] !== group2) {
+                translations[group][`${content}_2`] = group2;
+                return `{{ "${group}.${content}_2" | t }}`;
+              }
+            }
+
+            if (translations[group][content] === group2) {
+              return `{{ "${group}.${content}" | t }}`;
+            }
+
+            return group2;
+          });
+
+          translationArray.push(translatedContent);
+        }
+
+        blockSchema.limit = undefined;
+
+        translationArray.push(generateBlockFileSchema(blockSchema, schema));
+
+        if (config.ignore_blocks?.includes(blockPath.split(/[/\\]/)?.at(-1))) {
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+              `Ignored: ${blockPath.replace(process.cwd(), "")}`
+            )}`
+          );
+          writeOnlyNew(blockPath, translationArray.join("\n"));
+        } else {
+          writeCompareFile(blockPath, translationArray.join("\n"));
+        }
+      }
+    };
+
+    schema?.blocks?.forEach(createBlockSchemas);
+
     const translationArray = [];
 
-    const rawContent = fs.readFileSync(path.join(folders.blocks, schema.folder, sectionName), {
+    const rawContent = readFile(path.join(folders.blocks, schema.folder, sectionName), {
       encoding: "utf-8",
     });
 
@@ -424,7 +535,7 @@ export const generateLiquidFiles = () => {
 
     const translationArray = [];
 
-    const rawContent = fs.readFileSync(path.join(folders.classic_blocks, schema.folder, sectionName), {
+    const rawContent = readFile(path.join(folders.classic_blocks, schema.folder, sectionName), {
       encoding: "utf-8",
     });
 
@@ -492,7 +603,7 @@ export const generateLiquidFiles = () => {
 
     const translationArray = [];
 
-    const rawContent = fs.readFileSync(path.join(folders.cards, schema.folder, sectionName), {
+    const rawContent = readFile(path.join(folders.cards, schema.folder, sectionName), {
       encoding: "utf-8",
     });
 
@@ -568,7 +679,7 @@ export const generateLiquidFiles = () => {
 
     const returnArr = [];
 
-    const rawContent = fs.readFileSync(snippet, {
+    const rawContent = readFile(snippet, {
       encoding: "utf-8",
     });
 
@@ -717,7 +828,7 @@ export const generateLiquidFiles = () => {
 
     const returnArr = [];
 
-    const rawContent = fs.readFileSync(giftCard, {
+    const rawContent = readFile(giftCard, {
       encoding: "utf-8",
     });
 
@@ -771,7 +882,7 @@ export const generateLiquidFiles = () => {
 
     const returnArr = [];
 
-    const rawContent = fs.readFileSync(layout, {
+    const rawContent = readFile(layout, {
       encoding: "utf-8",
     });
 
@@ -1044,7 +1155,24 @@ declare global {
             return block?.blocks?.some(hasMatchingBlock) || false;
           };
           return schema.blocks?.some(hasMatchingBlock);
+        }) ||
+        Object.values(sources.blockSchemas)?.find((schema) => {
+          const schema_file_path = schema.folder.replace(/^_*/gi, "");
+
+          const hasMatchingBlock = (block) => {
+            if (
+              "theme_block" in block &&
+              block.theme_block &&
+              !block.disabled &&
+              `_${schema_file_path}__${block.type}.liquid` === fileName
+            ) {
+              return true;
+            }
+            return block?.blocks?.some(hasMatchingBlock) || false;
+          };
+          return schema.blocks?.some(hasMatchingBlock);
         });
+
       if (!targetFile) {
         deleteFile(path.join(process.cwd(), file));
       }

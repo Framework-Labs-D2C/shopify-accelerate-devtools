@@ -1,14 +1,14 @@
 import fs from "fs";
 import path from "path";
 import { config } from "../../shopify-accelerate";
-import { getAllDirectories, writeCompareFile, writeOnlyNew } from "../utils/fs";
+import { getAllDirectories, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { toCamelCase } from "../utils/to-camel-case";
 import { capitalize, toPascalCase } from "../utils/to-pascal-case";
 
 export const generateSchemaFiles = (dirName: string) => {
   const fileName = dirName.split(/[/\\]/gi).at(-1)?.replace(/^_*/gi, "");
   const exists = fs.existsSync(path.join(dirName, "schema.ts"));
-  const schemaContent = exists ? fs.readFileSync(path.join(dirName, "schema.ts"), { encoding: "utf-8" }) : "";
+  const schemaContent = exists ? readFile(path.join(dirName, "schema.ts"), { encoding: "utf-8" }) : "";
   const isEmpty = !schemaContent?.includes(`export const ${toCamelCase(fileName)}:`);
 
   if (exists && !isEmpty) {

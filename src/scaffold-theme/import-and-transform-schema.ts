@@ -4,7 +4,7 @@ import chalk from "chalk";
 import { exec } from "child_process";
 import fs from "fs";
 import importFresh from "import-fresh";
-import { writeCompareFile } from "../utils/fs";
+import { readFile, writeCompareFile } from "../utils/fs";
 import { delay } from "../utils/delay";
 
 // Recursive function to transform `blocks` and remove `block_order`
@@ -65,7 +65,7 @@ export const importAndTransformSchema = async (file: any) => {
           `/${file.split(/[\\/]/).at(-2)}/schema.ts Block Schema Transformation Started`
         )}`
       );
-      const data = fs.readFileSync(file, { encoding: "utf-8" });
+      const data = readFile(file, { encoding: "utf-8" });
 
       const splitter = data.match(/export\s+const\s+[^\n]*?\n/gi).at(0);
 

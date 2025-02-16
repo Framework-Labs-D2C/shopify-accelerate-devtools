@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import fs from "fs";
 import path from "path";
+import { readFile } from "../utils/fs";
 import { toSnakeCase } from "../utils/to-snake-case";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
@@ -51,7 +52,7 @@ export const generateSchemaVariables = () => {
     }
 
     if (fs.existsSync(sectionLiquid)) {
-      const sectionContent = fs.readFileSync(sectionLiquid, {
+      const sectionContent = readFile(sectionLiquid, {
         encoding: "utf-8",
       });
 
@@ -130,7 +131,7 @@ export const generateSchemaVariables = () => {
       }
 
       if (fs.existsSync(blockPath)) {
-        const blockContent = fs.readFileSync(blockPath, {
+        const blockContent = readFile(blockPath, {
           encoding: "utf-8",
         });
         if (blockContent.includes(start) && blockContent.includes(end)) {
@@ -210,7 +211,7 @@ export const generateSchemaVariables = () => {
     }
 
     if (fs.existsSync(itemLiquid)) {
-      const itemContent = fs.readFileSync(itemLiquid, {
+      const itemContent = readFile(itemLiquid, {
         encoding: "utf-8",
       });
 
@@ -242,6 +243,89 @@ export const generateSchemaVariables = () => {
         fs.writeFileSync(itemLiquid, newContent);
       }
     }
+
+    const generateSectionBlocks = (block) => {
+      if (block.type === "@app") return;
+      if (block.type === "@theme") return;
+      if (!block.name) return;
+      // @ts-ignore
+      if (Array.isArray(schema.generate_block_files) && !schema.generate_block_files?.includes(block.type)) {
+        return;
+      }
+
+      const blockPath = path.join(folders.blocks, schema.folder, `${schema_file_path}.${block.type}.liquid`);
+
+      const blockVariables = [start];
+      blockVariables.push("{%- liquid");
+
+      if ("theme_block" in block && block.theme_block) {
+        blockVariables.push(`  assign block_type = "${`_${schema_file_path}`.replace(/^_+/gi, "_")}__${block.type}"`);
+      } else {
+        blockVariables.push(`  assign block_type = "${block.type}"`);
+      }
+
+      blockVariables.push(`  assign section_type = "${schema_file_path}"`);
+      block?.settings?.forEach((setting) => {
+        if (setting.type === "header" || setting.type === "paragraph") return;
+        blockVariables.push(
+          `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
+        );
+      });
+
+      blockVariables.push("-%}");
+      blockVariables.push(end);
+      blockVariables.push("");
+      blockVariables.push("");
+
+      const variableContent = block?.settings && block?.settings?.length ? blockVariables.join("\n") : "";
+
+      if (!fs.existsSync(blockPath)) {
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
+            `Created: ${blockPath.replace(process.cwd(), "")}`
+          )}`
+        );
+        fs.writeFileSync(blockPath, block?.settings ? blockVariables.join("\n") : "");
+        config.sources.snippets.add(blockPath);
+      }
+
+      if (fs.existsSync(blockPath)) {
+        const blockContent = readFile(blockPath, {
+          encoding: "utf-8",
+        });
+        if (blockContent.includes(start) && blockContent.includes(end)) {
+          const newContent = blockContent.replace(
+            // eslint-disable-next-line max-len
+            /({%- comment -%} Auto Generated Variables start {%- endcomment -%})(.|\n|\r)*({%- comment -%} Auto Generated Variables end {%- endcomment -%})(\r|\n|\s)*/gim,
+            variableContent
+          );
+
+          if (blockContent !== newContent) {
+            console.log(
+              `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+                `Updated: ${blockPath.replace(process.cwd(), "")}`
+              )}`
+            );
+            fs.writeFileSync(blockPath, newContent);
+          }
+        }
+
+        if (!blockContent.includes(start) && !blockContent.includes(end) && variableContent) {
+          const newContent = variableContent + blockContent;
+
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
+              `Updated: ${blockPath.replace(process.cwd(), "")}`
+            )}`
+          );
+          fs.writeFileSync(blockPath, newContent);
+        }
+      }
+
+      block.blocks?.forEach(generateSectionBlocks);
+    };
+
+    schema.blocks?.forEach(generateSectionBlocks);
 
     /*schema.blocks?.forEach((block) => {
       if (block.type === "@app") return;
@@ -279,7 +363,7 @@ export const generateSchemaVariables = () => {
       }
 
       if (fs.existsSync(blockPath)) {
-        const blockContent = fs.readFileSync(blockPath, {
+        const blockContent = readFile(blockPath, {
           encoding: "utf-8",
         });
         if (blockContent.includes(start) && blockContent.includes(end)) {
@@ -356,7 +440,7 @@ export const generateSchemaVariables = () => {
     }
 
     if (fs.existsSync(itemLiquid)) {
-      const itemContent = fs.readFileSync(itemLiquid, {
+      const itemContent = readFile(itemLiquid, {
         encoding: "utf-8",
       });
 
@@ -436,7 +520,7 @@ export const generateSchemaVariables = () => {
     }
 
     if (fs.existsSync(liquidFilePath)) {
-      const cardContent = fs.readFileSync(liquidFilePath, {
+      const cardContent = readFile(liquidFilePath, {
         encoding: "utf-8",
       });
 

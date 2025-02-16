@@ -1,8 +1,7 @@
 import chalk from "chalk";
-import fs from "fs";
 import path from "path";
-import { config, root_dir } from "../../shopify-accelerate";
-import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
+import { config } from "../../shopify-accelerate";
+import { deleteFile, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const generateAssetFiles = () => {
   const { theme_path, sources, targets, delete_external_assets, ignore_assets } = config;
@@ -12,7 +11,7 @@ export const generateAssetFiles = () => {
     const fileName = file.split(/[\\/]/gi).at(-1);
     const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
 
-    const rawContent = fs.readFileSync(file, { encoding: "utf-8" });
+    const rawContent = readFile(file, { encoding: "utf-8" });
     if (ignore_assets?.includes(targetPath.split(/[/\\]/)?.at(-1))) {
       console.log(
         `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(

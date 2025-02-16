@@ -17,7 +17,7 @@ import { generateSectionsTypes } from "../scaffold-theme/generate-section-types"
 import { generateSettingTypes } from "../scaffold-theme/generate-setting-types";
 import { getSchemaSources, getSources, getTargets, isAsset, isBlockTs, isLiquid, isSectionTs, isTypeScriptSchema } from "../scaffold-theme/parse-files";
 import { parseLocales } from "../scaffold-theme/parse-locales";
-import { deleteFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
+import { deleteFile, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 
 export const watchTheme = () => {
   const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
@@ -116,7 +116,7 @@ export const watchTheme = () => {
       if (isAsset(name) && !/\.ts$/gi.test(name)) {
         const fileName = name.split(/[\\/]/gi).at(-1);
         const targetPath = path.join(process.cwd(), theme_path, "assets", fileName);
-        const rawContent = fs.readFileSync(name, { encoding: "utf-8" });
+        const rawContent = readFile(name, { encoding: "utf-8" });
 
         if (ignore_assets?.includes(targetPath.split(/[/\\]/)?.at(-1))) {
           console.log(

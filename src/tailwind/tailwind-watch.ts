@@ -2,7 +2,7 @@ import child_process from "child_process";
 import fs from "fs";
 import path from "path";
 import { config, root_dir } from "../../shopify-accelerate";
-import { deleteFile } from "../utils/fs";
+import { deleteFile, readFile } from "../utils/fs";
 const watch = require("node-watch");
 
 export const runTailwindCSSWatcher = () => {
@@ -25,15 +25,9 @@ export const runTailwindCSSWatcher = () => {
     [
       "tailwindcss",
       "--config",
-      /*hasConfig ? "tailwind.config.js" :*/ path.join(
-        package_root,
-        `src/tailwind/tailwind.config.js`
-      ),
+      /*hasConfig ? "tailwind.config.js" :*/ path.join(package_root, `src/tailwind/tailwind.config.js`),
       "--postcss",
-      /*hasPostCss ? "postcss.config.js" : */ path.join(
-        package_root,
-        `src/tailwind/postcss.config.js`
-      ),
+      /*hasPostCss ? "postcss.config.js" : */ path.join(package_root, `src/tailwind/postcss.config.js`),
       "-i",
       path.join(root_dir, `assets`, `_tailwind.css`),
       "-o",
@@ -56,15 +50,9 @@ export const runTailwindCSSWatcher = () => {
     [
       "tailwindcss",
       "--config",
-      /*hasConfig ? "tailwind.config.js" :*/ path.join(
-        package_root,
-        `src/tailwind/tailwind.config.js`
-      ),
+      /*hasConfig ? "tailwind.config.js" :*/ path.join(package_root, `src/tailwind/tailwind.config.js`),
       "--postcss",
-      /*hasPostCss ? "postcss.config.js" :*/ path.join(
-        package_root,
-        `src/tailwind/postcss.config.js`
-      ),
+      /*hasPostCss ? "postcss.config.js" :*/ path.join(package_root, `src/tailwind/postcss.config.js`),
       "-i",
       path.join(root_dir, `assets`, `_reset.css`),
       "-o",
@@ -83,7 +71,7 @@ export const runTailwindCSSWatcher = () => {
       !fs.existsSync(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"))
     )
       return;
-    const file = fs.readFileSync(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"), {
+    const file = readFile(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"), {
       encoding: "utf-8",
     });
 
@@ -115,12 +103,7 @@ export const runTailwindCSSWatcher = () => {
       });
 
       if (writeOut) {
-        const finalClassName = line
-          .replace(/\./g, "")
-          .replace(/{/g, "")
-          .replace(/}/g, "")
-          .replace(/\\/g, "")
-          .trim();
+        const finalClassName = line.replace(/\./g, "").replace(/{/g, "").replace(/}/g, "").replace(/\\/g, "").trim();
         if (finalClassName !== "") {
           classesInOrder.push(`${finalClassName}`);
         }

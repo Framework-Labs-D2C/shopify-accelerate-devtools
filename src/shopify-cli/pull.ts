@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
+import { readFile } from "../utils/fs";
 import { config } from "../../shopify-accelerate";
 import { buildTheme } from "../scaffold-theme/build-theme";
 import { generateConfigFiles } from "../scaffold-theme/generate-config-files";
@@ -27,7 +28,7 @@ export const shopifyCliPull = async () => {
         const workspace = path.join(process.cwd(), ".idea/workspace.xml");
         if (fs.existsSync(workspace)) {
           if (fs.existsSync(vcsPath)) {
-            const vcsContent = fs.readFileSync(vcsPath, { encoding: "utf-8" });
+            const vcsContent = readFile(vcsPath, { encoding: "utf-8" });
             if (!vcsContent.includes(`<mapping directory="$PROJECT_DIR$/${cleanThemePath}" vcs="Git" />`)) {
               const newVcsContent = vcsContent.replace(
                 "</component>",

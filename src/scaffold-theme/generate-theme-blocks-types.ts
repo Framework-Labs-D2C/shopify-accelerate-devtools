@@ -15,8 +15,18 @@ export const generateThemeBlocksTypes = () => {
   const imports = getImports(blocks, sections);
   let sectionUnionType = "export type ThemeBlocks =";
   let typeContent = "";
+
   for (const key in blocks) {
-    const schema = blocks[key] as ShopifyBlock;
+    const schema = blocks[key];
+
+    schema.blocks?.forEach((block) => {
+      if ("theme_block" in block && block.theme_block) {
+        const newBlock = { ...block, folder: `_${schema.folder?.replace(/^_*/gi, "")}__${block.type}` };
+
+        typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
+        sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
+      }
+    });
 
     typeContent += `${blockToTypes(schema, key)}\n`;
     sectionUnionType += `\n  | ${capitalize(key)}Block`;
@@ -128,17 +138,27 @@ export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections:
   return ``;
 };
 
-export const blockToTypes = (block, key, isSectionBlock = false) => {
-  const filename = block.folder;
+export const blockToTypes = (blockSchema, key, isSectionBlock = false) => {
+  const filename = blockSchema.folder;
 
   const arr = [];
-  const settings: ShopifySettingsInput[] = block.settings
+  const settings: ShopifySettingsInput[] = blockSchema.settings
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
     .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
+  const hasNonThemeBlocks = blockSchema.blocks?.filter(
+    (b) => b.type !== "@app" && b.type !== "@theme" && b.type !== "@classic-theme"
+  )?.length;
+  const hasThemeBlocks = blockSchema.blocks?.some((block) => block.type === "@theme");
 
   arr.push(`export type ${capitalize(key)}Block = {`);
-  if (block.blocks?.some((block) => block.type === "@theme")) {
+  if (hasNonThemeBlocks && !hasThemeBlocks) {
+    arr.push(`  blocks: ${capitalize(key)}Blocks[];`);
+  }
+  if (!hasNonThemeBlocks && hasThemeBlocks) {
     arr.push(`  blocks: ThemeBlocks[];`);
+  }
+  if (!hasNonThemeBlocks && !hasThemeBlocks) {
+    arr.push(`  blocks${config.headless ? "?" : ""}: never[];`);
   }
   arr.push(`  id${config.headless ? "?" : ""}: string;`);
   if (isSectionBlock) {
@@ -175,6 +195,52 @@ export const blockToTypes = (block, key, isSectionBlock = false) => {
   arr.push(`  type: "${filename}";`);
   arr.push(`};`);
 
+  if (blockSchema.blocks?.length && blockSchema.blocks?.length === 1) {
+    const block = blockSchema.blocks[0];
+    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+    } else if (!block.name && block.type) {
+      arr.push("");
+      arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
+    } else if (block.theme_block) {
+      arr.push("");
+      arr.push(
+        `export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${blockSchema.folder.replace(/^_*/gi, "")}__${
+          block.type
+        }" }>;`
+      );
+    } else {
+      arr.push("");
+      arr.push(`export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
+    }
+  }
+
+  if (blockSchema.blocks?.length && blockSchema.blocks?.length > 1) {
+    arr.push("");
+    arr.push(`export type ${capitalize(key)}Blocks =`);
+
+    blockSchema.blocks?.forEach((block, i) => {
+      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+      } else if (!block.name && block.type) {
+        if (blockSchema.blocks?.length - 1 === i) {
+          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
+        } else {
+          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>`);
+        }
+      } else if (block.theme_block) {
+        if (blockSchema.blocks?.length - 1 === i) {
+          arr.push(`  | Extract<ThemeBlocks, { type: "_${blockSchema.folder.replace(/^_*/gi, "")}__${block.type}" }>;`);
+        } else {
+          arr.push(`  | Extract<ThemeBlocks, { type: "_${blockSchema.folder.replace(/^_*/gi, "")}__${block.type}" }>`);
+        }
+      } else {
+        if (blockSchema.blocks?.length - 1 === i) {
+          arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
+        } else {
+          arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))}`);
+        }
+      }
+    });
+  }
   arr.push("");
   return arr.join("\n");
 };
