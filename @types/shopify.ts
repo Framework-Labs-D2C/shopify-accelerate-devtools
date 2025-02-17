@@ -3,6 +3,43 @@ import { _Article_metafields, _Blog_metafields, _Collection_metafields, _Page_me
 import { Sections } from "./sections";
 import { SettingsSchema } from "./settings";
 
+type BlockChars =
+  | "a"
+  | "b"
+  | "c"
+  | "d"
+  | "e"
+  | "f"
+  | "g"
+  | "h"
+  | "i"
+  | "j"
+  | "k"
+  | "l"
+  | "m"
+  | "n"
+  | "o"
+  | "p"
+  | "q"
+  | "r"
+  | "s"
+  | "t"
+  | "u"
+  | "v"
+  | "w"
+  | "x"
+  | "y"
+  | "z"
+  | "_";
+
+type AnyCharExceptDash = Exclude<BlockChars, "-">;
+
+type NoDashString<T extends string> = T extends `${infer First}${infer Rest}`
+  ? First extends AnyCharExceptDash
+    ? NoDashString<Rest>
+    : never
+  : T;
+
 export type ShopifyHeader = {
   content: string;
   type: "header";
@@ -466,7 +503,7 @@ export type HeadlessSettingsInput =
 type ExtractSettings<T extends ShopifySection | ShopifySectionBlock> = Extract<
   /* @ts-ignore*/
   T["settings"][number],
-  { id: string; type: string }
+  { id: string; type: NoDashString<string> }
 >;
 
 type ExtractSetting<T extends ShopifySection | ShopifySectionBlock, ID extends string> = Extract<ExtractSettings<T>, { id: ID }>;
@@ -624,7 +661,7 @@ export type ShopifySectionBlock =
       disabled?: boolean;
       hide_development_presets?: boolean;
       theme_block?: never;
-      type: string;
+      type: NoDashString<string>;
       limit?: number;
       settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
     }
@@ -638,7 +675,7 @@ export type ShopifySectionBlock =
       hide_development_presets?: boolean;
     }
   | {
-      type: "@classic-theme";
+      type: "@classic_theme";
       disabled?: boolean;
       hide_development_presets?: boolean;
       limit?: never;
@@ -654,13 +691,13 @@ export type ShopifySectionGeneratedThemeBlock =
       theme_block: true;
       disabled?: boolean;
       tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
-      type: string;
+      type: NoDashString<string>;
       hide_development_presets?: boolean;
       settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
       blocks?: (
         | ShopifySectionGeneratedThemeBlock
         | {
-            type: "@section-blocks";
+            type: "@section_blocks";
             disabled?: boolean;
             limit?: never;
             name?: never;
@@ -687,7 +724,7 @@ export type HeadlessSectionBlock =
   | {
       name: string;
       disabled?: boolean;
-      type: string;
+      type: NoDashString<string>;
       limit?: number;
       settings?: (HeadlessSettingsInput | ShopifyHeader | ShopifyParagraph)[];
     }

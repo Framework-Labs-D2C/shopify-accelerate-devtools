@@ -1,6 +1,5 @@
 import chalk from "chalk";
-import child_process, { exec } from "child_process";
-import fs from "fs";
+import child_process from "child_process";
 
 import json2toml from "json2toml";
 import path from "path";

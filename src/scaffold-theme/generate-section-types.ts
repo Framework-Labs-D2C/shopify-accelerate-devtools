@@ -100,12 +100,12 @@ export const getImports = (sections: { [T: string]: ShopifySection }) => {
         (block) =>
           block.type === "@theme" ||
           `theme_block` in block ||
-          (!block.name && block.type && block.type !== "@app" && block.type !== "@theme" && block.type !== "@classic-theme")
+          (!block.name && block.type && block.type !== "@app" && block.type !== "@theme" && block.type !== "@classic_theme")
       )
     ) {
       themeBlocks = true;
     }
-    if (schema.blocks?.some((block) => block.type === "@classic-theme")) {
+    if (schema.blocks?.some((block) => block.type === "@classic_theme")) {
       classicThemeBlocks = true;
     }
     schema.blocks?.forEach((block) => {
@@ -135,10 +135,10 @@ export const sectionToTypes = (section, key) => {
   const settings: ShopifySettingsInput[] = section.settings
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
     .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
-  const hasNonThemeBlocks = section.blocks?.filter((b) => b.type !== "@app" && b.type !== "@theme" && b.type !== "@classic-theme")
+  const hasNonThemeBlocks = section.blocks?.filter((b) => b.type !== "@app" && b.type !== "@theme" && b.type !== "@classic_theme")
     ?.length;
   const hasThemeBlocks = section.blocks?.some((block) => block.type === "@theme");
-  const hasClassicThemeBlocks = section.blocks?.some((block) => block.type === "@classic-theme");
+  const hasClassicThemeBlocks = section.blocks?.some((block) => block.type === "@classic_theme");
 
   arr.push(`export type ${capitalize(key)}Section = {`);
   if (hasNonThemeBlocks && !hasThemeBlocks && !hasClassicThemeBlocks) {
@@ -238,7 +238,7 @@ export const sectionToTypes = (section, key) => {
 
   if (section.blocks?.length && section.blocks?.length === 1) {
     const block = section.blocks[0];
-    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
     } else if (!block.name && block.type) {
       arr.push("");
       arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
@@ -260,7 +260,7 @@ export const sectionToTypes = (section, key) => {
     arr.push(`export type ${capitalize(key)}Blocks =`);
 
     section.blocks?.forEach((block, i) => {
-      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
       } else if (!block.name && block.type) {
         if (section.blocks?.length - 1 === i) {
           arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);

@@ -117,7 +117,7 @@ export const generateBlockFileSchema = (
           return acc;
         }
 
-        if (block.type === "@section-blocks") {
+        if (block.type === "@section_blocks") {
           section.blocks.forEach((sectionBlock) => {
             if (sectionBlock.type && !sectionBlock.name) {
               acc.push({ type: sectionBlock.type });

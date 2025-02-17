@@ -1079,7 +1079,7 @@ declare global {
   });
 
   writeCompareFile(
-    path.join(process.cwd(), theme_path, "snippets", "_layout.dynamic-imports.liquid"),
+    path.join(process.cwd(), theme_path, "snippets", "_layout.dynamic_imports.liquid"),
     dynamicJsImports.join("\n")
   );
 
@@ -1093,7 +1093,7 @@ declare global {
       );
       if (
         fileName.includes("_layout.translations.liquid") ||
-        fileName.includes("_layout.dynamic-imports.liquid") ||
+        fileName.includes("_layout.dynamic_imports.liquid") ||
         /^replo/gi.test(fileName) ||
         /^pandectes/gi.test(fileName) ||
         /^locksmith/gi.test(fileName) ||

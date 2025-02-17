@@ -475,7 +475,7 @@ export const getTargets = () => {
     if (/[\\/]templates[\\/]gift_card\.liquid$/gi.test(name)) {
       giftCards.push(name);
     }
-    if (/[\\/]sections[\\/][\\/]*\.json$/gi.test(name)) {
+    if (/[\\/]sections[\\/][^\\/]*\.json$/gi.test(name)) {
       sectionGroups.push(name);
     }
     if (/[\\/]config[\\/][^\\/]*\.json$/gi.test(name)) {

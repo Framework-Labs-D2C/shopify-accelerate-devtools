@@ -2,17 +2,19 @@
 
 import fs from "fs";
 import path from "path";
-import { generateCardsTypes } from "./src/scaffold-theme/generate-card-types";
-import { generateClassicBlocksTypes } from "./src/scaffold-theme/generate-classic-blocks-types";
+import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
+import { getTargetsAndValidateTemplates } from "./src/scaffold-theme/validate-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
-import { generateThemeBlocksTypes } from "./src/scaffold-theme/generate-theme-blocks-types";
+import { generateCardsTypes } from "./src/scaffold-theme/generate-card-types";
+import { generateClassicBlocksTypes } from "./src/scaffold-theme/generate-classic-blocks-types";
 import { generateConfigFiles } from "./src/scaffold-theme/generate-config-files";
 import { generateSectionsTypes } from "./src/scaffold-theme/generate-section-types";
 import { generateSettingTypes } from "./src/scaffold-theme/generate-setting-types";
+import { generateThemeBlocksTypes } from "./src/scaffold-theme/generate-theme-blocks-types";
 import { getSchemaSources, getSources } from "./src/scaffold-theme/parse-files";
 import { shopifyCliPull } from "./src/shopify-cli/pull";
 import { runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
@@ -112,7 +114,7 @@ export type GlobalsState = {
     sectionGroups: string[];
     templates: string[];
     customerTemplates: string[];
-    settingsFile: string[];
+    settingsFile: string;
     locale_duplicates: { [T: string]: string[] };
     settingsSchema: ShopifySettings;
     sectionSchemas: { [T: string]: ShopifySection & { path: string; folder: string } };
@@ -188,7 +190,7 @@ export const config: GlobalsState = {
     sectionGroups: [],
     templates: [],
     customerTemplates: [],
-    settingsFile: [],
+    settingsFile: undefined,
     locale_duplicates: {},
     settingsSchema: null,
     sectionSchemas: {},
@@ -287,8 +289,8 @@ program
   });
 
 program
-  .command("dev")
-  .description("Shopify Theme Development")
+  .command("transform")
+  .description("Transform a local development environment from an existing Shopify theme")
   // .argument("<string>", "string to split")
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .option(
@@ -304,27 +306,32 @@ program
     await validateCliOptions(options);
     await buildTheme();
     generateConfigFiles();
+    await shopifyCliPull();
+  });
+
+program
+  .command("dev")
+  .description("Shopify Theme Development")
+  // .argument("<string>", "string to split")
+  .option("-e, --environment <environment_name>", "Development environment name", "development")
+  .option(
+    "-s, --store <store_id>",
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`"
+  )
+  .option(
+    "-t, --theme <theme_id>",
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
+  )
+  .action(async (options) => {
+    config.options = options;
+    await validateCliOptions(options);
+    await getTargetsAndValidateTemplates();
+    await fixNamingConventions(true);
+    await buildTheme();
+    generateConfigFiles();
     runEsbuild();
     runTailwindCSSWatcher();
     watchTheme();
-
-    process.on("uncaughtException", (error) => {
-      console.error("Global uncaughtException error caught");
-      console.error(error.message);
-      console.log("Killing server with restart...");
-      // process.exit(0);
-    });
-
-    process.on("exit", () => {
-      console.log("on exit detected");
-      const exec = require("child_process").exec;
-      // const command = "node app.js";
-      // exec(command, (error, stdout, stderr) => {
-      //   console.log(`error:  ${error.message}`);
-      //   console.log(`stdout: ${stdout}`);
-      //   console.log(`stderr: ${stderr}`);
-      // });
-    });
   });
 
 program

@@ -108,6 +108,9 @@ importers:
       '@types/node':
         specifier: ^20.11.19
         version: 20.11.19
+      '@types/prompts':
+        specifier: ^2.4.9
+        version: 2.4.9
       '@types/react':
         specifier: ^18.2.57
         version: 18.2.57
@@ -547,6 +550,9 @@ packages:
 
   '@types/prettier@2.7.2':
     resolution: {integrity: sha512-KufADq8uQqo1pYKVIYzfKbJfBAc0sOeXqGbFaSpv8MRmC/zXgowNZmFcbngndGk922QDmOASEXUZCaY48gs4cg==}
+
+  '@types/prompts@2.4.9':
+    resolution: {integrity: sha512-qTxFi6Buiu8+50/+3DGIWLHM6QuWsEKugJnnP6iv2Mc4ncxE4A/OJkjuVOA+5X0X1S/nq5VJRa8Lu+nwcvbrKA==}
 
   '@types/prop-types@15.7.5':
     resolution: {integrity: sha512-JCB8C6SnDoQf0cNycqd/35A7MjcnK+ZTqE7judS6o7utxUCg6imJg3QK2qzHKszlTjcj2cn+NwMB2i96ubpj7w==}
@@ -3407,6 +3413,11 @@ snapshots:
   '@types/normalize-package-data@2.4.1': {}
 
   '@types/prettier@2.7.2': {}
+
+  '@types/prompts@2.4.9':
+    dependencies:
+      '@types/node': 20.11.19
+      kleur: 3.0.3
 
   '@types/prop-types@15.7.5': {}
 

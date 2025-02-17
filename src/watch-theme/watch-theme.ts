@@ -3,6 +3,7 @@ import fs from "fs";
 import watch from "node-watch";
 import os from "os";
 import path from "path";
+import { getTargetsAndValidateTemplates } from "../scaffold-theme/validate-templates";
 import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
 import { delay } from "../utils/delay";
 import { generateSchemaFiles } from "../scaffold-theme/generate-schema-files";
@@ -129,7 +130,6 @@ export const watchTheme = () => {
           writeCompareFile(targetPath, rawContent);
         }
       }
-
       if (isLiquid(name) || isSectionTs(name) || isBlockTs(name)) {
         getTargets();
         await getSources();
@@ -151,6 +151,32 @@ export const watchTheme = () => {
       );
     }
   });
+
+  watch(
+    [path.join(theme_path, "sections"), path.join(theme_path, "config"), path.join(theme_path, "templates")],
+    {
+      recursive: true,
+      filter: /\.json$/,
+    },
+    async (event, name) => {
+      const startTime = Date.now();
+      console.log(`edited: ${event} - ${name}`, running);
+      try {
+        if (running) return;
+        running = true;
+        await getTargetsAndValidateTemplates(true);
+
+        running = false;
+      } catch (err) {
+        console.log(
+          `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
+            `File modified: ${name.replace(process.cwd(), "")}`
+          )}`,
+          err
+        );
+      }
+    }
+  );
 
   try {
     const username = os.userInfo().username;

@@ -1,10 +1,9 @@
-import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { readFile } from "../utils/fs";
-import { toSnakeCase } from "../utils/to-snake-case";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
+import { readFile, writeCompareFile } from "../utils/fs";
+import { toSnakeCase } from "../utils/to-snake-case";
 
 export const generateSchemaVariables = () => {
   const { folders, sources } = config;
@@ -42,12 +41,8 @@ export const generateSchemaVariables = () => {
     const variableContent = schema.settings && schema.settings.length ? variables.join("\n") : "";
 
     if (!fs.existsSync(sectionLiquid)) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-          `Created: ${sectionLiquid.replace(process.cwd(), "")}`
-        )}`
-      );
-      fs.writeFileSync(sectionLiquid, schema.settings ? variables.join("\n") : "");
+      writeCompareFile(sectionLiquid, schema.settings ? variables.join("\n") : "");
+
       config.sources.sectionsLiquid = [...new Set([...config.sources.sectionsLiquid, sectionLiquid])];
     }
 
@@ -64,24 +59,13 @@ export const generateSchemaVariables = () => {
         );
 
         if (sectionContent !== newContent) {
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-              `Updated: ${sectionLiquid.replace(process.cwd(), "")}`
-            )}`
-          );
-          fs.writeFileSync(sectionLiquid, newContent);
+          writeCompareFile(sectionLiquid, newContent);
         }
       }
 
       if (!sectionContent.includes(start) && !sectionContent.includes(end) && variableContent) {
         const newContent = variableContent + sectionContent;
-
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-            `Updated: ${sectionLiquid.replace(process.cwd(), "")}`
-          )}`
-        );
-        fs.writeFileSync(sectionLiquid, newContent);
+        writeCompareFile(sectionLiquid, newContent);
       }
     }
 
@@ -121,12 +105,7 @@ export const generateSchemaVariables = () => {
       const variableContent = block?.settings && block?.settings?.length ? blockVariables.join("\n") : "";
 
       if (!fs.existsSync(blockPath)) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-            `Created: ${blockPath.replace(process.cwd(), "")}`
-          )}`
-        );
-        fs.writeFileSync(blockPath, block?.settings ? blockVariables.join("\n") : "");
+        writeCompareFile(blockPath, block?.settings ? blockVariables.join("\n") : "");
         config.sources.snippets.add(blockPath);
       }
 
@@ -142,24 +121,14 @@ export const generateSchemaVariables = () => {
           );
 
           if (blockContent !== newContent) {
-            console.log(
-              `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-                `Updated: ${blockPath.replace(process.cwd(), "")}`
-              )}`
-            );
-            fs.writeFileSync(blockPath, newContent);
+            writeCompareFile(blockPath, newContent);
           }
         }
 
         if (!blockContent.includes(start) && !blockContent.includes(end) && variableContent) {
           const newContent = variableContent + blockContent;
 
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-              `Updated: ${blockPath.replace(process.cwd(), "")}`
-            )}`
-          );
-          fs.writeFileSync(blockPath, newContent);
+          writeCompareFile(blockPath, newContent);
         }
       }
 
@@ -201,12 +170,7 @@ export const generateSchemaVariables = () => {
     const variableContent = schema.settings && schema.settings.length ? variables.join("\n") : "";
 
     if (!fs.existsSync(itemLiquid)) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-          `Created: ${itemLiquid.replace(process.cwd(), "")}`
-        )}`
-      );
-      fs.writeFileSync(itemLiquid, schema.settings ? variables.join("\n") : "");
+      writeCompareFile(itemLiquid, schema.settings ? variables.join("\n") : "");
       config.sources.blocksLiquid = [...new Set([...config.sources.blocksLiquid, itemLiquid])];
     }
 
@@ -223,24 +187,14 @@ export const generateSchemaVariables = () => {
         );
 
         if (itemContent !== newContent) {
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-              `Updated: ${itemLiquid.replace(process.cwd(), "")}`
-            )}`
-          );
-          fs.writeFileSync(itemLiquid, newContent);
+          writeCompareFile(itemLiquid, newContent);
         }
       }
 
       if (!itemContent.includes(start) && !itemContent.includes(end) && variableContent) {
         const newContent = variableContent + itemContent;
 
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-            `Updated: ${itemLiquid.replace(process.cwd(), "")}`
-          )}`
-        );
-        fs.writeFileSync(itemLiquid, newContent);
+        writeCompareFile(itemLiquid, newContent);
       }
     }
 
@@ -280,12 +234,7 @@ export const generateSchemaVariables = () => {
       const variableContent = block?.settings && block?.settings?.length ? blockVariables.join("\n") : "";
 
       if (!fs.existsSync(blockPath)) {
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-            `Created: ${blockPath.replace(process.cwd(), "")}`
-          )}`
-        );
-        fs.writeFileSync(blockPath, block?.settings ? blockVariables.join("\n") : "");
+        writeCompareFile(blockPath, block?.settings ? blockVariables.join("\n") : "");
         config.sources.snippets.add(blockPath);
       }
 
@@ -301,24 +250,14 @@ export const generateSchemaVariables = () => {
           );
 
           if (blockContent !== newContent) {
-            console.log(
-              `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-                `Updated: ${blockPath.replace(process.cwd(), "")}`
-              )}`
-            );
-            fs.writeFileSync(blockPath, newContent);
+            writeCompareFile(blockPath, newContent);
           }
         }
 
         if (!blockContent.includes(start) && !blockContent.includes(end) && variableContent) {
           const newContent = variableContent + blockContent;
 
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-              `Updated: ${blockPath.replace(process.cwd(), "")}`
-            )}`
-          );
-          fs.writeFileSync(blockPath, newContent);
+          writeCompareFile(blockPath, newContent);
         }
       }
 
@@ -429,12 +368,7 @@ export const generateSchemaVariables = () => {
     const variableContent = schema.settings && schema.settings.length ? variables.join("\n") : "";
 
     if (!fs.existsSync(itemLiquid)) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-          `Created: ${itemLiquid.replace(process.cwd(), "")}`
-        )}`
-      );
-      fs.writeFileSync(itemLiquid, schema.settings ? variables.join("\n") : "");
+      writeCompareFile(itemLiquid, schema.settings ? variables.join("\n") : "");
       config.sources.classic_blocksLiquid = [...new Set([...config.sources.classic_blocksLiquid, itemLiquid])];
       config.sources.snippets.add(itemLiquid);
     }
@@ -452,24 +386,13 @@ export const generateSchemaVariables = () => {
         );
 
         if (itemContent !== newContent) {
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-              `Updated: ${itemLiquid.replace(process.cwd(), "")}`
-            )}`
-          );
-          fs.writeFileSync(itemLiquid, newContent);
+          writeCompareFile(itemLiquid, newContent);
         }
       }
 
       if (!itemContent.includes(start) && !itemContent.includes(end) && variableContent) {
         const newContent = variableContent + itemContent;
-
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-            `Updated: ${itemLiquid.replace(process.cwd(), "")}`
-          )}`
-        );
-        fs.writeFileSync(itemLiquid, newContent);
+        writeCompareFile(itemLiquid, newContent);
       }
     }
   }
@@ -510,12 +433,7 @@ export const generateSchemaVariables = () => {
     const variableContent = schema.settings && schema.settings.length ? variables.join("\n") : "";
 
     if (!fs.existsSync(liquidFilePath)) {
-      console.log(
-        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
-          `Created: ${liquidFilePath.replace(process.cwd(), "")}`
-        )}`
-      );
-      fs.writeFileSync(liquidFilePath, schema.settings ? variables.join("\n") : "");
+      writeCompareFile(liquidFilePath, schema.settings ? variables.join("\n") : "");
       config.sources.cardsLiquid = [...new Set([...config.sources.cardsLiquid, liquidFilePath])];
     }
 
@@ -532,24 +450,14 @@ export const generateSchemaVariables = () => {
         );
 
         if (cardContent !== newContent) {
-          console.log(
-            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-              `Updated: ${liquidFilePath.replace(process.cwd(), "")}`
-            )}`
-          );
-          fs.writeFileSync(liquidFilePath, newContent);
+          writeCompareFile(liquidFilePath, newContent);
         }
       }
 
       if (!cardContent.includes(start) && !cardContent.includes(end) && variableContent) {
         const newContent = variableContent + cardContent;
 
-        console.log(
-          `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(
-            `Updated: ${liquidFilePath.replace(process.cwd(), "")}`
-          )}`
-        );
-        fs.writeFileSync(liquidFilePath, newContent);
+        writeCompareFile(liquidFilePath, newContent);
       }
     }
   }

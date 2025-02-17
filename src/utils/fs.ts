@@ -37,6 +37,24 @@ export const writeCompareFile = (file_path, content, successCallback = () => {})
     successCallback();
   }
 };
+export const renameFile = (file_path, new_file_path, successCallback = () => {}) => {
+  if (!fs.existsSync(file_path)) {
+    successCallback();
+    return;
+  }
+
+  if (fs.existsSync(new_file_path) && fs.statSync(new_file_path).isDirectory() && !fs.readdirSync(new_file_path)?.length) {
+    fs.rmSync(new_file_path, { recursive: true });
+  }
+
+  fs.renameSync(file_path, new_file_path);
+  console.log(
+    `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(
+      `Renamed: ${file_path.replace(process.cwd(), "")} -> ${new_file_path.split(/[\\/]/gi).at(-1)}`
+    )}`
+  );
+  successCallback();
+};
 
 export const writeOnlyNew = (file_path, content, successCallback = () => {}) => {
   if (!fs.existsSync(file_path)) {

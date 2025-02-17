@@ -114,7 +114,7 @@ export const generateSectionFiles = ({
           acc.push({ type: `_${folder.replace(/^_*/gi, "")}__${block.type}` });
           return acc;
         }
-        if (block.type === "@section-blocks") {
+        if (block.type === "@section_blocks") {
           section.blocks.forEach((rootBlock) => {
             if (block.type && !name) {
               acc.push({ type: block.type });
@@ -126,7 +126,7 @@ export const generateSectionFiles = ({
           acc = acc.filter((a, i, arr) => arr.findIndex((b) => a.type === b.type) === i);
           return acc;
         }
-        if (block.type === "@classic-theme") {
+        if (block.type === "@classic_theme") {
           for (const key in sources.classic_blockSchemas) {
             let paragraphCount = 1;
             let headerCount = 1;

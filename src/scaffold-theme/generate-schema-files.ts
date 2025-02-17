@@ -18,8 +18,6 @@ export const generateSchemaFiles = (dirName: string) => {
   const writeFile = isEmpty ? writeCompareFile : writeOnlyNew;
 
   if (dirName.includes(config.folders.sections) && dirName !== config.folders.sections) {
-    console.log(schemaContent, { dirName });
-
     writeFile(
       path.join(dirName, "schema.ts"),
       `import { ShopifySection } from "types/shopify";

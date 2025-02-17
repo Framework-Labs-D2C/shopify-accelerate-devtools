@@ -146,7 +146,7 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false) => {
     ?.filter((s) => s.type !== "header" && s.type !== "paragraph")
     .sort((a, b) => (a.id > b.id ? 1 : a.id < b.id ? -1 : 0));
   const hasNonThemeBlocks = blockSchema.blocks?.filter(
-    (b) => b.type !== "@app" && b.type !== "@theme" && b.type !== "@classic-theme"
+    (b) => b.type !== "@app" && b.type !== "@theme" && b.type !== "@classic_theme"
   )?.length;
   const hasThemeBlocks = blockSchema.blocks?.some((block) => block.type === "@theme");
 
@@ -197,7 +197,7 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false) => {
 
   if (blockSchema.blocks?.length && blockSchema.blocks?.length === 1) {
     const block = blockSchema.blocks[0];
-    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
     } else if (!block.name && block.type) {
       arr.push("");
       arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
@@ -219,7 +219,7 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false) => {
     arr.push(`export type ${capitalize(key)}Blocks =`);
 
     blockSchema.blocks?.forEach((block, i) => {
-      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic-theme") {
+      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
       } else if (!block.name && block.type) {
         if (blockSchema.blocks?.length - 1 === i) {
           arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
