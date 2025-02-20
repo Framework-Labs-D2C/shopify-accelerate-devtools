@@ -16,32 +16,31 @@ export const generateThemeBlocksTypes = () => {
   let sectionUnionType = "export type ThemeBlocks =";
   let typeContent = "";
 
+  const generateBlockTypes = (block, folder, key) => {
+    if ("theme_block" in block && block.theme_block) {
+      const newBlock = { ...block, folder: folder, filename: `_${folder}__${block.type}` };
+
+      typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
+      sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
+
+      block?.blocks?.forEach((childBlock) => generateBlockTypes(childBlock, folder, key));
+    }
+  };
+
   for (const key in blocks) {
-    const schema = blocks[key];
+    const schema = { ...blocks[key] };
+    schema["filename"] = schema.folder;
 
-    schema.blocks?.forEach((block) => {
-      if ("theme_block" in block && block.theme_block) {
-        const newBlock = { ...block, folder: `_${schema.folder?.replace(/^_*/gi, "")}__${block.type}` };
-
-        typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
-        sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
-      }
-    });
+    schema.blocks?.forEach((block) => generateBlockTypes(block, schema.folder?.replace(/^_*/gi, ""), key));
 
     typeContent += `${blockToTypes(schema, key)}\n`;
     sectionUnionType += `\n  | ${capitalize(key)}Block`;
   }
+
   for (const key in sections) {
     const schema = sections[key];
 
-    schema.blocks?.forEach((block) => {
-      if ("theme_block" in block && block.theme_block) {
-        const newBlock = { ...block, folder: `_${schema.folder?.replace(/^_*/gi, "")}__${block.type}` };
-
-        typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
-        sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
-      }
-    });
+    schema.blocks?.forEach((block) => generateBlockTypes(block, schema.folder?.replace(/^_*/gi, ""), key));
   }
 
   if (!typeContent) return;
@@ -139,7 +138,7 @@ export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections:
 };
 
 export const blockToTypes = (blockSchema, key, isSectionBlock = false) => {
-  const filename = blockSchema.folder;
+  const filename = blockSchema.filename;
 
   const arr = [];
   const settings: ShopifySettingsInput[] = blockSchema.settings

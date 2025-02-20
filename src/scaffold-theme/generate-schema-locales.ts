@@ -9,7 +9,7 @@ export const generateSchemaLocales = () => {
   const sections = sources.sectionSchemas;
   const blocks = sources.blockSchemas;
   const classic_blocks = sources.classic_blockSchemas;
-  const cards = sources.cardSchemas;
+  // const cards = sources.cardSchemas;
   const settings = [...(sources.settingsSchema ?? [])];
 
   const localesDuplicates = sources.locale_duplicates;
@@ -53,46 +53,55 @@ export const generateSchemaLocales = () => {
           return acc;
         }, {});
 
+      const generateThemeBlocksLocales = (input, settings) => {
+        const schema = {
+          ...input,
+          presets: "presets" in input ? input.presets : [{ name: input.name }],
+          folder: input.folder,
+        };
+
+        // @ts-ignore
+        const presets = schema?.presets
+          ?.filter(
+            ({ development_only }) =>
+              !development_only ||
+              /* @ts-ignore */
+              (config?.all_presets && !schema.hide_development_presets && !section.hide_development_presets)
+          )
+          ?.reduce((acc, preset) => {
+            acc[toLocaleFriendlySnakeCase(preset.name)] =
+              preset.name?.length > 25
+                ? {
+                    name: preset.name,
+                  }
+                : undefined;
+
+            if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
+              delete acc[toLocaleFriendlySnakeCase(preset.name)];
+            }
+            return acc;
+          }, {});
+
+        current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
+          name: schema.name?.length > 25 ? schema.name : undefined,
+          settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
+          presets: Object.values(presets ?? {})?.filter(Boolean)?.length ? presets : undefined,
+        };
+
+        if (!Object.values(current.blocks[toLocaleFriendlySnakeCase(schema.name)] ?? {})?.filter(Boolean)?.length) {
+          delete current.blocks[toLocaleFriendlySnakeCase(schema.name)];
+        }
+
+        schema?.blocks?.forEach((schema) =>
+          generateThemeBlocksLocales(schema, generateSectionSettings(schema.settings, localesDuplicates))
+        );
+      };
+
       const translatedBlocks = blocks?.reduce((acc, block) => {
         const blockSettings = generateSectionSettings(block.settings, localesDuplicates);
 
         if (isThemeBlocks) {
-          const schema = block;
-
-          const settings = generateSectionSettings(schema.settings, localesDuplicates);
-
-          // @ts-ignore
-          const presets = schema?.presets
-            ?.filter(
-              ({ development_only }) =>
-                !development_only ||
-                /* @ts-ignore */
-                (config?.all_presets && !schema.hide_development_presets && !section.hide_development_presets)
-            )
-            ?.reduce((acc, preset) => {
-              acc[toLocaleFriendlySnakeCase(preset.name)] =
-                preset.name?.length > 25
-                  ? {
-                      name: preset.name,
-                    }
-                  : undefined;
-
-              if (!Object.values(acc[toLocaleFriendlySnakeCase(preset.name)] ?? {})?.filter(Boolean)?.length) {
-                delete acc[toLocaleFriendlySnakeCase(preset.name)];
-              }
-              return acc;
-            }, {});
-
-          current.blocks[toLocaleFriendlySnakeCase(schema.name)] = {
-            name: schema.name?.length > 25 ? schema.name : undefined,
-            settings: Object.values(settings ?? {})?.filter(Boolean)?.length ? settings : undefined,
-            presets: Object.values(presets ?? {})?.filter(Boolean)?.length ? presets : undefined,
-          };
-
-          if (!Object.values(current.blocks[toLocaleFriendlySnakeCase(schema.name)] ?? {})?.filter(Boolean)?.length) {
-            delete current.blocks[toLocaleFriendlySnakeCase(schema.name)];
-          }
-
+          generateThemeBlocksLocales(block, blockSettings);
           return acc;
         }
 
@@ -205,7 +214,7 @@ export const generateSchemaLocales = () => {
     });
   });
 
-  for (const key in cards) {
+  /*for (const key in cards) {
     const card = cards[key];
     settings.push({
       name: `Card: ${card.name}`,
@@ -214,7 +223,7 @@ export const generateSchemaLocales = () => {
           "id" in setting ? { ...setting, id: `c_${toSnakeCase(card.folder)}__${setting.id}` } : setting
         ) ?? [],
     });
-  }
+  }*/
 
   settings?.forEach((settingsBlock) => {
     if (!("settings" in settingsBlock)) return;
@@ -251,7 +260,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
         const key = toLocaleFriendlySnakeCase(setting.content);
         if (
           localesDuplicates[key]?.length > 1 ||
-          (disabled_locales && !setting.content.includes(" ") && setting.content.length < 500)
+          (disabled_locales && !setting.content.includes(" ") && setting.content.length <= 500)
         ) {
           return;
         }
@@ -264,7 +273,7 @@ export const generateSectionSettings = (settings, localesDuplicates: { [T: strin
         const key = toLocaleFriendlySnakeCase(setting.content);
         if (
           localesDuplicates[key]?.length > 1 ||
-          (disabled_locales && !setting.content.includes(" ") && setting.content.length < 500)
+          (disabled_locales && !setting.content.includes(" ") && setting.content.length <= 50)
         ) {
           return;
         }

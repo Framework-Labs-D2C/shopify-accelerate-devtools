@@ -397,13 +397,13 @@ export const generateSchemaVariables = () => {
     }
   }
 
-  const cards = sources.cardSchemas as {
+  /*const cards = sources.cardSchemas as {
     [T: string]: ShopifyCard<{ settings: any }> & { path: string; folder: string };
-  };
+  };*/
 
-  for (const key in cards) {
+  /*for (const key in cards) {
     const schema = cards[key];
-    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+    const schema_file_path = schema.folder.replace(/^_*!/gi, "");
     const liquidFilePath = path.join(folders.cards, schema.folder, `${schema_file_path}.liquid`);
 
     const start = "{%- comment -%} Auto Generated Variables start {%- endcomment -%}";
@@ -434,7 +434,7 @@ export const generateSchemaVariables = () => {
 
     if (!fs.existsSync(liquidFilePath)) {
       writeCompareFile(liquidFilePath, schema.settings ? variables.join("\n") : "");
-      config.sources.cardsLiquid = [...new Set([...config.sources.cardsLiquid, liquidFilePath])];
+      // config.sources.cardsLiquid = [...new Set([...config.sources.cardsLiquid, liquidFilePath])];
     }
 
     if (fs.existsSync(liquidFilePath)) {
@@ -445,7 +445,7 @@ export const generateSchemaVariables = () => {
       if (cardContent.includes(start) && cardContent.includes(end)) {
         const newContent = cardContent.replace(
           // eslint-disable-next-line max-len
-          /({%- comment -%} Auto Generated Variables start {%- endcomment -%})(.|\n|\r)*({%- comment -%} Auto Generated Variables end {%- endcomment -%})(\r|\n|\s)*/gim,
+          /({%- comment -%} Auto Generated Variables start {%- endcomment -%})(.|\n|\r)*({%- comment -%} Auto Generated Variables end {%- endcomment -%})(\r|\n|\s)*!/gim,
           variableContent
         );
 
@@ -460,7 +460,7 @@ export const generateSchemaVariables = () => {
         writeCompareFile(liquidFilePath, newContent);
       }
     }
-  }
+  }*/
 };
 
 export const RESERVED_VARIABLES = [

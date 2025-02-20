@@ -28,7 +28,7 @@ export const generateLiquidFiles = () => {
   const sectionsSchemas = sources.sectionSchemas;
   const blockSchemas = sources.blockSchemas;
   const classic_blockSchemas = sources.classic_blockSchemas;
-  const cardSchemas = sources.cardSchemas;
+  // const cardSchemas = sources.cardSchemas;
 
   generateSettingsFile();
 
@@ -584,10 +584,10 @@ export const generateLiquidFiles = () => {
     translationArray.push(generateBlockFileSchema(schema));
   }
 
-  for (const key in cardSchemas) {
+  /*for (const key in cardSchemas) {
     const schema = cardSchemas[key];
 
-    const schema_file_path = schema.folder.replace(/^_*/gi, "");
+    const schema_file_path = schema.folder.replace(/^_*!/gi, "");
     const sectionName = `${schema_file_path}.liquid`;
     const targetSectionName = `_card.${schema_file_path}.liquid`;
 
@@ -650,7 +650,7 @@ export const generateLiquidFiles = () => {
     }
 
     translationArray.push(generateBlockFileSchema(schema));
-  }
+  }*/
 
   for (let i = 0; i < snippets.size; i++) {
     const snippet = [...snippets][i];
@@ -658,9 +658,9 @@ export const generateLiquidFiles = () => {
 
     const snippetTargetName = snippet?.includes(folders.classic_blocks)
       ? `_blocks.${snippetName}`
-      : snippet?.includes(folders.cards)
-      ? `_card.${snippetName}`
-      : snippetName;
+      : /*: snippet?.includes(folders.cards)
+      ? `_card.${snippetName}`*/
+        snippetName;
 
     const section = Object.values(sectionsSchemas).find((section) => section.path.includes(snippet.replace(snippetName, "")));
     const sectionBlockSchemas = section?.blocks?.find((block) => new RegExp(`\\.${block.type}\\.`, "gi").test(snippetName));

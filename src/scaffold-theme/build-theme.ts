@@ -27,7 +27,7 @@ export const buildTheme = async () => {
   generateSectionsTypes();
   generateThemeBlocksTypes();
   generateClassicBlocksTypes();
-  generateCardsTypes();
+  // generateCardsTypes();
   generateSettingTypes();
   generateLiquidFiles();
   generateAssetFiles();

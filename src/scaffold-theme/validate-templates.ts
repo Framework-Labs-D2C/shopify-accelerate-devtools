@@ -9,6 +9,7 @@ import userInput from "prompts";
 export const getTargetsAndValidateTemplates = async (novalidate = false) => {
   getTargets();
 
+  const count = 0;
   const templates = [
     ...new Set([
       ...config.targets.sectionGroups,
@@ -17,6 +18,47 @@ export const getTargetsAndValidateTemplates = async (novalidate = false) => {
       ...config.targets.customerTemplates,
     ]),
   ];
+
+  /* templates.forEach((template) => {
+    const originalContent = readFile(template);
+    const content = originalContent.replace(
+      /(custom_css": ")([^"]*?)(&[^{@"]*?{)([^&{}@"]*?)(@media[^{"]*?{[^&{}"]*?})([^}&"]*?})/gi,
+      (match, p1, p2, p3, p4, p5, p6, p7) => {
+        // console.log({ p1, p2, p3, p4, p5, p6, p7 });
+        count++;
+        const result = `${p1}${p2}${p3}${p4}${p6}\\n${p5.replace(/{([^&{}]*?})/gi, (match, m1, m2) => {
+          console.log({ match, m1, m2 });
+          return `{\\n  ${p3}${m1}\\n}`;
+        })}`?.replace(/\n/gi, "\\n");
+        // console.log({ match, result });
+        return result;
+      }
+    );
+    if (content !== originalContent) {
+      writeCompareFile(template, content);
+    }
+  });
+*/
+  /*let count = 0;
+  templates.forEach((template) => {
+    const originalContent = readFile(template);
+    const content = originalContent.replace(
+      /(custom_css": ")([^"@]*?)(&[^{"@]*?{)([^&{}"@]*?)(@media[^{"@]*?{[^&{}"@]*?})([^}&"@]*?})/gi,
+      (match, p1, p2, p3, p4, p5, p6) => {
+        // console.log({ p1, p2, p3, p4, p5, p6 });
+        count++;
+        const result = `${p1}${p2}${p3}${p4}${p6}\\n${p5.replace(/{([^&{}]*?})/gi, (match, m1) => {
+          // console.log({ match, m1 });
+          return `{\\n  ${p3}${m1}\\n}`;
+        })}`?.replace(/\n/gi, "\\n");
+        console.log({ match, result });
+        return result;
+      }
+    );
+    if (content !== originalContent) {
+      writeCompareFile(template, content);
+    }
+  });*/
 
   if (templates.some((template) => /"(type|id)":\s+(["'`])([^'"`]*-[^'"`]*)\2/gi.test(readFile(template)))) {
     const results = novalidate

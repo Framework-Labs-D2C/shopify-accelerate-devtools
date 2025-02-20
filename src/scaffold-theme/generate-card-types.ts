@@ -6,11 +6,11 @@ import { writeCompareFile } from "../utils/fs";
 
 export const generateCardsTypes = () => {
   const { folders, sources } = config;
-  const sections = sources.cardSchemas;
+  // const sections = sources.cardSchemas;
 
-  const blockTypesPath = path.join(folders.types, "cards.ts");
+  // const blockTypesPath = path.join(folders.types, "cards.ts");
 
-  const imports = getImports(sections);
+  /*const imports = getImports(sections);
   let sectionUnionType = "export type Cards =";
   let typeContent = "";
   for (const key in sections) {
@@ -24,7 +24,7 @@ export const generateCardsTypes = () => {
 
   const finalContent = `${imports + typeContent + sectionUnionType};\n`;
 
-  writeCompareFile(blockTypesPath, finalContent);
+  writeCompareFile(blockTypesPath, finalContent);*/
 };
 
 export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {

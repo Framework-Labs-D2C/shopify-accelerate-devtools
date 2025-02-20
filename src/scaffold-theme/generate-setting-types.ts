@@ -7,10 +7,10 @@ import { getSettingsType } from "./generate-section-types";
 
 export const generateSettingTypes = () => {
   const { sources } = config;
-  const cards = sources.cardSchemas;
+  // const cards = sources.cardSchemas;
   const sourceSettings = [...(sources.settingsSchema ?? [])];
 
-  for (const key in cards) {
+  /*for (const key in cards) {
     const card = cards[key];
     sourceSettings.push({
       name: `Card: ${card.name}`,
@@ -19,7 +19,7 @@ export const generateSettingTypes = () => {
           "id" in setting ? { ...setting, id: `c_${toSnakeCase(card.folder)}__${setting.id}` } : setting
         ) ?? [],
     });
-  }
+  }*/
 
   const settings =
     sourceSettings?.reduce((acc: ShopifySettingsInput[], group) => {

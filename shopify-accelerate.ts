@@ -104,10 +104,10 @@ export type GlobalsState = {
     classic_blocksSchemaFiles: string[];
     classic_blocksJs: string[];
     classic_blockSchemas: { [T: string]: ShopifyBlock & { path: string; folder: string } };
-    cardsLiquid: string[];
-    cardsSchemaFiles: string[];
-    cardsJs: string[];
-    cardSchemas: { [T: string]: ShopifyCard & { path: string; folder: string } };
+    // cardsLiquid: string[];
+    // cardsSchemaFiles: string[];
+    // cardsJs: string[];
+    // cardSchemas: { [T: string]: ShopifyCard & { path: string; folder: string } };
     assets: string[];
     giftCards: string[];
     configs: string[];
@@ -141,7 +141,7 @@ export type GlobalsState = {
     layout: string;
     blocks: string;
     classic_blocks: string;
-    cards: string;
+    // cards: string;
     snippets: string;
     templates: string;
     assets: string;
@@ -180,10 +180,10 @@ export const config: GlobalsState = {
     classic_blocksSchemaFiles: [],
     classic_blocksJs: [],
     classic_blockSchemas: {},
-    cardsLiquid: [],
-    cardsSchemaFiles: [],
-    cardsJs: [],
-    cardSchemas: {},
+    // cardsLiquid: [],
+    // cardsSchemaFiles: [],
+    // cardsJs: [],
+    // cardSchemas: {},
     assets: [],
     giftCards: [],
     configs: [],
@@ -229,9 +229,9 @@ export const config: GlobalsState = {
     classic_blocks: process.env.SHOPIFY_ACCELERATE_CLASSIC_BLOCKS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_CLASSIC_BLOCKS)
       : path.join(root_dir, "classic-blocks"),
-    cards: process.env.SHOPIFY_ACCELERATE_CARDS
+    /*cards: process.env.SHOPIFY_ACCELERATE_CARDS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_CARDS)
-      : path.join(root_dir, "cards"),
+      : path.join(root_dir, "cards"),*/
     snippets: process.env.SHOPIFY_ACCELERATE_SNIPPETS
       ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_SNIPPETS)
       : path.join(root_dir, "snippets"),

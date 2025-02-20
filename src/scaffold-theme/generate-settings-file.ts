@@ -8,8 +8,8 @@ export const generateSettingsFile = () => {
   const localeDuplicates = sources.locale_duplicates;
   const settingsSchema = [...(sources.settingsSchema ?? [])];
 
-  const cards = sources.cardSchemas;
-  for (const key in cards) {
+  // const cards = sources.cardSchemas;
+  /* for (const key in cards) {
     const card = cards[key];
     settingsSchema.push({
       name: `Card: ${card.name}`,
@@ -18,7 +18,7 @@ export const generateSettingsFile = () => {
           "id" in setting ? { ...setting, id: `c_${toSnakeCase(card.folder)}__${setting.id}` } : setting
         ) ?? [],
     });
-  }
+  }*/
 
   const localizedSettings = settingsSchema.map(({ name, ...settingsBlock }) => {
     if (!("settings" in settingsBlock)) return { name, ...settingsBlock };
@@ -36,7 +36,7 @@ export const generateSettingsFile = () => {
             ...setting,
             content:
               "content" in setting
-                ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
+                ? disabled_locales && !setting.content.includes(" ") && setting.content.length <= 500
                   ? setting.content
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                   ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`
@@ -49,7 +49,7 @@ export const generateSettingsFile = () => {
             ...setting,
             content:
               "content" in setting
-                ? disabled_locales && !setting.content.includes(" ") && setting.content.length < 500
+                ? disabled_locales && !setting.content.includes(" ") && setting.content.length <= 50
                   ? setting.content
                   : localeDuplicates[toLocaleFriendlySnakeCase(setting.content)]?.length > 1
                   ? `t:all.${toLocaleFriendlySnakeCase(setting.content)}`

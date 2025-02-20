@@ -160,7 +160,7 @@ export const watchTheme = () => {
     },
     async (event, name) => {
       const startTime = Date.now();
-      console.log(`edited: ${event} - ${name}`, running);
+
       try {
         if (running) return;
         running = true;
