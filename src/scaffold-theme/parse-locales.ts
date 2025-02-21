@@ -7,7 +7,7 @@ export function parseLocales() {
   const sections = sources.sectionSchemas;
   const blocks = sources.blockSchemas;
   const classic_blocks = sources.classic_blockSchemas;
-  // const cards = sources.cardSchemas;
+  const cards = sources.cardSchemas;
   const settings = sources.settingsSchema;
   const entries: { [T: string]: string[] } = {};
 
@@ -87,9 +87,9 @@ export function parseLocales() {
     mapSettings(section.settings);
   });
 
-  /* Object.values(cards).forEach((section) => {
+  Object.values(cards).forEach((section) => {
     mapSettings(section.settings);
-  });*/
+  });
 
   settings.forEach((settingsSection) => {
     if (!("settings" in settingsSection)) return;

@@ -78,7 +78,7 @@ export const ${toCamelCase(fileName)}: ShopifyThemeBlock<${toPascalCase(fileName
     );
   }
 
-  /*if (dirName.includes(config.folders.cards) && dirName !== config.folders.cards) {
+  if (dirName.includes(config.folders.cards) && dirName !== config.folders.cards) {
     writeFile(
       path.join(dirName, "schema.ts"),
       `import { ShopifyCard } from "types/shopify";
@@ -90,7 +90,7 @@ export const ${toCamelCase(fileName)}: ShopifyCard<${toPascalCase(fileName)}Card
 };
 `
     );
-  }*/
+  }
 };
 
 export const generateAllMissingSchemaFiles = () => {
@@ -98,7 +98,7 @@ export const generateAllMissingSchemaFiles = () => {
     ...getAllDirectories(config.folders.sections),
     ...getAllDirectories(config.folders.blocks),
     ...getAllDirectories(config.folders.classic_blocks),
-    // ...getAllDirectories(config.folders.cards),
+    ...getAllDirectories(config.folders.cards),
   ];
 
   directories.forEach((name) => {

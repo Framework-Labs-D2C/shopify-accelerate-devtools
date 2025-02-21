@@ -21,7 +21,7 @@ export const getSources = async () => {
     ...getAllFiles(folders.types),
     ...getAllFiles(folders.blocks),
     ...getAllFiles(folders.classic_blocks),
-    // ...getAllFiles(folders.cards),
+    ...getAllFiles(folders.cards),
   ];
 
   const typeScriptSchema = [];
@@ -86,7 +86,7 @@ export const getSources = async () => {
     if (isClassicBlockTs(filePath)) {
       classic_blocksJs.push(filePath);
     }
-    /* if (isCardsLiquid(filePath)) {
+    if (isCardsLiquid(filePath)) {
       cardsLiquid.push(filePath);
       snippets.add(filePath);
     }
@@ -95,7 +95,7 @@ export const getSources = async () => {
     }
     if (isCardsTs(filePath)) {
       cardsJs.push(filePath);
-    }*/
+    }
     if (isGiftCard(filePath)) {
       giftCards.push(filePath);
     }
@@ -130,9 +130,9 @@ export const getSources = async () => {
   config.sources.classic_blocksLiquid = classic_blocksLiquid;
   config.sources.classic_blocksSchemaFiles = classic_blocksSchemaFiles;
   config.sources.classic_blocksJs = classic_blocksJs;
-  /*  config.sources.cardsLiquid = cardsLiquid;
+  config.sources.cardsLiquid = cardsLiquid;
   config.sources.cardsSchemaFiles = cardsSchemaFiles;
-  config.sources.cardsJs = cardsJs;*/
+  config.sources.cardsJs = cardsJs;
   config.sources.assets = assets;
   config.sources.giftCards = giftCards;
   config.sources.configs = configs;
@@ -223,7 +223,7 @@ export const getSources = async () => {
     },
     {} as { [T: string]: ShopifyBlock }
   );
-  /*config.sources.cardSchemas = cardsSchemaFiles.reduce(
+  config.sources.cardSchemas = cardsSchemaFiles.reduce(
     (acc, file) => {
       try {
         const data = importFresh(file);
@@ -242,7 +242,7 @@ export const getSources = async () => {
       }
     },
     {} as { [T: string]: ShopifyBlock }
-  );*/
+  );
 };
 
 export const getSchemaSources = async () => {
@@ -253,7 +253,7 @@ export const getSchemaSources = async () => {
     ...getAllFiles(folders.snippets),
     ...getAllFiles(folders.blocks),
     ...getAllFiles(folders.classic_blocks),
-    // ...getAllFiles(folders.cards),
+    ...getAllFiles(folders.cards),
     ...getAllFiles(folders.sections),
     ...getAllFiles(folders.config),
   ];
@@ -304,13 +304,13 @@ export const getSchemaSources = async () => {
     if (isClassicBlockSchema(filePath)) {
       classic_blocksSchemaFiles.push(filePath);
     }
-    /*    if (isCardsLiquid(filePath)) {
+    if (isCardsLiquid(filePath)) {
       cardsLiquid.push(filePath);
       snippets.add(filePath);
     }
     if (isCardsSchema(filePath)) {
       cardsSchemaFiles.push(filePath);
-    }*/
+    }
     if (isAsset(filePath)) {
       assets.push(filePath);
     }
@@ -331,7 +331,7 @@ export const getSchemaSources = async () => {
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.classic_blocksLiquid = classic_blocksLiquid;
-  // config.sources.cardsLiquid = cardsLiquid;
+  config.sources.cardsLiquid = cardsLiquid;
   config.sources.giftCards = giftCards;
   config.sources.settingsFile = settingsFiles[0];
   config.sources.settingsSchema = settingsFiles?.[0]
@@ -417,7 +417,7 @@ export const getSchemaSources = async () => {
     },
     {} as { [T: string]: ShopifyBlock }
   );
-  /*config.sources.cardSchemas = cardsSchemaFiles.reduce(
+  config.sources.cardSchemas = cardsSchemaFiles.reduce(
     (acc, file) => {
       try {
         const data = importFresh(file);
@@ -436,7 +436,7 @@ export const getSchemaSources = async () => {
       }
     },
     {} as { [T: string]: ShopifyBlock }
-  );*/
+  );
 };
 
 export const getTargets = () => {
@@ -556,13 +556,13 @@ export const isClassicBlockSchema = (name: string) =>
 export const isClassicBlockTs = (name: string) =>
   name.includes(config.folders.classic_blocks) && !isClassicBlockSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
 
-// export const isCardsLiquid = (name: string) =>
-//   name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/][^.\\/]*\.liquid$/gi.test(name);
-//
-// export const isCardsSchema = (name: string) => name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name);
+export const isCardsLiquid = (name: string) =>
+  name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/][^.\\/]*\.liquid$/gi.test(name);
 
-// export const isCardsTs = (name: string) =>
-//   name.includes(config.folders.cards) && !isCardsSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
+export const isCardsSchema = (name: string) => name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name);
+
+export const isCardsTs = (name: string) =>
+  name.includes(config.folders.cards) && !isCardsSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
 
 export const isLayout = (name: string) => {
   return name.includes(config.folders.layout) && /[\\/][^\\/]*\.liquid$/gi.test(name);
@@ -587,7 +587,7 @@ export const isLiquid = (name: string) =>
   isSectionLiquid(name) ||
   isBlockLiquid(name) ||
   isClassicBlockLiquid(name) ||
-  // isCardsLiquid(name) ||
+  isCardsLiquid(name) ||
   isSnippet(name) ||
   isLayout(name) ||
   isGiftCard(name);

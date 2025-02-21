@@ -77,8 +77,12 @@ export const getAllFiles = (dirname) => {
     if (config.headless) {
       return [];
     }
+    if (/[\\/]cards$/gi.test(dirname)) {
+      return [];
+    }
     fs.mkdirSync(dirname, { recursive: true });
   }
+
   return fs.readdirSync(dirname).reduce((acc, file) => {
     const name = path.join(dirname, file);
 
@@ -90,6 +94,9 @@ export const getAllFiles = (dirname) => {
 export const getAllDirectories = (dirname) => {
   if (!fs.existsSync(dirname)) {
     if (config.headless) {
+      return [];
+    }
+    if (/[\\/]cards$/gi.test(dirname)) {
       return [];
     }
     fs.mkdirSync(dirname, { recursive: true });

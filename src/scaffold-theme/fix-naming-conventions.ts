@@ -18,7 +18,7 @@ export const fixNamingConventions = async (force = false) => {
       ...config.sources.snippets,
       ...config.sources.sectionsLiquid,
       ...config.sources.blocksLiquid,
-      // ...config.sources.cardsLiquid,
+      ...config.sources.cardsLiquid,
       ...config.sources.classic_blocksLiquid,
       ...config.sources.layouts,
     ]),
@@ -26,7 +26,7 @@ export const fixNamingConventions = async (force = false) => {
 
   const sourceJsFiles = [
     ...new Set([
-      // ...config.sources.cardsJs,
+      ...config.sources.cardsJs,
       ...config.sources.blocksJs,
       ...config.sources.classic_blocksJs,
       ...config.sources.sectionsJs,
@@ -37,7 +37,7 @@ export const fixNamingConventions = async (force = false) => {
     ...new Set([
       config.sources.settingsFile,
       ...config.sources.blocksSchemaFiles,
-      // ...config.sources.cardsSchemaFiles,
+      ...config.sources.cardsSchemaFiles,
       ...config.sources.classic_blocksSchemaFiles,
       ...config.sources.sectionsSchemaFiles,
     ]),

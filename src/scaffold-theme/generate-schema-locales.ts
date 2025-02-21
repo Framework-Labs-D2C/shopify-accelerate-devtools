@@ -9,7 +9,7 @@ export const generateSchemaLocales = () => {
   const sections = sources.sectionSchemas;
   const blocks = sources.blockSchemas;
   const classic_blocks = sources.classic_blockSchemas;
-  // const cards = sources.cardSchemas;
+  const cards = sources.cardSchemas;
   const settings = [...(sources.settingsSchema ?? [])];
 
   const localesDuplicates = sources.locale_duplicates;
@@ -214,7 +214,7 @@ export const generateSchemaLocales = () => {
     });
   });
 
-  /*for (const key in cards) {
+  for (const key in cards) {
     const card = cards[key];
     settings.push({
       name: `Card: ${card.name}`,
@@ -223,7 +223,7 @@ export const generateSchemaLocales = () => {
           "id" in setting ? { ...setting, id: `c_${toSnakeCase(card.folder)}__${setting.id}` } : setting
         ) ?? [],
     });
-  }*/
+  }
 
   settings?.forEach((settingsBlock) => {
     if (!("settings" in settingsBlock)) return;

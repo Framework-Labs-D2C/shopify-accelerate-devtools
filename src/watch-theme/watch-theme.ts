@@ -25,7 +25,7 @@ export const watchTheme = () => {
   let files_edited: { [T: string]: number[] } = {};
   let running = false;
 
-  watch(Object.values(folders), { recursive: true }, async (event, name) => {
+  watch(Object.values(folders)?.filter((folder) => fs.existsSync(folder)), { recursive: true }, async (event, name) => {
     const startTime = Date.now();
     try {
       if (running) return;
