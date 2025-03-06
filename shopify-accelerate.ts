@@ -2,8 +2,10 @@
 
 import fs from "fs";
 import path from "path";
+import { syncPresets } from "./src/scaffold-theme/sync-presets";
+import { generateAllMissingPresetsFiles } from "./src/scaffold-theme/generate-presets-files";
 import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
-import { getTargetsAndValidateTemplates } from "./src/scaffold-theme/validate-templates";
+import { validateTemplates } from "./src/scaffold-theme/validate-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
@@ -15,7 +17,7 @@ import { generateConfigFiles } from "./src/scaffold-theme/generate-config-files"
 import { generateSectionsTypes } from "./src/scaffold-theme/generate-section-types";
 import { generateSettingTypes } from "./src/scaffold-theme/generate-setting-types";
 import { generateThemeBlocksTypes } from "./src/scaffold-theme/generate-theme-blocks-types";
-import { getSchemaSources, getSources } from "./src/scaffold-theme/parse-files";
+import { getSchemaSources, getSources, getTargets } from "./src/scaffold-theme/parse-files";
 import { shopifyCliPull } from "./src/shopify-cli/pull";
 import { runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
 import { capitalize } from "./src/utils/capitalize";
@@ -53,6 +55,7 @@ const shopify_toml = tomlFile
           live?: boolean;
           "allow-live"?: boolean;
           all_presets?: boolean;
+          sync_presets?: boolean;
           mode: "development" | "production";
           ignore_blocks: string;
           ignore_snippets: string;
@@ -72,6 +75,7 @@ export type GlobalsState = {
   package_types: string;
   project_root: ReturnType<typeof process.cwd>;
   all_presets: boolean;
+  sync_presets: boolean;
   mode: "development" | "production";
   theme_id: number;
   theme_path: string;
@@ -94,6 +98,7 @@ export type GlobalsState = {
     snippets: Set<string>;
     layouts: string[];
     sectionsLiquid: string[];
+    sectionsPresetFiles: string[];
     sectionsSchemaFiles: string[];
     sectionsJs: string[];
     blocksLiquid: string[];
@@ -170,6 +175,7 @@ export const config: GlobalsState = {
     snippets: new Set(),
     layouts: [],
     sectionsLiquid: [],
+    sectionsPresetFiles: [],
     sectionsSchemaFiles: [],
     sectionsJs: [],
     blocksLiquid: [],
@@ -259,12 +265,14 @@ export const config: GlobalsState = {
   theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
   store: shopify_toml?.environments?.["development"]?.store,
   all_presets: shopify_toml?.environments?.["development"]?.all_presets,
+  sync_presets: shopify_toml?.environments?.["development"]?.sync_presets,
   mode: shopify_toml?.environments?.["development"]?.mode ?? "production",
 };
 
 program
   .name("shopify-accelerate")
   .description("CLI for Accelerated Shopify Theme development")
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   .version(require(path.join("./", "package.json")).version);
 
 program
@@ -283,6 +291,10 @@ program
   .action(async (options) => {
     config.options = options;
     await validateCliOptions(options);
+    generateBaseTypes();
+    await getSources();
+    getTargets();
+
     await buildTheme();
     generateConfigFiles();
     await shopifyCliPull();
@@ -304,6 +316,10 @@ program
   .action(async (options) => {
     config.options = options;
     await validateCliOptions(options);
+    generateBaseTypes();
+    await getSources();
+    getTargets();
+
     await buildTheme();
     generateConfigFiles();
     await shopifyCliPull();
@@ -325,7 +341,13 @@ program
   .action(async (options) => {
     config.options = options;
     await validateCliOptions(options);
-    await getTargetsAndValidateTemplates();
+    generateBaseTypes();
+    generateAllMissingPresetsFiles();
+    await getSources();
+    getTargets();
+
+    await validateTemplates();
+    await syncPresets();
     await fixNamingConventions(true);
     await buildTheme();
     generateConfigFiles();
@@ -394,7 +416,7 @@ program
     }`);
 
       writeOnlyNew(
-        entry.path?.replace("schema.ts", `${entry.folder}.tsx`),
+        entry.path?.replace("_schema.ts", `${entry.folder}.tsx`),
         `import type { ${capitalize(key)}Section } from "types/sections";
 
 export const ${capitalize(key)} = ({ id, type, settings, blocks, disabled }: ${capitalize(key)}Section) => {

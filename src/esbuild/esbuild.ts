@@ -196,7 +196,7 @@ export const runEsbuild = () => {
   let running = false;
   watch(root_dir, { recursive: true }, async (event, name) => {
     if (running || event === "remove") return;
-    if (!name.match(/\.(ts)x?$/) || /schema\.ts$/gi.test(name)) return;
+    if (!name.match(/\.(ts)x?$/) || /_schema\.ts$/gi.test(name)) return;
     running = true;
 
     if (isSectionTs(name)) {

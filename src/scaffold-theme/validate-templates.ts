@@ -1,14 +1,12 @@
+import userInput from "prompts";
+import { Sections } from "types/sections";
 import { config } from "../../shopify-accelerate";
 import { buildTheme } from "../../src/scaffold-theme/build-theme";
-import { generateConfigFiles } from "../../src/scaffold-theme/generate-config-files";
-import { getTargets } from "../../src/scaffold-theme/parse-files";
+import { getSources, getTargets } from "../../src/scaffold-theme/parse-files";
 import { shopifyCliCreate, shopifyCliPull, shopifyCliPush } from "../../src/shopify-cli/pull";
 import { readFile, writeCompareFile } from "../../src/utils/fs";
-import userInput from "prompts";
 
-export const getTargetsAndValidateTemplates = async (novalidate = false) => {
-  getTargets();
-
+export const validateTemplates = async (novalidate = false) => {
   const count = 0;
   const templates = [
     ...new Set([
@@ -60,7 +58,9 @@ export const getTargetsAndValidateTemplates = async (novalidate = false) => {
     }
   });*/
 
-  if (templates.some((template) => /"(type|id)":\s+(["'`])([^'"`]*-[^'"`]*)\2/gi.test(readFile(template)))) {
+  if (
+    templates.some((template) => /"(type|id)":\s+(["'`])(?!(shopify:\/\/apps))([^'"`]*-[^'"`]*)\2/gi.test(readFile(template)))
+  ) {
     const results = novalidate
       ? { reinitialize: true, shopify_cli_method: "" }
       : await userInput([
@@ -88,11 +88,12 @@ export const getTargetsAndValidateTemplates = async (novalidate = false) => {
 
     await shopifyCliPull("Transform Savepoint");
 
-    await buildTheme();
-    generateConfigFiles();
-
+    await getSources();
     getTargets();
-    const templates = [
+
+    await buildTheme();
+
+    const newTemplates = [
       ...new Set([
         ...config.targets.sectionGroups,
         ...config.targets.configs,
@@ -100,11 +101,15 @@ export const getTargetsAndValidateTemplates = async (novalidate = false) => {
         ...config.targets.customerTemplates,
       ]),
     ];
-    templates.forEach((template) => {
+
+    newTemplates.forEach((template) => {
       const originalContent = readFile(template);
-      const content = originalContent.replace(/"(type|id)":\s+(["'`])([^'"`]*-[^'"`]*)\2/gi, (match, p1, p2, p3) => {
-        return `"${p1}": ${p2}${p3.replace(/-/gi, "_")}${p2}`;
-      });
+      const content = originalContent.replace(
+        /"(type|id)":\s+(["'`])(?!(shopify:\/\/apps))([^'"`\s]*-[^'"`]*)\2/gi,
+        (match, p1, p2, p3) => {
+          return `"${p1}": ${p2}${p3.replace(/-/g, "_")}${p2}`;
+        }
+      );
 
       if (content !== originalContent) {
         writeCompareFile(template, content);

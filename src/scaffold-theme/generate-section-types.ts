@@ -362,11 +362,9 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
     case "url":
       return "?: string";
     case "video":
-      return config.headless
-        ? "?:  { src?: string | null,  mimeType?: string | null, alt?: string | null }"
-        : "?:  _Video_liquid";
+      return config.headless ? "?: { src?: string | null,  mimeType?: string | null, alt?: string | null }" : "?: _Video_liquid";
     case "video_url":
-      return "?:  `${string}youtube${string}` | `${string}vimeo${string}`";
+      return "?: `${string}youtube${string}` | `${string}vimeo${string}`";
     case "font":
       return "?: string";
     case "color_scheme":

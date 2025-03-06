@@ -4,6 +4,8 @@ import chalk from "chalk";
 import { exec } from "child_process";
 import fs from "fs";
 import importFresh from "import-fresh";
+import { toCamelCase } from "../utils/to-pascal-case";
+import { toKebabCase } from "../utils/to-kebab-case";
 import { readFile, writeCompareFile } from "../utils/fs";
 import { delay } from "../utils/delay";
 
@@ -12,15 +14,16 @@ function transformBlocks(obj: any): any {
   if (!obj || typeof obj !== "object") return obj;
 
   for (const key of Object.keys(obj)) {
-    if (key === "blocks" && obj[key] && typeof obj[key] === "object") {
-      // Convert `blocks` to an array of values
-      obj[key] = Object.entries(obj[key]).map(([_, value]) => transformBlocks(value));
+    if (key === "presets") {
+      // Replace `presets` with an empty array
+
+      obj[key] = "PRESETS_PLACEHOLDER";
     } else if (key === "block_order") {
       // Remove `block_order`
       delete obj[key];
     } else if (typeof obj[key] === "object") {
-      // Recursively handle nested objects
-      transformBlocks(obj[key]);
+      // Recursively transform nested objects
+      obj[key] = transformBlocks(obj[key]);
     }
   }
 
@@ -54,15 +57,136 @@ function createObjectExpression(obj: any): any {
     value: obj,
   };
 }
-export const importAndTransformSchema = async (file: any) => {
+
+export const importAndTransformSchema = async (file: any, secondAttempt = false): Promise<unknown> => {
   let importedData = importFresh(file);
+  const fileContent = readFile(file);
+
+  const folder = file.split(/[\\/]/gi).at(-2);
+  const sectionPath = file.split(/[\\/]/gi).at(-3);
+  const sectionName = folder.replace(/^_+/gi, "");
+
+  // console.log({ sectionName: `${toCamelCase(sectionName)}Presets` });
+
+  const oldPresets = !/import\s+\{\s+[^}]*\s+}\s+from\s+["'`][^"'`]*?[\\/]_presets["'`]/gi.test(fileContent);
 
   const presets = Object.values(importedData)?.[0]?.presets;
-  if (Array.isArray(presets) && presets.some((preset) => typeof preset?.blocks === "object" && !Array.isArray(preset?.blocks))) {
+
+  // console.log(Array.isArray(presets) && presets, presets?.length);
+
+  if (Array.isArray(presets) && oldPresets) {
     try {
       console.log(
         `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.magentaBright(
-          `/${file.split(/[\\/]/).at(-2)}/schema.ts Block Schema Transformation Started`
+          `/${file.split(/[\\/]/).at(-2)}/_schema.ts Block Schema Transformation Started`
+        )}`
+      );
+      const data = readFile(file, { encoding: "utf-8" });
+
+      const splitter = data.match(/export\s+const\s+[^\n]*?\n/gi).at(0);
+
+      const parts = data.split(splitter);
+
+      const [schemaContent, presets] = parts[1]?.split(/\n\s\s"?presets"?\s*:/gi) ?? [];
+
+      if (!presets && !secondAttempt) {
+        await new Promise((resolve, reject) => {
+          exec(`eslint ${file} --fix`, (error, stdout, stderr) => {
+            console.log(
+              `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+                `/${file.split(/[\\/]/).at(-2)}/_schema.ts Prettified`
+              )}`
+            );
+            resolve(true);
+            if (error) {
+              console.log(`error: ${error.message}`);
+              reject();
+            }
+          });
+        });
+        await delay(500);
+        return await importAndTransformSchema(file, true);
+      }
+
+      const parseableData = `${splitter}presets:${presets}`;
+
+      const ast = tsParser.parse(parseableData, {
+        loc: true,
+        range: true,
+        comment: true,
+        tokens: true,
+        ecmaFeatures: {
+          jsx: false,
+          globalReturn: false,
+        },
+      });
+
+      // fs.writeFileSync("C:/test.json", JSON.stringify(ast, null, 2));
+      // Traverse the AST to find the `presets` array and export type annotations
+      tsParser.simpleTraverse(ast, {
+        enter(node, parent) {
+          if (node.type === "Property" && node.key.type === "Identifier" && node.key.name === "presets") {
+            node.value = {
+              // @ts-ignore
+              type: "Identifier",
+              name: `${toCamelCase(sectionName)}Presets`,
+            };
+          }
+        },
+      });
+
+      // Generate the transformed code
+      const transformedData = escodegen.generate(ast, {
+        comment: true,
+        format: {
+          quotes: "double", // Use double quotes
+          semicolons: false, // Omit semicolons
+          compact: false, // Keep formatting readable
+          retainLines: true, // Retain existing line structure where possible
+          indent: {
+            style: "  ", // Use double spaces for indentation
+          },
+          newline: "\n", // Use Unix-style line endings
+          trailingComma: true, // Add trailing commas where applicable
+        },
+      });
+
+      const secondSplitter = transformedData.match(/export\s+const\s+[^{]*?{/gi)?.at(0);
+
+      const presetImport = `import { ${toCamelCase(sectionName)}Presets } from "${sectionPath}/${folder}/_presets";\n`;
+
+      const finalContent = presetImport + parts[0] + splitter + schemaContent + transformedData.split(secondSplitter).at(1);
+      // finalContent.replace(`"PRESETS_PLACEHOLDER"`, `${toCamelCase(sectionName)}Presets`)
+
+      console.log(transformedData);
+      writeCompareFile(`${file}`, finalContent);
+
+      await new Promise((resolve, reject) => {
+        exec(`eslint ${file} --fix`, (error, stdout, stderr) => {
+          console.log(
+            `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+              `/${file.split(/[\\/]/).at(-2)}/_schema.ts Prettified`
+            )}`
+          );
+          resolve(true);
+          if (error) {
+            console.log(`error: ${error.message}`);
+            reject();
+          }
+        });
+      });
+      await delay(500);
+      importedData = importFresh(file);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+  /*if (Array.isArray(presets) && oldPresets) {
+    try {
+      console.log(
+        `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.magentaBright(
+          `/${file.split(/[\\/]/).at(-2)}/_schema.ts Block Schema Transformation Started`
         )}`
       );
       const data = readFile(file, { encoding: "utf-8" });
@@ -145,7 +269,7 @@ export const importAndTransformSchema = async (file: any) => {
         exec(`eslint ${file} --fix`, (error, stdout, stderr) => {
           console.log(
             `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
-              `/${file.split(/[\\/]/).at(-2)}/schema.ts Prettified`
+              `/${file.split(/[\\/]/).at(-2)}/_schema.ts Prettified`
             )}`
           );
           resolve(true);
@@ -160,7 +284,7 @@ export const importAndTransformSchema = async (file: any) => {
     } catch (err) {
       console.log(err);
     }
-  }
+  }*/
 
   return importedData;
 };

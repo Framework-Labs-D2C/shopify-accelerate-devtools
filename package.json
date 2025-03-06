@@ -1,6 +1,6 @@
 {
   "name": "shopify-accelerate",
-  "version": "2.0.1-alpha.4",
+  "version": "2.0.1-alpha.6",
   "description": "Shopify Theme development with full Typescript Support",
   "author": "Felix Tellmann",
   "license": "MIT",
@@ -37,7 +37,7 @@
     "@swc/helpers": "^0.5.6",
     "@tailwindcss/aspect-ratio": "^0.4.2",
     "@tailwindcss/container-queries": "^0.1.1",
-    "@typescript-eslint/typescript-estree": "^8.20.0",
+    "@typescript-eslint/typescript-estree": "^8.26.0",
     "autoprefixer": "^10.4.19",
     "chalk": "4.1.2",
     "commander": "^12.0.0",
@@ -45,6 +45,7 @@
     "esbuild": "^0.24.0",
     "esbuild-plugin-d.ts": "^1.3.1",
     "escodegen": "^2.1.0",
+    "fast-deep-equal": "^3.1.3",
     "immer": "^10.0.3",
     "import-fresh": "^3.3.0",
     "inquirer": "9.2.15",
@@ -70,16 +71,16 @@
     "@types/prompts": "^2.4.9",
     "@types/react": "^18.2.57",
     "@types/react-dom": "^18.2.19",
-    "fx-style": "^3.0.3",
+    "fx-style": "3.0.4-beta.9",
     "pnpm": "^8.15.5",
-    "typescript": "^5.3.3"
+    "typescript": "^5.8.2"
   },
   "eslintConfig": {
     "env": {
       "browser": true
     },
     "extends": [
-      "./node_modules/fx-style/"
+      "./node_modules/fx-style/.eslintrc.js"
     ],
     "ignorePatterns": [
       ".github/**/*"
@@ -88,6 +89,8 @@
       "sort-keys-fix"
     ],
     "rules": {
+      "react/jsx-curly-brace-presence": "off",
+      "next/no-html-link-for-pages": "off",
       "typescript-sort-keys/interface": 0,
       "sort-keys-fix/sort-keys-fix": 0,
       "import/no-anonymous-default-export": 0,

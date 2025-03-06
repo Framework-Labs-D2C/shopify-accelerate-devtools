@@ -1,3 +1,4 @@
+import { ClassicThemeBlocks } from "types/classic-blocks";
 import { ThemeBlocks } from "./blocks";
 import { _Article_metafields, _Blog_metafields, _Collection_metafields, _Page_metafields, _Product_metafields, _Shop_metafields, _Variant_metafields } from "./metafields";
 import { Sections } from "./sections";
@@ -559,6 +560,57 @@ type MapSettings<Section extends ShopifySection | ShopifySectionBlock> = {
     : never;
 };
 
+type MapPresetSettings<Section extends ShopifySection | ShopifySectionBlock> = {
+  [ID in ExtractSettings<Section>["id"]]: ExtractSetting<Section, ID>["type"] extends "article"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "checkbox"
+    ? boolean
+    : ExtractSetting<Section, ID>["type"] extends "number" | "range"
+    ? number
+    : ExtractSetting<Section, ID>["type"] extends "radio" | "select"
+    ? // @ts-ignore
+      ExtractSetting<Section, ID>["options"][number]["value"]
+    : ExtractSetting<Section, ID>["type"] extends
+        | "text"
+        | "textarea"
+        | "inline_richtext"
+        | "color_background"
+        | "html"
+        | "liquid"
+        | "url"
+        | "font"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "text_alignment"
+    ? "left" | "center" | "right"
+    : ExtractSetting<Section, ID>["type"] extends "blog"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "collection"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "collection_list"
+    ? string[]
+    : ExtractSetting<Section, ID>["type"] extends "color"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "font_picker"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "image_picker"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "link_list"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "page"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "product"
+    ? string
+    : ExtractSetting<Section, ID>["type"] extends "product_list"
+    ? string[]
+    : ExtractSetting<Section, ID>["type"] extends "richtext"
+    ? `<${_BlockTag}${string}</${_BlockTag}>`
+    : ExtractSetting<Section, ID>["type"] extends "video_url"
+    ? `${string}youtube${string}` | `${string}vimeo${string}`
+    : ExtractSetting<Section, ID>["type"] extends "video"
+    ? string
+    : never;
+};
+
 export type _BlockTag = "p" | "h1" | "h2" | "h3" | "h4" | "h5" | "h6" | "ol" | "ul";
 
 type MapSection<T> = {
@@ -579,22 +631,28 @@ type MapBlocks<T extends { blocks: ShopifySectionBlock[] }> = {
   };
 };
 
-type MapBlocksPreset<T extends { blocks: ShopifySectionBlock[] }> = {
+type MapBlocksPreset<T extends { blocks: (ShopifySectionBlock | ShopifyThemeBlock)[] }, Depth extends number = 0> = {
   [B in Extract<T["blocks"][number], { type: string }>["type"]]: {
     type: B;
-    settings?: Partial<MapSettings<Extract<T["blocks"][number], { type: B }>>>;
-    blocks?:
-      | (T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never)
-      | (T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never);
+    settings?: Partial<MapPresetSettings<Extract<T["blocks"][number], { type: B }>>>;
+    blocks?: Depth extends 7
+      ? never
+      : T extends { blocks: { type: string }[] }
+      ? MapBlocksPreset<Extract<T["blocks"][number], { type: B; blocks: any[] }>, DepthCounter[Depth]>[keyof MapBlocksPreset<
+          Extract<T["blocks"][number], { type: B; blocks: any[] }>,
+          DepthCounter[Depth]
+        >][]
+      : never;
   };
 };
-type MapBlocksPresetObject<T extends { blocks: Record<string, ShopifySectionBlock> }> = {
+
+export type MapBlocksPresetObject<T extends { blocks: Record<string, ShopifySectionBlock> }> = {
   [B in Extract<T["blocks"], { type: string }>["type"]]: {
     type: B;
-    settings?: Partial<MapSettings<Extract<T["blocks"][keyof T["blocks"]], { type: B }>>>;
-    blocks?:
-      | (T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never)
-      | (T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never);
+    settings?: Partial<MapPresetSettings<Extract<T["blocks"][keyof T["blocks"]], { type: B }>>>;
+    blocks?: T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never;
+    block_order?: string[];
+    disabled?: boolean;
   };
 };
 
@@ -626,21 +684,60 @@ export type ShopifySectionDefaultGuaranteed<T = never> = {
     : { [T: string]: string | number | boolean };
 };
 
+export type PresetSettings<
+  T extends
+    | Extract<Sections, { settings: any }>["settings"]
+    | Extract<ThemeBlocks, { settings: any }>["settings"]
+    | Extract<ClassicThemeBlocks, { settings: any }>["settings"],
+> = {
+  [setting in keyof T]: T[setting] extends _Product_liquid
+    ? string
+    : T[setting] extends _Product_liquid
+    ? string
+    : T[setting] extends _Product_liquid[]
+    ? string[]
+    : T[setting] extends _Collection_liquid
+    ? string
+    : T[setting] extends _Collection_liquid[]
+    ? string[]
+    : T[setting] extends _Color_liquid
+    ? string
+    : T[setting] extends _Page_liquid
+    ? string
+    : T[setting] extends _Article_liquid
+    ? string
+    : T[setting] extends _Blog_liquid
+    ? string
+    : T[setting] extends _Image_liquid
+    ? string
+    : T[setting] extends _Linklist_liquid
+    ? string
+    : T[setting] extends _Video_liquid
+    ? string
+    : T[setting];
+};
+
+type DepthCounter = [0, 1, 2, 3, 4, 5, 6, 7];
+
 export type ShopifySectionPreset<T = unknown> = {
   name: string;
   category?: string;
   development_only?: boolean;
-  blocks?:
-    | (T extends { blocks: { [T: string]: any } } ? { [C: string]: MapBlocksPresetObject<T> } : never)
-    | (T extends { blocks: Array<any> } ? MapBlocksPreset<T>[keyof MapBlocksPreset<T>][] : never);
-  block_order?: string[];
+  manual_preset?: boolean;
+  blocks?: T extends { blocks: Array<any> }
+    ? MapBlocksPreset<T, 0>[keyof MapBlocksPreset<T, 0>][]
+    : T extends unknown
+    ? any[]
+    : never;
+
   settings?: T extends never
     ? { [T: string]: string | number | boolean } | undefined
+    : T extends unknown
+    ? { [T: string]: string | number | boolean } | undefined
     : T extends { settings: any }
-    ? Partial<T["settings"]> | undefined
+    ? Partial<PresetSettings<T["settings"]>> | undefined
     : { [T: string]: string | number | boolean } | undefined;
 };
-
 /*
 export type PresetSchema<T = never> = {
   type: T extends { type: string } ? T["type"] : Sections["type"];
@@ -704,17 +801,17 @@ export type ShopifySectionGeneratedThemeBlock =
             settings?: never;
             hide_development_presets?: boolean;
           }
-        | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never; hide_development_presets?: boolean }
-        | {
-            type: "@theme";
-            disabled?: boolean;
-            limit?: never;
-            name?: never;
-            settings?: never;
-            hide_development_presets?: boolean;
-          }
       )[];
-      presets?: ShopifySectionPreset<{ blocks: Array<any> }>[];
+      presets?: ShopifySectionPreset[];
+    }
+  | {
+      type: "@app";
+      disabled?: boolean;
+      limit?: never;
+      name?: never;
+      settings?: never;
+      hide_development_presets?: boolean;
+      theme_block?: never;
     }
   | { type: "@app"; disabled?: boolean; limit?: never; name?: never; settings?: never; hide_development_presets?: boolean }
   | { type: "@theme"; disabled?: boolean; limit?: never; name?: never; settings?: never; hide_development_presets?: boolean }

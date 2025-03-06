@@ -3,7 +3,9 @@ import fs from "fs";
 import watch from "node-watch";
 import os from "os";
 import path from "path";
-import { getTargetsAndValidateTemplates } from "../scaffold-theme/validate-templates";
+import { syncPresets } from "../scaffold-theme/sync-presets";
+import { generatePresetsFiles } from "../scaffold-theme/generate-presets-files";
+import { validateTemplates } from "../scaffold-theme/validate-templates";
 import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
 import { delay } from "../utils/delay";
 import { generateSchemaFiles } from "../scaffold-theme/generate-schema-files";
@@ -27,10 +29,12 @@ export const watchTheme = () => {
 
   watch(Object.values(folders)?.filter((folder) => fs.existsSync(folder)), { recursive: true }, async (event, name) => {
     const startTime = Date.now();
+
     try {
       if (running) return;
       const fileName = name.split(/[/\\]/gi).at(-1);
 
+      console.log(fileName);
       running = true;
 
       if (event === "remove") {
@@ -49,23 +53,33 @@ export const watchTheme = () => {
           }
         }
 
-        if (/^schema\.ts$/gi.test(fileName)) {
+        if (/^_schema\.ts$/gi.test(fileName)) {
           await delay(20);
-          if (fs.existsSync(name.replace(/[\\/]schema.ts$/gi, ""))) {
-            generateSchemaFiles(name.replace(/[\\/]schema.ts$/gi, ""));
+          if (fs.existsSync(name.replace(/[\\/]_schema\.ts$/gi, ""))) {
+            generateSchemaFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
+          }
+        }
+        if (/^_presets\.ts$/gi.test(fileName)) {
+          await delay(20);
+          if (fs.existsSync(name.replace(/[\\/]_presets\.ts$/gi, ""))) {
+            generatePresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
           }
         }
         running = false;
         return;
       }
 
-      if (/^schema\.ts$/gi.test(fileName)) {
-        generateSchemaFiles(name.replace(/[\\/]schema.ts$/gi, ""));
+      if (/^_schema\.ts$/gi.test(fileName)) {
+        generateSchemaFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
         getTargets();
         await getSchemaSources();
       }
 
-      if (fs.statSync(name).isDirectory() && !fs.existsSync(path.join(name, "schema.ts"))) {
+      if (/^_presets\.ts$/gi.test(fileName)) {
+        generatePresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
+      }
+
+      if (fs.statSync(name).isDirectory() && !fs.existsSync(path.join(name, "_schema.ts"))) {
         if (fs.existsSync(name)) {
           generateSchemaFiles(name);
           getTargets();
@@ -82,7 +96,7 @@ export const watchTheme = () => {
           console.log(
             `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(
               `${Date.now() - startTime}ms`
-            )}] ${chalk.cyan(`File created: ${path.join(name, "schema.ts").replace(process.cwd(), "")}`)}`
+            )}] ${chalk.cyan(`File created: ${path.join(name, "_schema.ts").replace(process.cwd(), "")}`)}`
           );
         }
       }
@@ -164,8 +178,8 @@ export const watchTheme = () => {
       try {
         if (running) return;
         running = true;
-        await getTargetsAndValidateTemplates(true);
-
+        await validateTemplates(true);
+        await syncPresets();
         running = false;
       } catch (err) {
         console.log(

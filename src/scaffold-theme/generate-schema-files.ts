@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { getSources } from "./parse-files";
 import { config } from "../../shopify-accelerate";
 import { getAllDirectories, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { toCamelCase } from "../utils/to-camel-case";
@@ -7,8 +8,8 @@ import { capitalize, toPascalCase } from "../utils/to-pascal-case";
 
 export const generateSchemaFiles = (dirName: string) => {
   const fileName = dirName.split(/[/\\]/gi).at(-1)?.replace(/^_*/gi, "");
-  const exists = fs.existsSync(path.join(dirName, "schema.ts"));
-  const schemaContent = exists ? readFile(path.join(dirName, "schema.ts"), { encoding: "utf-8" }) : "";
+  const exists = fs.existsSync(path.join(dirName, "_schema.ts"));
+  const schemaContent = exists ? readFile(path.join(dirName, "_schema.ts"), { encoding: "utf-8" }) : "";
   const isEmpty = !schemaContent?.includes(`export const ${toCamelCase(fileName)}:`);
 
   if (exists && !isEmpty) {
@@ -18,19 +19,24 @@ export const generateSchemaFiles = (dirName: string) => {
   const writeFile = isEmpty ? writeCompareFile : writeOnlyNew;
 
   if (dirName.includes(config.folders.sections) && dirName !== config.folders.sections) {
+    const presetsFile = config.sources.sectionsPresetFiles.find((file) => file.includes(dirName));
     writeFile(
-      path.join(dirName, "schema.ts"),
+      path.join(dirName, "_schema.ts"),
       `import { ShopifySection } from "types/shopify";
 import { ${toPascalCase(fileName)}Section } from "types/sections";
-
+${presetsFile ? `import { ${toCamelCase(fileName)}Presets } from "sections/${fileName}/_presets";\n` : ""}
 export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}Section> = {
   name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",
   settings: [],
-  presets: [
+  presets: ${
+    presetsFile
+      ? `${toCamelCase(fileName)}Presets,`
+      : `[
     {
       name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",
     },
-  ],
+  ],`
+  }
   disabled_on: {
     groups: ["custom.globals", "custom.header", "custom.modal", "custom.card"],
   },
@@ -41,7 +47,7 @@ export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}S
 
   if (dirName.includes(config.folders.blocks) && dirName !== config.folders.blocks) {
     writeFile(
-      path.join(dirName, "schema.ts"),
+      path.join(dirName, "_schema.ts"),
       `import { ShopifyThemeBlock } from "types/shopify";
 import { ${toPascalCase(fileName)}Block } from "types/blocks";
 
@@ -61,7 +67,7 @@ export const ${toCamelCase(fileName)}: ShopifyThemeBlock<${toPascalCase(fileName
 
   if (dirName.includes(config.folders.classic_blocks) && dirName !== config.folders.classic_blocks) {
     writeFile(
-      path.join(dirName, "schema.ts"),
+      path.join(dirName, "_schema.ts"),
       `import { ShopifyBlock } from "types/shopify";
 import { ${toPascalCase(fileName)}Block } from "types/classic-blocks";
 
@@ -80,7 +86,7 @@ export const ${toCamelCase(fileName)}: ShopifyThemeBlock<${toPascalCase(fileName
 
   if (dirName.includes(config.folders.cards) && dirName !== config.folders.cards) {
     writeFile(
-      path.join(dirName, "schema.ts"),
+      path.join(dirName, "_schema.ts"),
       `import { ShopifyCard } from "types/shopify";
 import { ${toPascalCase(fileName)}Card } from "types/cards";
 
@@ -93,7 +99,7 @@ export const ${toCamelCase(fileName)}: ShopifyCard<${toPascalCase(fileName)}Card
   }
 };
 
-export const generateAllMissingSchemaFiles = () => {
+export const generateAllMissingSchemaFiles = async () => {
   const directories = [
     ...getAllDirectories(config.folders.sections),
     ...getAllDirectories(config.folders.blocks),
@@ -104,4 +110,5 @@ export const generateAllMissingSchemaFiles = () => {
   directories.forEach((name) => {
     generateSchemaFiles(name);
   });
+  await getSources();
 };

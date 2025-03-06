@@ -16,14 +16,14 @@ export const generateThemeBlocksTypes = () => {
   let sectionUnionType = "export type ThemeBlocks =";
   let typeContent = "";
 
-  const generateBlockTypes = (block, folder, key) => {
+  const generateBlockTypes = (block, folder, key, rootSchema?: ShopifyThemeBlock | ShopifySection) => {
     if ("theme_block" in block && block.theme_block) {
       const newBlock = { ...block, folder: folder, filename: `_${folder}__${block.type}` };
 
-      typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true)}\n`;
+      typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true, rootSchema)}\n`;
       sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
 
-      block?.blocks?.forEach((childBlock) => generateBlockTypes(childBlock, folder, key));
+      block?.blocks?.forEach((childBlock) => generateBlockTypes(childBlock, folder, key, rootSchema));
     }
   };
 
@@ -31,7 +31,7 @@ export const generateThemeBlocksTypes = () => {
     const schema = { ...blocks[key] };
     schema["filename"] = schema.folder;
 
-    schema.blocks?.forEach((block) => generateBlockTypes(block, schema.folder?.replace(/^_*/gi, ""), key));
+    schema.blocks?.forEach((block) => generateBlockTypes(block, schema.folder?.replace(/^_*/gi, ""), key, schema));
 
     typeContent += `${blockToTypes(schema, key)}\n`;
     sectionUnionType += `\n  | ${capitalize(key)}Block`;
@@ -40,7 +40,7 @@ export const generateThemeBlocksTypes = () => {
   for (const key in sections) {
     const schema = sections[key];
 
-    schema.blocks?.forEach((block) => generateBlockTypes(block, schema.folder?.replace(/^_*/gi, ""), key));
+    schema.blocks?.forEach((block) => generateBlockTypes(block, schema.folder?.replace(/^_*/gi, ""), key, schema));
   }
 
   if (!typeContent) return;
@@ -125,8 +125,14 @@ export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections:
     const schema = sections[key];
 
     schema.blocks?.forEach((block) => {
-      if ("theme_block" in block && block.theme_block) {
-        block?.settings?.forEach(analyseSetting, localTypes);
+      try {
+        if ("theme_block" in block && block.theme_block) {
+          block?.settings?.forEach(analyseSetting, localTypes);
+        }
+      } catch (err) {
+        console.log(err);
+        console.log(schema.blocks);
+        throw new Error("Short Circuit");
       }
     });
   }
@@ -137,7 +143,7 @@ export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections:
   return ``;
 };
 
-export const blockToTypes = (blockSchema, key, isSectionBlock = false) => {
+export const blockToTypes = (blockSchema, key, isSectionBlock = false, rootSchema?: ShopifyThemeBlock | ShopifySection) => {
   const filename = blockSchema.filename;
 
   const arr = [];
@@ -194,52 +200,71 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false) => {
   arr.push(`  type: "${filename}";`);
   arr.push(`};`);
 
-  if (blockSchema.blocks?.length && blockSchema.blocks?.length === 1) {
-    const block = blockSchema.blocks[0];
-    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
-    } else if (!block.name && block.type) {
-      arr.push("");
-      arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
-    } else if (block.theme_block) {
-      arr.push("");
-      arr.push(
-        `export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${blockSchema.folder.replace(/^_*/gi, "")}__${
-          block.type
-        }" }>;`
-      );
-    } else {
-      arr.push("");
-      arr.push(`export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
-    }
-  }
-
-  if (blockSchema.blocks?.length && blockSchema.blocks?.length > 1) {
-    arr.push("");
-    arr.push(`export type ${capitalize(key)}Blocks =`);
-
-    blockSchema.blocks?.forEach((block, i) => {
-      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
-      } else if (!block.name && block.type) {
-        if (blockSchema.blocks?.length - 1 === i) {
-          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
+  const addBlockTypes = (schema, skipSingle = false, isLast = false) => {
+    if (!skipSingle) {
+      if (schema.blocks?.length && schema.blocks?.length === 1) {
+        const block = schema.blocks[0];
+        if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
+        } else if (block.type === "@section_blocks") {
+          addBlockTypes(rootSchema);
+        } else if (!block.name && block.type) {
+          arr.push("");
+          arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
+        } else if (block.theme_block) {
+          arr.push("");
+          arr.push(
+            `export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${schema.folder.replace(/^_*/gi, "")}__${
+              block.type
+            }" }>;`
+          );
         } else {
-          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>`);
-        }
-      } else if (block.theme_block) {
-        if (blockSchema.blocks?.length - 1 === i) {
-          arr.push(`  | Extract<ThemeBlocks, { type: "_${blockSchema.folder.replace(/^_*/gi, "")}__${block.type}" }>;`);
-        } else {
-          arr.push(`  | Extract<ThemeBlocks, { type: "_${blockSchema.folder.replace(/^_*/gi, "")}__${block.type}" }>`);
-        }
-      } else {
-        if (blockSchema.blocks?.length - 1 === i) {
-          arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
-        } else {
-          arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))}`);
+          arr.push("");
+          arr.push(
+            `export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`
+          );
         }
       }
-    });
-  }
+    }
+
+    if (schema.blocks?.length && (schema.blocks?.length > 1 || skipSingle)) {
+      if (!skipSingle) {
+        arr.push("");
+        arr.push(`export type ${capitalize(key)}Blocks =`);
+      }
+
+      schema.blocks?.forEach((block, i) => {
+        if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
+        } else if (block.type === "@section_blocks") {
+          if (schema.blocks?.length - 1 === i) {
+            addBlockTypes(rootSchema, true, true);
+          } else {
+            addBlockTypes(rootSchema, true);
+          }
+        } else if (!block.name && block.type) {
+          if (schema.blocks?.length - 1 === i && (!skipSingle || isLast)) {
+            arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
+          } else {
+            arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>`);
+          }
+        } else if (block.theme_block) {
+          if (schema.blocks?.length - 1 === i && (!skipSingle || isLast)) {
+            arr.push(`  | Extract<ThemeBlocks, { type: "_${schema.folder.replace(/^_*/gi, "")}__${block.type}" }>;`);
+          } else {
+            arr.push(`  | Extract<ThemeBlocks, { type: "_${schema.folder.replace(/^_*/gi, "")}__${block.type}" }>`);
+          }
+        } else {
+          if (schema.blocks?.length - 1 === i && (!skipSingle || isLast)) {
+            arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
+          } else {
+            arr.push(`  | ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))}`);
+          }
+        }
+      });
+    }
+  };
+
+  addBlockTypes(blockSchema);
+
   arr.push("");
   return arr.join("\n");
 };
@@ -321,9 +346,9 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
     case "url":
       return "?: string";
     case "video":
-      return "?:  _Video_liquid";
+      return "?: _Video_liquid";
     case "video_url":
-      return "?:  `${string}youtube${string}` | `${string}vimeo${string}`";
+      return "?: `${string}youtube${string}` | `${string}vimeo${string}`";
     case "font":
       return "?: string";
     case "color_scheme":

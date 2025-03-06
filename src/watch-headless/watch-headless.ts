@@ -40,7 +40,7 @@ export const watchHeadless = () => {
     }`);
 
         writeOnlyNew(
-          entry.path?.replace("schema.ts", `${entry.folder}.tsx`),
+          entry.path?.replace("_schema.ts", `${entry.folder}.tsx`),
           `import type { ${capitalize(key)}Section } from "types/sections";
 
 export const ${capitalize(key)} = ({ id, type, settings, blocks, disabled }: ${capitalize(key)}Section) => {

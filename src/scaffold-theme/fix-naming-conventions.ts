@@ -128,9 +128,12 @@ export const fixNamingConventions = async (force = false) => {
 
     schemaFiles.forEach((file) => {
       const originalContent = readFile(file, { encoding: "utf-8" });
-      const content = originalContent.replace(/ (type|id):\s+(["'`])([^'"`]*-[^'"`]*)\2/gi, (match, p1, p2, p3) => {
-        return ` ${p1}: ${p2}${p3.replace(/-/gi, "_")}${p2}`;
-      });
+      const content = originalContent.replace(
+        / (type|id):\s+(["'`])(?!(shopify:\/\/apps))([^'"`\s]*-[^'"`]*)\2/gi,
+        (match, p1, p2, p3) => {
+          return ` ${p1}: ${p2}${p3.replace(/-/g, "_")}${p2}`;
+        }
+      );
 
       if (content !== originalContent) {
         writeCompareFile(file, content);

@@ -5,7 +5,7 @@ import { config } from "../../shopify-accelerate";
 
 export const readFile = (file_path, options?: any) => {
   if (fs.existsSync(file_path)) {
-    return fs.readFileSync(file_path, { ...options, encoding: "utf-8" }) as unknown as string;
+    return fs.readFileSync(file_path, { encoding: "utf-8", ...options }) as unknown as string;
   }
   return "";
 };

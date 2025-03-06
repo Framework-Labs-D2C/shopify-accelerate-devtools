@@ -1,11 +1,10 @@
 import chalk from "chalk";
 import importFresh from "import-fresh";
 import path from "path";
-import { JSONParse } from "../utils/json";
-import { importAndTransformSchema } from "./import-and-transform-schema";
 import { ShopifyBlock, ShopifySection, ShopifySettings } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { getAllFiles } from "../utils/fs";
+import { importAndTransformSchema } from "./import-and-transform-schema";
 
 export const getSources = async () => {
   const { folders } = config;
@@ -30,6 +29,7 @@ export const getSources = async () => {
   const layouts = [];
   const sectionsLiquid = [];
   const sectionsSchemaFiles = [];
+  const sectionsPresetFiles = [];
   const sectionsJs = [];
   const settingsFiles = [];
   const blocksLiquid = [];
@@ -63,6 +63,9 @@ export const getSources = async () => {
     }
     if (isSectionSchema(filePath)) {
       sectionsSchemaFiles.push(filePath);
+    }
+    if (isSectionPreset(filePath)) {
+      sectionsPresetFiles.push(filePath);
     }
     if (isSectionTs(filePath)) {
       sectionsJs.push(filePath);
@@ -123,6 +126,7 @@ export const getSources = async () => {
   config.sources.layouts = layouts;
   config.sources.sectionsLiquid = sectionsLiquid;
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+  config.sources.sectionsPresetFiles = sectionsPresetFiles;
   config.sources.sectionsJs = sectionsJs;
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.blocksSchemaFiles = blocksSchemaFiles;
@@ -264,6 +268,7 @@ export const getSchemaSources = async () => {
   const layouts = [];
   const sectionsLiquid = [];
   const sectionsSchemaFiles = [];
+  const sectionsPresetFiles = [];
   const settingsFiles = [];
   const blocksLiquid = [];
   const blocksSchemaFiles = [];
@@ -290,6 +295,9 @@ export const getSchemaSources = async () => {
     }
     if (isSectionSchema(filePath)) {
       sectionsSchemaFiles.push(filePath);
+    }
+    if (isSectionPreset(filePath)) {
+      sectionsPresetFiles.push(filePath);
     }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
@@ -329,6 +337,7 @@ export const getSchemaSources = async () => {
   config.sources.layouts = layouts;
   config.sources.sectionsLiquid = sectionsLiquid;
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
+  config.sources.sectionsPresetFiles = sectionsPresetFiles;
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.classic_blocksLiquid = classic_blocksLiquid;
   config.sources.cardsLiquid = cardsLiquid;
@@ -508,9 +517,9 @@ export const getTargets = () => {
 };
 
 export const isTypeScriptSchema = (name: string) =>
-  (name.includes(config.folders.sections) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name)) ||
-  (name.includes(config.folders.blocks) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name)) ||
-  (name.includes(config.folders.classic_blocks) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name)) ||
+  (name.includes(config.folders.sections) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name)) ||
+  (name.includes(config.folders.blocks) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name)) ||
+  (name.includes(config.folders.classic_blocks) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name)) ||
   (name.includes(config.folders.config) && /[\\/]settings_schema\.ts$/gi.test(name)) ||
   (name.includes(config.folders.utils) && /[\\/]settings[\\/][^\\/]*\.ts$/gi.test(name));
 
@@ -518,10 +527,16 @@ export const isSectionLiquid = (name: string) =>
   name.includes(config.folders.sections) && /[\\/][^\\/]*[\\/][^.]*\.liquid$/gi.test(name);
 
 export const isSectionSchema = (name: string) =>
-  name.includes(config.folders.sections) && /[\\/][^\\/]*[\\/]schema\.ts$/gi.test(name);
+  name.includes(config.folders.sections) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name);
+
+export const isSectionPreset = (name: string) =>
+  name.includes(config.folders.sections) && /[\\/][^\\/]*[\\/]_presets\.ts$/gi.test(name);
 
 export const isSectionTs = (name: string) =>
-  name.includes(config.folders.sections) && !isSectionSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*\.ts$/gi.test(name);
+  name.includes(config.folders.sections) &&
+  !isSectionSchema(name) &&
+  !isSectionPreset(name) &&
+  /[\\/][^\\/]*[\\/][^\\/]*\.ts$/gi.test(name);
 
 export const isSettingsSchema = (name: string) =>
   name.includes(config.folders.config) && /[\\/]settings_schema\.ts$/gi.test(name);
@@ -542,7 +557,8 @@ export const isSnippet = (name: string) =>
 export const isBlockLiquid = (name: string) =>
   name.includes(config.folders.blocks) && /[\\/][^\\/]*[\\/][^.\\/]*\.liquid$/gi.test(name);
 
-export const isBlockSchema = (name: string) => name.includes(config.folders.blocks) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name);
+export const isBlockSchema = (name: string) =>
+  name.includes(config.folders.blocks) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name);
 
 export const isBlockTs = (name: string) =>
   name.includes(config.folders.blocks) && !isBlockSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
@@ -551,7 +567,7 @@ export const isClassicBlockLiquid = (name: string) =>
   name.includes(config.folders.classic_blocks) && /[\\/][^\\/]*[\\/][^.\\/]*\.liquid$/gi.test(name);
 
 export const isClassicBlockSchema = (name: string) =>
-  name.includes(config.folders.classic_blocks) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name);
+  name.includes(config.folders.classic_blocks) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name);
 
 export const isClassicBlockTs = (name: string) =>
   name.includes(config.folders.classic_blocks) && !isClassicBlockSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
@@ -559,7 +575,8 @@ export const isClassicBlockTs = (name: string) =>
 export const isCardsLiquid = (name: string) =>
   name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/][^.\\/]*\.liquid$/gi.test(name);
 
-export const isCardsSchema = (name: string) => name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/]schema.ts$/gi.test(name);
+export const isCardsSchema = (name: string) =>
+  name.includes(config.folders.cards) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name);
 
 export const isCardsTs = (name: string) =>
   name.includes(config.folders.cards) && !isCardsSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
