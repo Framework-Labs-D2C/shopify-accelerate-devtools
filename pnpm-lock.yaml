@@ -50,6 +50,9 @@ importers:
       fast-deep-equal:
         specifier: ^3.1.3
         version: 3.1.3
+      fx-style:
+        specifier: 3.0.4-beta.21
+        version: 3.0.4-beta.21(typescript@5.8.2)
       immer:
         specifier: ^10.0.3
         version: 10.0.3
@@ -120,9 +123,6 @@ importers:
       '@types/react-dom':
         specifier: ^18.2.19
         version: 18.2.19
-      fx-style:
-        specifier: 3.0.4-beta.9
-        version: 3.0.4-beta.9(typescript@5.8.2)
       pnpm:
         specifier: ^8.15.5
         version: 8.15.5
@@ -518,6 +518,9 @@ packages:
   '@types/json-schema@7.0.11':
     resolution: {integrity: sha512-wOuvG1SN4Us4rez+tylwwwCV1psiNVOkJeM3AUWUNWg/jDQY2+HE/444y5gc+jBmRqASOm2Oeh5c1axHobwRKQ==}
 
+  '@types/json-schema@7.0.15':
+    resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
   '@types/jsonwebtoken@8.5.9':
     resolution: {integrity: sha512-272FMnFGzAVMGtu9tkr29hRL6bZj4Zs1KZNeHLnKqAvp06tAIcarTMwOh8/8bz4FmKRcMxZhZNeUAQsNLoiPhg==}
 
@@ -554,8 +557,8 @@ packages:
   '@types/scheduler@0.16.2':
     resolution: {integrity: sha512-hppQEBDmlwhFAXKJX2KnWLYu5yMfi91yazPb2l+lbJiwW+wdo1gNeRA+3RgNSO39WYX2euey41KEwnqesU2Jew==}
 
-  '@types/semver@7.3.13':
-    resolution: {integrity: sha512-21cFJr9z3g5dW8B0CVI9g2O9beqaThGQ6ZFBqHfwhzLDKUxaqTIy3vnfah/UPkfOiF2pLq+tGz+W8RyCskuslw==}
+  '@types/semver@7.5.8':
+    resolution: {integrity: sha512-I8EUhyrgfLrcTkzV3TSsGyl1tSuPrEDzr0yd5m90UgNxQkyDXULk3b6MlQqTCpZpNtWe1K0hzclnZkTcLBe2UQ==}
 
   '@types/superagent@4.1.16':
     resolution: {integrity: sha512-tLfnlJf6A5mB6ddqF159GqcDizfzbMUB1/DeT59/wBNqzRTNNKsaw79A/1TZ84X+f/EwWH8FeuSkjlCLyqS/zQ==}
@@ -1394,8 +1397,8 @@ packages:
   functions-have-names@1.2.3:
     resolution: {integrity: sha512-xckBUXyTIqT97tq2x2AMb+g163b5JFysYk0x4qxNFwbfQkmNZoiRHb6sPzI9/QV33WeuvVYBUIiD4NzNIyqaRQ==}
 
-  fx-style@3.0.4-beta.9:
-    resolution: {integrity: sha512-Y/JwpYuaU4h5KxOEgNsRG1b8XzSn2PcxEBDZPfO4cmq3TTqLiaGuhNox4GMUVpjHkNeeyMBell2pYL4bL3XAqg==}
+  fx-style@3.0.4-beta.21:
+    resolution: {integrity: sha512-CZz07llQHu2Plg/D4A7SABRCtszkw4jV+mvY+NWdSw3KQI6XEAhwdWKyEqXoSk6z+I2BNBilf+w4/QMfcWSxUQ==}
     engines: {node: '>=14'}
     hasBin: true
     peerDependencies:
@@ -2319,8 +2322,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.0.3:
-    resolution: {integrity: sha512-L/4pUDMxcNa8R/EthV08Zt42WBO4h1rarVtK0K+QJG0X187OLo7l699jWw0GKuwzkPQ//jMFA/8Xm6Fh3J/DAg==}
+  prettier@3.5.3:
+    resolution: {integrity: sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -3325,6 +3328,8 @@ snapshots:
 
   '@types/json-schema@7.0.11': {}
 
+  '@types/json-schema@7.0.15': {}
+
   '@types/jsonwebtoken@8.5.9':
     dependencies:
       '@types/node': 20.11.19
@@ -3362,7 +3367,7 @@ snapshots:
 
   '@types/scheduler@0.16.2': {}
 
-  '@types/semver@7.3.13': {}
+  '@types/semver@7.5.8': {}
 
   '@types/superagent@4.1.16':
     dependencies:
@@ -3469,8 +3474,8 @@ snapshots:
 
   '@typescript-eslint/utils@5.45.0(eslint@8.57.1)(typescript@5.8.2)':
     dependencies:
-      '@types/json-schema': 7.0.11
-      '@types/semver': 7.3.13
+      '@types/json-schema': 7.0.15
+      '@types/semver': 7.5.8
       '@typescript-eslint/scope-manager': 5.45.0
       '@typescript-eslint/types': 5.45.0
       '@typescript-eslint/typescript-estree': 5.45.0(typescript@5.8.2)
@@ -4164,10 +4169,10 @@ snapshots:
     optionalDependencies:
       eslint-config-prettier: 10.0.2(eslint@8.57.1)
 
-  eslint-plugin-prettier@5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.0.3):
+  eslint-plugin-prettier@5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3):
     dependencies:
       eslint: 8.57.1
-      prettier: 3.0.3
+      prettier: 3.5.3
       prettier-linter-helpers: 1.0.0
       synckit: 0.8.5
     optionalDependencies:
@@ -4422,7 +4427,7 @@ snapshots:
 
   functions-have-names@1.2.3: {}
 
-  fx-style@3.0.4-beta.9(typescript@5.8.2):
+  fx-style@3.0.4-beta.21(typescript@5.8.2):
     dependencies:
       '@typescript-eslint/eslint-plugin': 8.26.0(@typescript-eslint/parser@8.26.0(eslint@8.57.1)(typescript@5.8.2))(eslint@8.57.1)(typescript@5.8.2)
       '@typescript-eslint/parser': 8.26.0(eslint@8.57.1)(typescript@5.8.2)
@@ -4431,7 +4436,7 @@ snapshots:
       eslint: 8.57.1
       eslint-config-prettier: 10.0.2(eslint@8.57.1)
       eslint-plugin-node: 11.1.0(eslint@8.57.1)
-      eslint-plugin-prettier: 5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.0.3)
+      eslint-plugin-prettier: 5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3)
       eslint-plugin-prettier-fx: 5.0.2(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier-fx@3.1.1)
       eslint-plugin-react: 7.37.4(eslint@8.57.1)
       eslint-plugin-sort-keys-fix: 1.1.2
@@ -4441,9 +4446,9 @@ snapshots:
       json5: 2.2.3
       meow: 9.0.0
       ncp: 2.0.0
-      prettier: 3.0.3
+      prettier: 3.5.3
       prettier-fx: 3.1.1
-      prettier-plugin-tailwindcss: 0.6.11(prettier@3.0.3)
+      prettier-plugin-tailwindcss: 0.6.11(prettier@3.5.3)
       rimraf: 3.0.2
       typescript: 5.8.2
       write-file-atomic: 4.0.2
@@ -5348,13 +5353,13 @@ snapshots:
     dependencies:
       fast-diff: 1.2.0
 
-  prettier-plugin-tailwindcss@0.6.11(prettier@3.0.3):
+  prettier-plugin-tailwindcss@0.6.11(prettier@3.5.3):
     dependencies:
-      prettier: 3.0.3
+      prettier: 3.5.3
 
   prettier@2.8.0: {}
 
-  prettier@3.0.3: {}
+  prettier@3.5.3: {}
 
   process-nextick-args@2.0.1: {}
 

@@ -1,25 +1,36 @@
 import chalk from "chalk";
 import equal from "fast-deep-equal/es6";
 
-import { ESLint } from "fx-style";
+// @ts-ignore
+import { ESLint } from "fx-style/eslint";
 import importFresh from "import-fresh";
 
 import fs from "node:fs";
 import path from "node:path";
+import { generateCardsTypes } from "./generate-card-types";
+import { generateClassicBlocksTypes } from "./generate-classic-blocks-types";
+import { generateLiquidFiles } from "./generate-liquid-files";
+import { generateSchemaLocales } from "./generate-schema-locales";
+import { generateSchemaVariables } from "./generate-schema-variables";
+import { generateSectionsTypes } from "./generate-section-types";
+import { generateSettingTypes } from "./generate-setting-types";
+import { generateThemeBlocksTypes } from "./generate-theme-blocks-types";
+import { getSchemaSources, getTargets } from "./parse-files";
+import { parseLocales } from "./parse-locales";
 import { Sections } from "types/sections";
 import { MapBlocksPresetObject, ShopifySection, ShopifySectionBlock, ShopifySectionPreset } from "types/shopify";
 import { config } from "../../shopify-accelerate";
-import { getTargets } from "../../src/scaffold-theme/parse-files";
 import { readFile, writeCompareFile } from "../../src/utils/fs";
 import { toCamelCase, toPascalCase } from "../../src/utils/to-pascal-case";
 
-export const syncPresets = async () => {
+export const syncPresets = async (watch = false) => {
   if (!config.sync_presets) {
     return;
   }
-  await new Promise((resolve, reject) => {
-    const startTime = Date.now();
+  const startTime = Date.now();
+  const completed = [];
 
+  await new Promise((resolve, reject) => {
     const count = 0;
     const templates = [
       ...new Set([
@@ -35,7 +46,7 @@ export const syncPresets = async () => {
       if (/[\\/]config[\\/]/gi.test(template)) return;
       const content = readFile(template);
       eval(`"use strict";
-    templateData.push(${content})`);
+      templateData.push(${content})`);
     });
 
     const presets: {
@@ -76,7 +87,7 @@ export const syncPresets = async () => {
       return obj.toString();
     };
 
-    const mapPresetBlocks = (blocks: { [C: string]: MapBlocksPresetObject<{ blocks: Record<string, ShopifySectionBlock> }> }) => {
+    const mapPresetBlocks = (blocks: { [C: string]: MapBlocksPresetObject }) => {
       // @ts-ignore
       return Object.values(blocks)?.map(({ block_order, disabled, blocks, ...block }) => {
         const returnBlock = {
@@ -130,8 +141,6 @@ export const syncPresets = async () => {
         }
       });
     });
-
-    const completed = [];
 
     Object.entries(presets ?? {}).forEach(([type, { schema, named, unnamed, primary, development }], i, arr) => {
       const filePath = path.join(config.folders.sections, schema.folder, "_presets.ts");
@@ -244,15 +253,44 @@ export const syncPresets = async () => {
       );
 
       // Save the formatted output to a temporary file
-      const tempFilePath = path.join(__dirname, `${type}__temp.ts`);
+      const tempFilePath = path.join(config.project_root, "@utils", "temp", `${type}__temp.ts`);
       fs.writeFileSync(tempFilePath, output.join("\n"), "utf8");
 
       // Run ESLint Fix Programmatically
       const runEslintFix = async () => {
         try {
-          const eslint = new ESLint({ fix: true });
+          const eslint = new ESLint({
+            fix: true,
+            ignore: false,
+            cwd: path.join(config.project_root, "package.json"),
+            overrideConfig: {
+              rules: {
+                "comma-dangle": ["error", "always-multiline"],
+                "prettier/prettier": [
+                  "error",
+                  {
+                    plugins: ["prettier-plugin-tailwindcss"],
+                    trailingComma: "es5",
+                    arrowParens: "always",
+                    singleQuote: false,
+                    bracketSpacing: true,
+                    printWidth: 130,
+                    indentChains: true,
+                    exportCurlySpacing: true,
+                    importCurlySpacing: true,
+                    allowBreakAfterOperator: false,
+                    breakLongMethodChains: true,
+                    importFormatting: "oneline",
+                    endOfLine: "auto",
+                    ignorePath: null,
+                    withNodeModules: true,
+                  },
+                ],
+              },
+              ignorePatterns: ["!node_modules/**"], // Force ESLint to include fx-style
+            },
+          });
 
-          // Lint the temp file
           const results = await eslint.lintFiles([tempFilePath]);
 
           // Apply the fixes
@@ -260,6 +298,7 @@ export const syncPresets = async () => {
             fs.unlinkSync(tempFilePath);
             return results[0].output;
           } else {
+            console.log(results[0], results[0]?.messages);
             throw new Error(`Could not transform presets: ${type}: ${schema.folder}`);
           }
         } finally {
@@ -272,20 +311,43 @@ export const syncPresets = async () => {
       // Execute ESLint fix
       runEslintFix()
         .then((res) => {
-          writeCompareFile(filePath, res);
+          writeCompareFile(filePath, res, (updated) => {
+            completed.push(updated);
+          });
         })
-        .catch(console.error)
+        .catch((e) => {
+          console.error(e);
+          completed.push(false);
+        })
         .finally(() => {
-          completed.push(true);
           if (completed?.length === arr?.length) {
-            console.log(
-              `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(
-                `${Date.now() - startTime}ms`
-              )}] ${chalk.cyan(`Presets Synchronized with theme ID: ${config.theme_id} - ${config.theme_path}`)}`
-            );
             resolve(true);
           }
         });
     });
   });
+
+  console.log(
+    `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
+      `Presets Synchronized with theme ID: ${config.theme_id} - ${config.theme_path}`
+    )}`
+  );
+
+  console.log(
+    { watch },
+    completed.some((updated) => updated)
+  );
+  if (watch && completed.some((updated) => updated)) {
+    getTargets();
+    await getSchemaSources();
+    parseLocales();
+    generateSchemaVariables();
+    generateSchemaLocales();
+    generateSectionsTypes();
+    generateThemeBlocksTypes();
+    generateClassicBlocksTypes();
+    generateCardsTypes();
+    generateSettingTypes();
+    generateLiquidFiles();
+  }
 };

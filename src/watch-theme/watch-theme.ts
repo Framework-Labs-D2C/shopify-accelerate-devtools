@@ -3,6 +3,7 @@ import fs from "fs";
 import watch from "node-watch";
 import os from "os";
 import path from "path";
+import { backupTemplates } from "../scaffold-theme/backup-templates";
 import { syncPresets } from "../scaffold-theme/sync-presets";
 import { generatePresetsFiles } from "../scaffold-theme/generate-presets-files";
 import { validateTemplates } from "../scaffold-theme/validate-templates";
@@ -178,8 +179,10 @@ export const watchTheme = () => {
       try {
         if (running) return;
         running = true;
+        getTargets();
         await validateTemplates(true);
-        await syncPresets();
+        await syncPresets(true);
+        backupTemplates();
         running = false;
       } catch (err) {
         console.log(

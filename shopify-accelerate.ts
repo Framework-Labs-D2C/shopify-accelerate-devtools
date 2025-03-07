@@ -2,22 +2,23 @@
 
 import fs from "fs";
 import path from "path";
-import { syncPresets } from "./src/scaffold-theme/sync-presets";
-import { generateAllMissingPresetsFiles } from "./src/scaffold-theme/generate-presets-files";
-import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
-import { validateTemplates } from "./src/scaffold-theme/validate-templates";
+import { backupTemplates } from "./src/scaffold-theme/backup-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
 import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
+import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
 import { generateCardsTypes } from "./src/scaffold-theme/generate-card-types";
 import { generateClassicBlocksTypes } from "./src/scaffold-theme/generate-classic-blocks-types";
 import { generateConfigFiles } from "./src/scaffold-theme/generate-config-files";
+import { generateAllMissingPresetsFiles } from "./src/scaffold-theme/generate-presets-files";
 import { generateSectionsTypes } from "./src/scaffold-theme/generate-section-types";
 import { generateSettingTypes } from "./src/scaffold-theme/generate-setting-types";
 import { generateThemeBlocksTypes } from "./src/scaffold-theme/generate-theme-blocks-types";
 import { getSchemaSources, getSources, getTargets } from "./src/scaffold-theme/parse-files";
+import { syncPresets } from "./src/scaffold-theme/sync-presets";
+import { validateTemplates } from "./src/scaffold-theme/validate-templates";
 import { shopifyCliPull } from "./src/shopify-cli/pull";
 import { runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
 import { capitalize } from "./src/utils/capitalize";
@@ -56,6 +57,7 @@ const shopify_toml = tomlFile
           "allow-live"?: boolean;
           all_presets?: boolean;
           sync_presets?: boolean;
+          auto_backups?: boolean;
           mode: "development" | "production";
           ignore_blocks: string;
           ignore_snippets: string;
@@ -76,6 +78,7 @@ export type GlobalsState = {
   project_root: ReturnType<typeof process.cwd>;
   all_presets: boolean;
   sync_presets: boolean;
+  auto_backups: boolean;
   mode: "development" | "production";
   theme_id: number;
   theme_path: string;
@@ -266,6 +269,7 @@ export const config: GlobalsState = {
   store: shopify_toml?.environments?.["development"]?.store,
   all_presets: shopify_toml?.environments?.["development"]?.all_presets,
   sync_presets: shopify_toml?.environments?.["development"]?.sync_presets,
+  auto_backups: shopify_toml?.environments?.["development"]?.auto_backups,
   mode: shopify_toml?.environments?.["development"]?.mode ?? "production",
 };
 
@@ -298,6 +302,7 @@ program
     await buildTheme();
     generateConfigFiles();
     await shopifyCliPull();
+    backupTemplates();
   });
 
 program
@@ -354,6 +359,7 @@ program
     runEsbuild();
     runTailwindCSSWatcher();
     watchTheme();
+    backupTemplates();
   });
 
 program

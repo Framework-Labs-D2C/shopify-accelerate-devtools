@@ -10,7 +10,7 @@ export const readFile = (file_path, options?: any) => {
   return "";
 };
 
-export const writeCompareFile = (file_path, content, successCallback = () => {}) => {
+export const writeCompareFile = (file_path, content, successCallback = (updated: boolean) => {}) => {
   if (!fs.existsSync(file_path)) {
     const dirname = path.dirname(file_path);
     if (!fs.existsSync(dirname)) {
@@ -21,7 +21,7 @@ export const writeCompareFile = (file_path, content, successCallback = () => {})
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.cyanBright(`Created: ${file_path.replace(process.cwd(), "")}`)}`
     );
-    successCallback();
+    successCallback(true);
     return;
   }
 
@@ -34,8 +34,11 @@ export const writeCompareFile = (file_path, content, successCallback = () => {})
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(`Updated: ${file_path.replace(process.cwd(), "")}`)}`
     );
     fs.writeFileSync(file_path, content);
-    successCallback();
+    successCallback(true);
+    return;
   }
+
+  successCallback(false);
 };
 export const renameFile = (file_path, new_file_path, successCallback = () => {}) => {
   if (!fs.existsSync(file_path)) {

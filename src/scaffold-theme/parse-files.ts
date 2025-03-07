@@ -154,6 +154,9 @@ export const getSources = async () => {
     try {
       const data = await importAndTransformSchema(file);
 
+      /*if (file.includes("navigation")) {
+        console.log(data);
+      }*/
       acc = {
         ...acc,
         ...Object.entries(data).reduce((acc2, [key, val]) => {
@@ -331,6 +334,9 @@ export const getSchemaSources = async () => {
     if (/[\\/]@utils[\\/]settings[\\/][^\\/]*\.ts$/gi.test(file)) {
       importFresh(file);
     }
+    if (/[\\/]_presets\.ts$/gi.test(file)) {
+      importFresh(file);
+    }
   });
 
   config.sources.snippets = snippets;
@@ -352,6 +358,10 @@ export const getSchemaSources = async () => {
     const file = sectionsSchemaFiles[i];
     try {
       const data = await importAndTransformSchema(file);
+
+      /*  if (file.includes("navigation")) {
+        console.log(Object.values(data)[0]);
+      }*/
 
       acc = {
         ...acc,

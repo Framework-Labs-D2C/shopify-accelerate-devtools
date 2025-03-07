@@ -646,7 +646,7 @@ type MapBlocksPreset<T extends { blocks: (ShopifySectionBlock | ShopifyThemeBloc
   };
 };
 
-export type MapBlocksPresetObject<T extends { blocks: Record<string, ShopifySectionBlock> }> = {
+export type MapBlocksPresetObject<T extends { blocks: Record<string, ShopifySectionBlock> } = any> = {
   [B in Extract<T["blocks"], { type: string }>["type"]]: {
     type: B;
     settings?: Partial<MapPresetSettings<Extract<T["blocks"][keyof T["blocks"]], { type: B }>>>;
