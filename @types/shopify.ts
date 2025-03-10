@@ -631,7 +631,7 @@ type MapBlocks<T extends { blocks: ShopifySectionBlock[] }> = {
   };
 };
 
-type MapBlocksPreset<T extends { blocks: (ShopifySectionBlock | ShopifyThemeBlock)[] }, Depth extends number = 0> = {
+export type MapBlocksPreset<T extends { blocks: (ShopifySectionBlock | ShopifyThemeBlock)[] }, Depth extends number = 0> = {
   [B in Extract<T["blocks"][number], { type: string }>["type"]]: {
     type: B;
     settings?: Partial<MapPresetSettings<Extract<T["blocks"][number], { type: B }>>>;
@@ -646,7 +646,7 @@ type MapBlocksPreset<T extends { blocks: (ShopifySectionBlock | ShopifyThemeBloc
   };
 };
 
-export type MapBlocksPresetObject<T extends { blocks: Record<string, ShopifySectionBlock> } = any> = {
+export type MapBlocksPresetObject<T extends { blocks: Record<string, ShopifySectionBlock> }> = {
   [B in Extract<T["blocks"], { type: string }>["type"]]: {
     type: B;
     settings?: Partial<MapPresetSettings<Extract<T["blocks"][keyof T["blocks"]], { type: B }>>>;

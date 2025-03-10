@@ -1,6 +1,6 @@
 {
   "name": "shopify-accelerate",
-  "version": "2.0.1-alpha.43",
+  "version": "2.0.2-beta.2",
   "description": "Shopify Theme development with full Typescript Support",
   "author": "Felix Tellmann",
   "license": "MIT",
@@ -56,6 +56,7 @@
     "node-watch": "^0.7.4",
     "postcss": "^8.4.38",
     "postcss-import": "^16.1.0",
+    "prettier": "3.3.2",
     "prompts": "^2.4.2",
     "regenerator-runtime": "^0.14.1",
     "shopify-typed-node-api": "^2.1.1",

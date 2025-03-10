@@ -5,7 +5,13 @@ import { getAllDirectories, readFile, writeCompareFile, writeOnlyNew } from "../
 import { toCamelCase } from "../utils/to-camel-case";
 import { capitalize, toPascalCase } from "../utils/to-pascal-case";
 
-export const generatePresetsFiles = (dirName: string) => {
+export const generateMissingPresetsFiles = (dirName: string) => {
+  if (
+    !path.join(dirName).includes(path.join(config.folders.sections)) ||
+    path.join(dirName) === path.join(config.folders.sections)
+  ) {
+    return;
+  }
   const fileName = dirName.split(/[/\\]/gi).at(-1)?.replace(/^_*/gi, "");
   const exists = fs.existsSync(path.join(dirName, "_presets.ts"));
   const presetsContent = exists ? readFile(path.join(dirName, "_presets.ts")) : "";
@@ -37,6 +43,6 @@ export const generateAllMissingPresetsFiles = () => {
   const directories = [...getAllDirectories(config.folders.sections)];
 
   directories.forEach((name) => {
-    generatePresetsFiles(name);
+    generateMissingPresetsFiles(name);
   });
 };

@@ -21,7 +21,9 @@ export const backupTemplates = () => {
 
   templates.forEach((template) => {
     const finalPath = path.join(config.theme_path, "template_history", template.replace(path.join(config.theme_path), ""));
-    writeCompareFile(finalPath, readFile(template));
+    if (finalPath?.trim()) {
+      writeCompareFile(finalPath, readFile(template));
+    }
   });
 
   const cleanThemePath = `${config.theme_path?.replace(/^\.\//gi, "")?.replace(/\\/gi, "/")}/template_history`;

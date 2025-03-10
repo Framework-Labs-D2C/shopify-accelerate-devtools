@@ -5,7 +5,7 @@ import os from "os";
 import path from "path";
 import { backupTemplates } from "../scaffold-theme/backup-templates";
 import { syncPresets } from "../scaffold-theme/sync-presets";
-import { generatePresetsFiles } from "../scaffold-theme/generate-presets-files";
+import { generateMissingPresetsFiles } from "../scaffold-theme/generate-presets-files";
 import { validateTemplates } from "../scaffold-theme/validate-templates";
 import { generateCardsTypes } from "../scaffold-theme/generate-card-types";
 import { delay } from "../utils/delay";
@@ -63,7 +63,7 @@ export const watchTheme = () => {
         if (/^_presets\.ts$/gi.test(fileName)) {
           await delay(20);
           if (fs.existsSync(name.replace(/[\\/]_presets\.ts$/gi, ""))) {
-            generatePresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
+            generateMissingPresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
           }
         }
         running = false;
@@ -77,11 +77,12 @@ export const watchTheme = () => {
       }
 
       if (/^_presets\.ts$/gi.test(fileName)) {
-        generatePresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
+        generateMissingPresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
       }
 
       if (fs.statSync(name).isDirectory() && !fs.existsSync(path.join(name, "_schema.ts"))) {
         if (fs.existsSync(name)) {
+          generateMissingPresetsFiles(name);
           generateSchemaFiles(name);
           getTargets();
           await getSchemaSources();
@@ -114,15 +115,19 @@ export const watchTheme = () => {
       if (isTypeScriptSchema(name)) {
         getTargets();
         await getSchemaSources();
-        parseLocales();
-        generateSchemaVariables();
-        generateSchemaLocales();
-        generateSectionsTypes();
-        generateThemeBlocksTypes();
-        generateClassicBlocksTypes();
-        generateCardsTypes();
-        generateSettingTypes();
-        generateLiquidFiles();
+        const updated = await syncPresets(true);
+        if (!updated) {
+          parseLocales();
+          generateSchemaVariables();
+          generateSchemaLocales();
+          generateSectionsTypes();
+          generateThemeBlocksTypes();
+          generateClassicBlocksTypes();
+          generateCardsTypes();
+          generateSettingTypes();
+          generateLiquidFiles();
+        }
+
         console.log(
           `[${chalk.gray(new Date().toLocaleTimeString())}]: [${chalk.magentaBright(`${Date.now() - startTime}ms`)}] ${chalk.cyan(
             `File modified: ${name.replace(process.cwd(), "")}`

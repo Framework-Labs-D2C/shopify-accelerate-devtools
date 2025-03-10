@@ -80,6 +80,9 @@ importers:
       postcss-import:
         specifier: ^16.1.0
         version: 16.1.0(postcss@8.4.38)
+      prettier:
+        specifier: 3.3.2
+        version: 3.3.2
       prompts:
         specifier: ^2.4.2
         version: 2.4.2
@@ -2322,8 +2325,8 @@ packages:
     engines: {node: '>=10.13.0'}
     hasBin: true
 
-  prettier@3.5.3:
-    resolution: {integrity: sha512-QQtaxnoDJeAkDvDKWCLiwIXkTgRhwYDEQCghU9Z6q03iyek/rxRh/2lC3HB7P8sWT2xC/y5JDctPLBIGzHKbhw==}
+  prettier@3.3.2:
+    resolution: {integrity: sha512-rAVeHYMcv8ATV5d508CFdn+8/pHPpXeIid1DdrPwXnaAdH7cqjVbpJaT5eq4yRAFU/lsbwYwSF/n5iNrdJHPQA==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -4169,10 +4172,10 @@ snapshots:
     optionalDependencies:
       eslint-config-prettier: 10.0.2(eslint@8.57.1)
 
-  eslint-plugin-prettier@5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3):
+  eslint-plugin-prettier@5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.3.2):
     dependencies:
       eslint: 8.57.1
-      prettier: 3.5.3
+      prettier: 3.3.2
       prettier-linter-helpers: 1.0.0
       synckit: 0.8.5
     optionalDependencies:
@@ -4436,7 +4439,7 @@ snapshots:
       eslint: 8.57.1
       eslint-config-prettier: 10.0.2(eslint@8.57.1)
       eslint-plugin-node: 11.1.0(eslint@8.57.1)
-      eslint-plugin-prettier: 5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.5.3)
+      eslint-plugin-prettier: 5.0.0(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier@3.3.2)
       eslint-plugin-prettier-fx: 5.0.2(eslint-config-prettier@10.0.2(eslint@8.57.1))(eslint@8.57.1)(prettier-fx@3.1.1)
       eslint-plugin-react: 7.37.4(eslint@8.57.1)
       eslint-plugin-sort-keys-fix: 1.1.2
@@ -4446,9 +4449,9 @@ snapshots:
       json5: 2.2.3
       meow: 9.0.0
       ncp: 2.0.0
-      prettier: 3.5.3
+      prettier: 3.3.2
       prettier-fx: 3.1.1
-      prettier-plugin-tailwindcss: 0.6.11(prettier@3.5.3)
+      prettier-plugin-tailwindcss: 0.6.11(prettier@3.3.2)
       rimraf: 3.0.2
       typescript: 5.8.2
       write-file-atomic: 4.0.2
@@ -5353,13 +5356,13 @@ snapshots:
     dependencies:
       fast-diff: 1.2.0
 
-  prettier-plugin-tailwindcss@0.6.11(prettier@3.5.3):
+  prettier-plugin-tailwindcss@0.6.11(prettier@3.3.2):
     dependencies:
-      prettier: 3.5.3
+      prettier: 3.3.2
 
   prettier@2.8.0: {}
 
-  prettier@3.5.3: {}
+  prettier@3.3.2: {}
 
   process-nextick-args@2.0.1: {}
 
