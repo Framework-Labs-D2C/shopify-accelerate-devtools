@@ -2,6 +2,7 @@ import chalk from "chalk";
 import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
+import { delay } from "../utils/delay";
 import { readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { config } from "../../shopify-accelerate";
 
@@ -21,12 +22,20 @@ export const backupTemplates = () => {
 
   templates.forEach((template) => {
     const finalPath = path.join(config.theme_path, "template_history", template.replace(path.join(config.theme_path), ""));
-    if (finalPath?.trim()) {
-      writeCompareFile(finalPath, readFile(template));
+    if (finalPath) {
+      const content = readFile(template);
+      if (content?.trim()) {
+        writeCompareFile(finalPath, content);
+      }
     }
   });
 
   const cleanThemePath = `${config.theme_path?.replace(/^\.\//gi, "")?.replace(/\\/gi, "/")}/template_history`;
+
+  if (!fs.existsSync(path.join(cleanThemePath))) {
+    fs.mkdirSync(path.join(cleanThemePath), { recursive: true });
+  }
+
   const shopifyCLIProcess = exec(
     `cd ${cleanThemePath} && git init && git add . && git commit -m "Autosave: ${Date.now()}`,
     async (error, stdout, stderr) => {

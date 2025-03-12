@@ -57,6 +57,7 @@ export const watchTheme = () => {
         if (/^_schema\.ts$/gi.test(fileName)) {
           await delay(20);
           if (fs.existsSync(name.replace(/[\\/]_schema\.ts$/gi, ""))) {
+            generateMissingPresetsFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
             generateSchemaFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
           }
         }
@@ -71,6 +72,7 @@ export const watchTheme = () => {
       }
 
       if (/^_schema\.ts$/gi.test(fileName)) {
+        generateMissingPresetsFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
         generateSchemaFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
         getTargets();
         await getSchemaSources();
