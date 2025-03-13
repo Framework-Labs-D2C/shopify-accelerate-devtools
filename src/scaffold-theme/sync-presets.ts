@@ -311,7 +311,8 @@ export const syncPresets = async (watch = false) => {
         const eslint = new ESLint({
           fix: true,
           ignore: false,
-          cwd: path.join(config.project_root, "package.json"),
+          cwd: path.join(config.project_root),
+          overrideConfigFile: path.join(config.project_root, "package.json"),
           overrideConfig: {
             rules: {
               "comma-dangle": ["error", "always-multiline"],
