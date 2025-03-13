@@ -70,6 +70,7 @@ export const shopifyCliPull = async (initMessage = "init") => {
         )}`
       );
     }, 1000);
+
     const shopifyCLIProcess = exec(
       `shopify theme pull --environment ${environment} && cd ${cleanThemePath} && git init && git add . && git commit -m "${initMessage}"`,
       async (error, stdout, stderr) => {

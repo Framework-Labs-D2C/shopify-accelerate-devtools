@@ -37,7 +37,7 @@ export const backupTemplates = () => {
   }
 
   const shopifyCLIProcess = exec(
-    `cd ${cleanThemePath} && git init && git add . && git commit -m "Autosave: ${Date.now()}`,
+    `cd ${cleanThemePath} && git init && git add . && git commit -m "Autosave: ${Date.now()}"`,
     async (error, stdout, stderr) => {
       if (stderr) {
         console.log(stderr);
