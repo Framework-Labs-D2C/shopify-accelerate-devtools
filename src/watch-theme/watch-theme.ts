@@ -35,7 +35,7 @@ export const watchTheme = () => {
       if (running) return;
       const fileName = name.split(/[/\\]/gi).at(-1);
 
-      console.log(fileName);
+      // console.log(fileName);
       running = true;
 
       if (event === "remove") {
