@@ -64,6 +64,51 @@ const mapPresetBlocks = (
 
         return acc;
       }
+
+      if (!block.name && !["@app", "@classic_theme", "@theme"].includes(block.type)) {
+        const potentialBlock = structuredClone(config.sources.blockSchemas[toCamelCase(block.type)]);
+
+        if (potentialBlock?.folder === block.type) {
+          acc.push({
+            ...potentialBlock,
+            type: potentialBlock.folder,
+            themeBlock: { ...potentialBlock, type: potentialBlock.folder },
+          });
+          return acc;
+        }
+
+        if (!potentialBlock && block.type.includes("__")) {
+          const sectionKey = toCamelCase(block.type.split("__")[0]);
+          const section = structuredClone(config.sources.sectionSchemas[sectionKey]);
+
+          const findSectionBlock = (blocks: any[], targetType: string, withSettings = false): any | undefined => {
+            for (const sBlock of blocks) {
+              const formattedType = sBlock.theme_block ? formatBlockType(sBlock.type, section.folder) : sBlock.type;
+
+              if (formattedType === targetType) return { ...sBlock, type: formattedType };
+
+              if (Array.isArray(sBlock.blocks)) {
+                const nestedBlock = findSectionBlock(sBlock.blocks as any[], targetType, withSettings);
+                if (withSettings) {
+                  if (nestedBlock && nestedBlock.settings) return nestedBlock;
+                } else {
+                  if (nestedBlock) return nestedBlock;
+                }
+              }
+            }
+            return undefined;
+          };
+
+          const sectionBlock = section?.blocks
+            ? findSectionBlock(section.blocks as any[], block.type, true) || findSectionBlock(section.blocks as any[], block.type)
+            : undefined;
+
+          if (sectionBlock) {
+            acc.push({ ...sectionBlock, cross_section: true, themeBlock: section });
+            return acc;
+          }
+        }
+      }
       acc.push(block);
       return acc;
     }, []);
@@ -74,7 +119,7 @@ const mapPresetBlocks = (
       if ("theme_block" in block && block.theme_block) {
         acc.push({
           ...block,
-          type: formatBlockType(block.type, schema?.folder),
+          type: "cross_section" in block ? block.type : formatBlockType(block.type, schema?.folder),
         });
         return acc;
       }
@@ -109,20 +154,28 @@ const mapPresetBlocks = (
           const sectionKey = toCamelCase(block.type.split("__")[0]);
           const section = structuredClone(config.sources.sectionSchemas[sectionKey]);
 
-          const findSectionBlock = (blocks: any[], targetType: string): any | undefined => {
+          const findSectionBlock = (blocks: any[], targetType: string, withSettings = false): any | undefined => {
             for (const sBlock of blocks) {
               const formattedType = sBlock.theme_block ? formatBlockType(sBlock.type, section.folder) : sBlock.type;
+
               if (formattedType === targetType) return { ...sBlock, type: formattedType };
 
               if (Array.isArray(sBlock.blocks)) {
-                const nestedBlock = findSectionBlock(sBlock.blocks as any[], targetType);
-                if (nestedBlock) return nestedBlock;
+                const nestedBlock = findSectionBlock(sBlock.blocks as any[], targetType, withSettings);
+                if (withSettings) {
+                  if (nestedBlock && nestedBlock.settings) return nestedBlock;
+                } else {
+                  if (nestedBlock) return nestedBlock;
+                }
               }
             }
             return undefined;
           };
 
-          const sectionBlock = section?.blocks ? findSectionBlock(section.blocks as any[], block.type) : undefined;
+          const sectionBlock = section?.blocks
+            ? findSectionBlock(section.blocks as any[], block.type, true) || findSectionBlock(section.blocks as any[], block.type)
+            : undefined;
+
           if (sectionBlock) acc.push({ ...sectionBlock, themeBlock: section });
         }
 
@@ -147,6 +200,17 @@ const mapPresetBlocks = (
         returnBlock.blocks = mapPresetBlocks(blocks, nextContainerSchema, nextContainerSchema?.themeBlock || schema);
       }
 
+      if (returnBlock?.settings) {
+        const blockSchema = containerSchema?.blocks?.find((containerBlock) => containerBlock.type === block.type);
+
+        returnBlock.settings = Object.entries(returnBlock.settings).reduce((acc, [key, value]) => {
+          if (blockSchema?.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+            acc[key] = value;
+            return acc;
+          }
+          return acc;
+        }, {});
+      }
       return returnBlock;
     })
     ?.filter((childBlock) => {
@@ -244,7 +308,12 @@ export const syncPresets = async (watch = false) => {
           const presetObject: ShopifySectionPreset = { name, ...(developmentOnly && { development_only: true }) };
 
           if (preset.settings) {
-            presetObject.settings = { ...preset.settings };
+            presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
+              if (schema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+                acc[key] = value;
+              }
+              return acc;
+            }, {});
             if ("generate_presets" in presetObject.settings) {
               presetObject.settings.generate_presets = "never";
             }
