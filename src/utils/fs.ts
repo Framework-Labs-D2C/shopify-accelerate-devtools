@@ -83,6 +83,9 @@ export const getAllFiles = (dirname) => {
     if (/[\\/]cards$/gi.test(dirname)) {
       return [];
     }
+    if (/[\\/]classic-blocks$/gi.test(dirname)) {
+      return [];
+    }
     fs.mkdirSync(dirname, { recursive: true });
   }
 
@@ -102,6 +105,9 @@ export const getAllDirectories = (dirname) => {
     if (/[\\/]cards$/gi.test(dirname)) {
       return [];
     }
+    if (/[\\/]classic-blocks$/gi.test(dirname)) {
+      return [];
+    }
     fs.mkdirSync(dirname, { recursive: true });
   }
   return fs.readdirSync(dirname).reduce((acc, file) => {
@@ -116,6 +122,15 @@ export const deleteFile = (file_path: string) => {
   if (!fs.existsSync(file_path)) return;
 
   fs.unlinkSync(file_path);
+  console.log(
+    `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file_path.replace(process.cwd(), "")}`)}`
+  );
+};
+
+export const deleteFolder = (file_path: string) => {
+  if (!fs.existsSync(file_path)) return;
+
+  fs.rmdirSync(file_path, { recursive: true });
   console.log(
     `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Deleted: ${file_path.replace(process.cwd(), "")}`)}`
   );

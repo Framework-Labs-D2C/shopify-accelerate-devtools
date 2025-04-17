@@ -3,11 +3,13 @@ import { exec } from "child_process";
 import fs from "fs";
 import path from "path";
 import { delay } from "../utils/delay";
-import { readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
+import { deleteFolder, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 import { config } from "../../shopify-accelerate";
 
 export const backupTemplates = () => {
-  writeOnlyNew(path.join(config.theme_path, ".gitignore"), `template_history`);
+  writeCompareFile(path.join(config.theme_path, ".gitignore"), `.template_history\n.shopify`);
+
+  deleteFolder(path.join(config.theme_path, "template_history"));
 
   if (!config.auto_backups) return;
 
@@ -21,7 +23,7 @@ export const backupTemplates = () => {
   ];
 
   templates.forEach((template) => {
-    const finalPath = path.join(config.theme_path, "template_history", template.replace(path.join(config.theme_path), ""));
+    const finalPath = path.join(config.theme_path, ".template_history", template.replace(path.join(config.theme_path), ""));
     if (finalPath) {
       const content = readFile(template);
       if (content?.trim()) {
@@ -30,7 +32,7 @@ export const backupTemplates = () => {
     }
   });
 
-  const cleanThemePath = `${config.theme_path?.replace(/^\.\//gi, "")?.replace(/\\/gi, "/")}/template_history`;
+  const cleanThemePath = `${config.theme_path?.replace(/^\.\//gi, "")?.replace(/\\/gi, "/")}/.template_history`;
 
   if (!fs.existsSync(path.join(cleanThemePath))) {
     fs.mkdirSync(path.join(cleanThemePath), { recursive: true });

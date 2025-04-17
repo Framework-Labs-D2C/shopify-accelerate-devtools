@@ -1,4 +1,3 @@
-import { ClassicThemeBlocks } from "types/classic-blocks";
 import { ThemeBlocks } from "./blocks";
 import { _Article_metafields, _Blog_metafields, _Collection_metafields, _Page_metafields, _Product_metafields, _Shop_metafields, _Variant_metafields } from "./metafields";
 import { Sections } from "./sections";
@@ -634,6 +633,7 @@ type MapBlocks<T extends { blocks: ShopifySectionBlock[] }> = {
 export type MapBlocksPreset<T extends { blocks: (ShopifySectionBlock | ShopifyThemeBlock)[] }, Depth extends number = 0> = {
   [B in Extract<T["blocks"][number], { type: string }>["type"]]: {
     type: B;
+    name?: string;
     settings?: Partial<MapPresetSettings<Extract<T["blocks"][number], { type: B }>>>;
     blocks?: Depth extends 7
       ? never
@@ -685,10 +685,7 @@ export type ShopifySectionDefaultGuaranteed<T = never> = {
 };
 
 export type PresetSettings<
-  T extends
-    | Extract<Sections, { settings: any }>["settings"]
-    | Extract<ThemeBlocks, { settings: any }>["settings"]
-    | Extract<ClassicThemeBlocks, { settings: any }>["settings"],
+  T extends Extract<Sections, { settings: any }>["settings"] | Extract<ThemeBlocks, { settings: any }>["settings"],
 > = {
   [setting in keyof T]: T[setting] extends _Product_liquid
     ? string
@@ -848,6 +845,10 @@ export type ShopifyTemplateTypes =
   | "product"
   | "search";
 
+export type ShopifySectionBlockPresetMap<T extends { type: string }> = {
+  [K in T["type"]]?: ShopifySectionPreset<Extract<T, { type: K }>>[];
+};
+
 export type ShopifySection<T = never> = {
   name: string;
   hide_development_presets?: boolean;
@@ -869,6 +870,7 @@ export type ShopifySection<T = never> = {
   };
   max_blocks?: number;
   presets?: ShopifySectionPreset<T>[];
+  blockPresets?: ShopifySectionBlockPresetMap<T extends { blocks: { type: string }[] } ? T["blocks"][number] : never>;
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section";
 } & (

@@ -74,9 +74,17 @@ export const generateLiquidFiles = () => {
       }
 
       if ("theme_block" in block && block.theme_block) {
+        const sectionBlockType = `_${schema_file_path}__${block.type}`;
+        const blockPresets = schema.blockPresets?.[sectionBlockType];
+
         const blockSchema = {
           ...block,
-          presets: "presets" in block ? block.presets : [{ name: block.name }],
+          presets:
+            "presets" in block
+              ? block.presets
+              : blockPresets
+              ? blockPresets?.map(({ manual_preset, ...preset }) => preset)
+              : [{ name: block.name }],
           folder: schema.folder,
         };
 

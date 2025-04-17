@@ -50,6 +50,9 @@ export const fixNamingConventions = async (force = false) => {
         .filter((dirent) => dirent.isDirectory())
         .map((dirent) => ({ ...dirent }));
     } catch (err) {
+      if (/[\\/]classic-blocks$/gi.test(source)) {
+        return [];
+      }
       console.error("Error reading directory:", err);
       return [];
     }

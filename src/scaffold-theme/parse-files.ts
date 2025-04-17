@@ -154,28 +154,35 @@ export const getSources = async () => {
     try {
       const data = await importAndTransformSchema(file);
 
-      /*if (file.includes("navigation")) {
-        console.log(data);
-      }*/
       acc = {
         ...acc,
-        ...Object.entries(data).reduce((acc2, [key, val]) => {
+        ...Object.entries(data).reduce((acc2, [key, schema]) => {
           // @ts-ignore
+
+          const folder = file.split(/[\\/]/gi).at(-2);
+          const schema_file_path = folder.replace(/^_*/gi, "");
           acc2[key] = {
-            ...val,
-            blocks: val?.blocks?.some((block) => block.theme_block)
-              ? val.blocks.map((block) => ({
-                  ...block,
-                  theme_block: block.name ? true : undefined,
-                  presets:
-                    block.presets && Array.isArray(block.presets)
-                      ? block.presets
-                      : block.name
-                      ? [{ name: block.name }]
-                      : undefined,
-                }))
-              : val?.blocks,
-            folder: file.split(/[\\/]/gi).at(-2),
+            ...schema,
+            blocks: schema?.blocks?.some((block) => block.theme_block)
+              ? schema.blocks.map((block) => {
+                  const sectionBlockType = `_${schema_file_path}__${block.type}`;
+                  const blockPresets = schema.blockPresets?.[sectionBlockType];
+
+                  return {
+                    ...block,
+                    theme_block: block.name ? true : undefined,
+                    presets:
+                      block.presets && Array.isArray(block.presets)
+                        ? block.presets
+                        : blockPresets
+                        ? blockPresets?.map(({ manual_preset, ...preset }) => preset)
+                        : block.name
+                        ? [{ name: block.name }]
+                        : undefined,
+                  };
+                })
+              : schema?.blocks,
+            folder,
             path: file,
           };
 
@@ -359,31 +366,41 @@ export const getSchemaSources = async () => {
     try {
       const data = await importAndTransformSchema(file);
 
-      /*  if (file.includes("navigation")) {
-        console.log(Object.values(data)[0]);
+      /*if (file.includes("navigation")) {
+        console.log(data);
       }*/
-
       acc = {
         ...acc,
-        ...Object.entries(data).reduce((acc2, [key, val]) => {
+        ...Object.entries(data).reduce((acc2, [key, schema]) => {
           // @ts-ignore
+
+          const folder = file.split(/[\\/]/gi).at(-2);
+          const schema_file_path = folder.replace(/^_*/gi, "");
           acc2[key] = {
-            ...val,
-            blocks: val?.blocks?.some((block) => block.theme_block)
-              ? val.blocks.map((block) => ({
-                  ...block,
-                  theme_block: block.name ? true : undefined,
-                  presets:
-                    block.presets && Array.isArray(block.presets)
-                      ? block.presets
-                      : block.name
-                      ? [{ name: block.name }]
-                      : undefined,
-                }))
-              : val?.blocks,
-            folder: file.split(/[\\/]/gi).at(-2),
+            ...schema,
+            blocks: schema?.blocks?.some((block) => block.theme_block)
+              ? schema.blocks.map((block) => {
+                  const sectionBlockType = `_${schema_file_path}__${block.type}`;
+                  const blockPresets = schema.blockPresets?.[sectionBlockType];
+
+                  return {
+                    ...block,
+                    theme_block: block.name ? true : undefined,
+                    presets:
+                      block.presets && Array.isArray(block.presets)
+                        ? block.presets
+                        : blockPresets
+                        ? blockPresets?.map(({ manual_preset, ...preset }) => preset)
+                        : block.name
+                        ? [{ name: block.name }]
+                        : undefined,
+                  };
+                })
+              : schema?.blocks,
+            folder,
             path: file,
           };
+
           return acc2;
         }, {}),
       };

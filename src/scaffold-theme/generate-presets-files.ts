@@ -28,12 +28,17 @@ export const generateMissingPresetsFiles = (dirName: string) => {
 
   writeFile(
     path.join(dirName, "_presets.ts"),
-    `import { ShopifySectionPreset } from "types/shopify";
+    `import { ThemeBlocks } from "types/blocks";
+import { ShopifySectionPreset, ShopifySectionBlockPresetMap } from "types/shopify";
 import { ${toPascalCase(fileName)}Section } from "types/sections";
 
 export const ${toCamelCase(fileName)}Presets: ShopifySectionPreset<${toPascalCase(fileName)}Section>[] = [
   { name: "${name}" },
 ];
+export const ${toCamelCase(
+      fileName
+    )}BlockPresets: ShopifySectionBlockPresetMap<Extract<ThemeBlocks, { type: \`_${fileName}__\${string}\` }>> = {};
+
 `
   );
   config.sources.sectionsPresetFiles = [...new Set(config.sources.sectionsPresetFiles), path.join(dirName, "_presets.ts")];

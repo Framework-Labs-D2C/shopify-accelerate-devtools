@@ -12,6 +12,7 @@ export const generateSectionFiles = ({
   path,
   folder,
   hide_development_presets,
+  blockPresets,
   ...section
 }: ShopifySection & { path: string; folder: string }) => {
   const sectionName = toLocaleFriendlySnakeCase(name);

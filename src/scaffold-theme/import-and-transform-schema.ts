@@ -158,7 +158,6 @@ export const importAndTransformSchema = async (file: any, secondAttempt = false)
       const finalContent = presetImport + parts[0] + splitter + schemaContent + transformedData.split(secondSplitter).at(1);
       // finalContent.replace(`"PRESETS_PLACEHOLDER"`, `${toCamelCase(sectionName)}Presets`)
 
-      console.log(transformedData);
       writeCompareFile(`${file}`, finalContent);
 
       await new Promise((resolve, reject) => {

@@ -9,7 +9,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { formatObject } from "../utils/format-object";
 import { Sections } from "types/sections";
-import { ShopifySection, ShopifySectionBlock, ShopifySectionGeneratedThemeBlock, ShopifySectionPreset, ShopifyThemeBlock } from "types/shopify";
+import { ShopifySection, ShopifySectionBlock, ShopifySectionBlockPresetMap, ShopifySectionGeneratedThemeBlock, ShopifySectionPreset, ShopifyThemeBlock } from "types/shopify";
 import { config } from "../../shopify-accelerate";
 import { readFile, writeCompareFile } from "../utils/fs";
 import { toCamelCase, toPascalCase } from "../utils/to-pascal-case";
@@ -36,7 +36,7 @@ const formatBlockType = (blockType: string, folder: string) =>
 const mapPresetBlocks = (
   blocks: ShopifySectionPreset["blocks"],
   containerSchema: (ShopifySection & { path: string; folder: string }) | (ShopifyThemeBlock & { path: string; folder: string }),
-  schema
+  schema?: any
 ) => {
   schema ??= containerSchema;
 
@@ -256,6 +256,8 @@ export const syncPresets = async (watch = false) => {
       unnamed: Record<string, ShopifySectionPreset[]>;
       primary: Record<string, ShopifySectionPreset[]>;
       development: Record<string, ShopifySectionPreset[]>;
+      no_existing_sections?: boolean;
+      block_presets: Record<string, ShopifySectionPreset[]>;
     }
   > = {};
 
@@ -270,12 +272,15 @@ export const syncPresets = async (watch = false) => {
       const sectionId = section.settings?.section_id;
       const generatePresets = section.settings?.generate_presets;
 
+      // console.log({ sectionId, test: section.name });
+
       presets[sectionType] ??= {
         schema: sectionSchema,
         named: {},
         unnamed: {},
         primary: {},
         development: {},
+        block_presets: {},
       };
 
       const category =
@@ -290,138 +295,301 @@ export const syncPresets = async (watch = false) => {
       const key = sectionId || name;
       presets[sectionType][category][key] ??= [];
       presets[sectionType][category][key].push(section);
+
+      const parseBlocks = (schema) => {
+        if (schema.blocks && Object.keys(schema.blocks ?? {})?.length) {
+          Object.values(schema.blocks).forEach((blockPreset: ShopifySectionPreset["blocks"][number]) => {
+            // @ts-ignore
+            if (blockPreset.type?.includes(`_${sectionType}__`) && blockPreset?.settings?.generate_block_presets === "always") {
+              presets[sectionType].block_presets[blockPreset.type] ??= [];
+              presets[sectionType].block_presets[blockPreset.type].push(blockPreset);
+            }
+            parseBlocks(blockPreset);
+          });
+        }
+      };
+      parseBlocks(section);
     });
   });
 
+  Object.values(config.sources.sectionSchemas).forEach((entry) => {
+    const sectionType = entry.folder.replace(/^_*/gi, "");
+
+    if (!presets[sectionType]) {
+      const sectionSchema = structuredClone(entry);
+
+      presets[sectionType] ??= {
+        schema: sectionSchema,
+        named: {},
+        unnamed: {},
+        primary: {},
+        development: {},
+        block_presets: {},
+        no_existing_sections: true,
+      };
+    }
+  });
+
   await new Promise((resolve, reject) => {
-    const promises = Object.entries(presets ?? {}).map(async ([type, { schema, named, unnamed, primary, development }]) => {
-      const filePath = path.join(config.folders.sections, schema.folder, "_presets.ts");
-      const existingPresets = importFresh(filePath)[`${toCamelCase(type)}Presets`] ?? [];
-      const sourceJson = existingPresets.filter((preset) => preset.manual_preset) ?? [];
-      const existingNames = new Set(sourceJson.map((preset) => preset.name));
+    const promises = Object.entries(presets ?? {}).map(
+      async ([type, { schema, named, unnamed, primary, development, no_existing_sections, block_presets }]) => {
+        const schema_file_path = schema.folder.replace(/^_*/gi, "");
+        const filePath = path.join(config.folders.sections, schema.folder, "_presets.ts");
+        const existingPresets = importFresh(filePath)[`${toCamelCase(type)}Presets`] ?? [];
+        const existingBlockPresets = importFresh(filePath)[`${toCamelCase(type)}BlockPresets`] as {
+          [T: string]: ShopifySectionPreset[];
+        };
+        const sectionBlocksPresetOutput = {};
+        const sectionPresetOutput = [];
 
-      const addPresets = (presetGroup: Record<string, ShopifySectionPreset[]>, developmentOnly = false) => {
-        Object.entries(presetGroup).forEach(([name, presets]) => {
-          if (existingNames.has(name)) return;
+        const addPresets = (presetGroup: Record<string, ShopifySectionPreset[]>, developmentOnly = false) => {
+          Object.entries(presetGroup).forEach(([name, presets]) => {
+            if (sectionPresetOutput.some((preset) => preset.name === name)) return;
 
-          const preset = presets[0];
-          const presetObject: ShopifySectionPreset = { name, ...(developmentOnly && { development_only: true }) };
+            const preset = presets[0];
+            const presetObject: ShopifySectionPreset = {
+              name,
+              ...(developmentOnly && { development_only: true }),
+            };
+            if (preset.manual_preset) {
+              presetObject.manual_preset = true;
+            }
 
-          if (preset.settings) {
-            presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
-              if (schema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
-                acc[key] = value;
+            if (preset.settings) {
+              presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
+                if (schema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+                  acc[key] = value;
+                }
+                return acc;
+              }, {});
+              if ("generate_presets" in presetObject.settings) {
+                presetObject.settings.generate_presets = "never";
               }
-              return acc;
-            }, {});
-            if ("generate_presets" in presetObject.settings) {
-              presetObject.settings.generate_presets = "never";
+            }
+            if (preset.blocks) {
+              // @ts-ignore
+              presetObject.blocks = mapPresetBlocks(preset.blocks, structuredClone(schema));
+            }
+
+            sectionPresetOutput.push(presetObject);
+          });
+        };
+
+        existingPresets?.forEach((preset, i, arr) => {
+          if (preset.manual_preset) {
+            addPresets({ [preset.name]: [preset] });
+          }
+          if (no_existing_sections && !sectionPresetOutput.length && !arr.some((p) => p.manual_preset)) {
+            const bestOption = arr.find((p) => p.name === schema.name);
+            if (bestOption) {
+              addPresets({ [bestOption.name]: [bestOption] });
+            } else {
+              addPresets({ [preset.name]: [preset] });
             }
           }
-          if (preset.blocks) {
-            // @ts-ignore
-            presetObject.blocks = mapPresetBlocks(preset.blocks, structuredClone(schema));
+        });
+
+        // Process all categories efficiently
+        addPresets(primary);
+        addPresets(named, true);
+        addPresets(unnamed, true);
+        addPresets(development, true);
+
+        if (sectionPresetOutput.length === 0) {
+          sectionPresetOutput.push({ name: schema.name });
+        }
+
+        const findBlockById = (s, t) => {
+          // Check current block
+          if (`_${schema_file_path}__${s.type}` === t) {
+            return s;
           }
 
-          sourceJson.push(presetObject);
-          existingNames.add(name);
+          // Check nested blocks
+          if (Array.isArray(s.blocks)) {
+            for (const block of s.blocks) {
+              const result = findBlockById(block, t);
+              if (result) return result; // short-circuit on match
+            }
+          }
+
+          return null;
+        };
+
+        const addBlockPresets = (type, blockPresets, existingPreset = false) => {
+          const blockSchema = findBlockById(schema, type);
+          if (blockSchema && blockPresets?.length) {
+            sectionBlocksPresetOutput[type] ??= [];
+
+            blockPresets.forEach((preset) => {
+              const name = existingPreset ? preset.name : preset.settings?.title || preset.name || blockSchema.name;
+
+              if (sectionBlocksPresetOutput[type].some((preset) => preset.name === name)) return;
+
+              const presetObject: ShopifySectionPreset = {
+                name,
+              };
+
+              if (preset.manual_preset) {
+                presetObject.manual_preset = true;
+              }
+
+              if (preset.settings) {
+                presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
+                  if (blockSchema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+                    acc[key] = value;
+                  }
+                  return acc;
+                }, {});
+
+                if ("generate_block_presets" in presetObject.settings) {
+                  presetObject.settings.generate_block_presets = "never";
+                }
+              }
+              if (preset.blocks) {
+                // @ts-ignore
+                presetObject.blocks = mapPresetBlocks(preset.blocks, structuredClone(blockSchema), structuredClone(schema));
+              }
+
+              sectionBlocksPresetOutput[type].push(presetObject);
+            });
+          }
+        };
+
+        if (existingBlockPresets && typeof existingBlockPresets === "object") {
+          Object.entries(existingBlockPresets)?.forEach(([type, presets]) => {
+            addBlockPresets(
+              type,
+              presets.filter((p) => p.manual_preset),
+              true
+            );
+
+            if (!block_presets[type]?.length && !sectionBlocksPresetOutput[type]) {
+              addBlockPresets(type, [presets[0]], true);
+            }
+          });
+        }
+
+        Object.entries(block_presets).forEach(([type, blockPresets]) => {
+          addBlockPresets(type, blockPresets);
         });
-      };
 
-      // Process all categories efficiently
-      addPresets(primary);
-      addPresets(named, true);
-      addPresets(unnamed, true);
-      addPresets(development, true);
+        // **Deep Equality Check to Avoid Unnecessary Updates**
+        const existingSourceJson = existingPresets.map((preset) => ({
+          name: preset.name,
+          settings: preset.settings ?? {},
+          blocks: preset.blocks ?? [],
+          development_only: preset.development_only ?? false,
+        }));
 
-      if (sourceJson.length === 0) {
-        sourceJson.push({ name: schema.name });
-      }
+        const newSourceJson = sectionPresetOutput.map((preset) => ({
+          name: preset.name,
+          settings: preset.settings ?? {},
+          blocks: preset.blocks ?? [],
+          development_only: preset.development_only ?? false,
+        }));
 
-      // **Deep Equality Check to Avoid Unnecessary Updates**
-      const existingSourceJson = existingPresets.map((preset) => ({
-        name: preset.name,
-        settings: preset.settings ?? {},
-        blocks: preset.blocks ?? [],
-        development_only: preset.development_only ?? false,
-      }));
+        if (
+          existingBlockPresets &&
+          equal(existingSourceJson, newSourceJson) &&
+          equal(existingBlockPresets, sectionBlocksPresetOutput)
+        ) {
+          // console.log("No Preset Change found");
+          completed.push(false);
+          return; // **Skip writing & ESLint if unchanged**
+        }
+        console.log(`Preset Update: ${type}`);
 
-      const newSourceJson = sourceJson.map((preset) => ({
-        name: preset.name,
-        settings: preset.settings ?? {},
-        blocks: preset.blocks ?? [],
-        development_only: preset.development_only ?? false,
-      }));
+        // Prepare new output file content
+        const outputArr = [];
 
-      if (equal(existingSourceJson, newSourceJson)) {
-        // console.log("No Preset Change found");
-        completed.push(false);
-        return; // **Skip writing & ESLint if unchanged**
-      }
+        outputArr.push(`import { ThemeBlocks } from "types/blocks";`);
+        outputArr.push(`import { ShopifySectionPreset, ShopifySectionBlockPresetMap } from "types/shopify";`);
+        outputArr.push(`import { ${toPascalCase(type)}Section } from "types/sections";`);
+        outputArr.push(``);
+        outputArr.push(
+          `export const ${toCamelCase(type)}Presets: ShopifySectionPreset<${toPascalCase(type)}Section>[] = ${formatObject(
+            sectionPresetOutput,
+            2
+          )};`
+        );
 
-      // Prepare new output file content
-      const output = [
-        `import { ShopifySectionPreset } from "types/shopify";`,
-        `import { ${toPascalCase(type)}Section } from "types/sections";`,
-        ``,
-        `export const ${toCamelCase(type)}Presets: ShopifySectionPreset<${toPascalCase(type)}Section>[] = ${formatObject(
-          sourceJson,
-          2
-        )};`,
-      ].join("\n");
+        if (!Object.keys(sectionBlocksPresetOutput)?.length) {
+          outputArr.push(``);
+          outputArr.push(
+            `export const ${toCamelCase(
+              type
+            )}BlockPresets: ShopifySectionBlockPresetMap<Extract<ThemeBlocks, { type: \`_${schema_file_path}__\${string}\` }>> = {};`
+          );
+        }
 
-      // Save the new output to a temporary file for ESLint
-      const tempFilePath = path.join(config.project_root, "@utils", "temp", `${type}__temp.ts`);
-      fs.mkdirSync(path.dirname(tempFilePath), { recursive: true });
-      fs.writeFileSync(tempFilePath, output, "utf8");
+        if (Object.keys(sectionBlocksPresetOutput)?.length) {
+          outputArr.push(``);
+          outputArr.push(
+            `export const ${toCamelCase(
+              type
+            )}BlockPresets: ShopifySectionBlockPresetMap<Extract<ThemeBlocks, { type: \`_${schema_file_path}__\${string}\` }>> = ${formatObject(
+              sectionBlocksPresetOutput,
+              2
+            )};`
+          );
+        }
 
-      // Run ESLint Fix
-      try {
-        const eslint = new ESLint({
-          fix: true,
-          ignore: false,
-          cwd: path.join(config.project_root),
-          overrideConfigFile: path.join(config.project_root, "package.json"),
-          overrideConfig: {
-            rules: {
-              "comma-dangle": ["error", "always-multiline"],
-              "prettier/prettier": [
-                "error",
-                {
-                  plugins: ["prettier-plugin-tailwindcss"],
-                  trailingComma: "es5",
-                  arrowParens: "always",
-                  singleQuote: false,
-                  bracketSpacing: true,
-                  printWidth: 130,
-                  indentChains: true,
-                  exportCurlySpacing: true,
-                  importCurlySpacing: true,
-                  allowBreakAfterOperator: false,
-                  breakLongMethodChains: true,
-                  importFormatting: "oneline",
-                  endOfLine: "auto",
-                  ignorePath: null,
-                  withNodeModules: true,
-                },
-              ],
+        const output = outputArr.join("\n");
+
+        // Save the new output to a temporary file for ESLint
+        const tempFilePath = path.join(config.project_root, "@utils", "temp", `${type}__temp.ts`);
+        fs.mkdirSync(path.dirname(tempFilePath), { recursive: true });
+        fs.writeFileSync(tempFilePath, output, "utf8");
+
+        // Run ESLint Fix
+        try {
+          const eslint = new ESLint({
+            fix: true,
+            ignore: false,
+            cwd: path.join(config.project_root),
+            overrideConfigFile: path.join(config.project_root, "package.json"),
+            overrideConfig: {
+              rules: {
+                "comma-dangle": ["error", "always-multiline"],
+                "prettier/prettier": [
+                  "error",
+                  {
+                    plugins: ["prettier-plugin-tailwindcss"],
+                    trailingComma: "es5",
+                    arrowParens: "always",
+                    singleQuote: false,
+                    bracketSpacing: true,
+                    printWidth: 130,
+                    indentChains: true,
+                    exportCurlySpacing: true,
+                    importCurlySpacing: true,
+                    allowBreakAfterOperator: false,
+                    breakLongMethodChains: true,
+                    importFormatting: "oneline",
+                    endOfLine: "auto",
+                    ignorePath: null,
+                    withNodeModules: true,
+                  },
+                ],
+              },
+              ignorePatterns: ["!node_modules/**"], // Force ESLint to include fx-style
             },
-            ignorePatterns: ["!node_modules/**"], // Force ESLint to include fx-style
-          },
-        });
+          });
 
-        const results = await eslint.lintFiles([tempFilePath]);
-        const formattedOutput = results[0]?.output ?? output;
+          const results = await eslint.lintFiles([tempFilePath]);
+          const formattedOutput = results[0]?.output ?? output;
 
-        fs.unlinkSync(tempFilePath);
-        writeCompareFile(filePath, formattedOutput, (updated) => {
-          if (updated) completed.push(true);
-        });
-      } catch (error) {
-        console.error(error);
-        completed.push(false);
+          fs.unlinkSync(tempFilePath);
+          writeCompareFile(filePath, formattedOutput, (updated) => {
+            if (updated) completed.push(true);
+          });
+        } catch (error) {
+          console.error(error);
+          completed.push(false);
+        }
       }
-    });
+    );
 
     Promise.all(promises).then(() => resolve(true));
   });

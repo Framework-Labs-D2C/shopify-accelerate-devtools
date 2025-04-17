@@ -7,7 +7,8 @@ import { toCamelCase } from "../utils/to-camel-case";
 import { capitalize, toPascalCase } from "../utils/to-pascal-case";
 
 export const generateSchemaFiles = (dirName: string) => {
-  const fileName = dirName.split(/[/\\]/gi).at(-1)?.replace(/^_*/gi, "");
+  const folder = dirName.split(/[/\\]/gi).at(-1);
+  const fileName = folder?.replace(/^_*/gi, "");
   const exists = fs.existsSync(path.join(dirName, "_schema.ts"));
   const schemaContent = exists ? readFile(path.join(dirName, "_schema.ts"), { encoding: "utf-8" }) : "";
   const isEmpty = !schemaContent?.includes(`export const ${toCamelCase(fileName)}:`);
@@ -24,7 +25,11 @@ export const generateSchemaFiles = (dirName: string) => {
       path.join(dirName, "_schema.ts"),
       `import { ShopifySection } from "types/shopify";
 import { ${toPascalCase(fileName)}Section } from "types/sections";
-${presetsFile ? `import { ${toCamelCase(fileName)}Presets } from "sections/${fileName}/_presets";\n` : ""}
+${
+  presetsFile
+    ? `import { ${toCamelCase(fileName)}Presets, ${toCamelCase(fileName)}BlockPresets } from "sections/${folder}/_presets";\n`
+    : ""
+}
 export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}Section> = {
   name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",
   settings: [],
@@ -37,8 +42,9 @@ export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}S
     },
   ],`
   }
+  blockPresets: ${presetsFile ? `${toCamelCase(fileName)}BlockPresets,` : `{}`},
   disabled_on: {
-    groups: ["custom.globals", "custom.header", "custom.modal", "custom.card"],
+    groups: ["custom.global", "custom.header", "custom.modal", "custom.card"],
   },
 };
 `
