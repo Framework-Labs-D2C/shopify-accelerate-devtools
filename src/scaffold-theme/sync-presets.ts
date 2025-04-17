@@ -204,6 +204,10 @@ const mapPresetBlocks = (
         const blockSchema = containerSchema?.blocks?.find((containerBlock) => containerBlock.type === block.type);
 
         returnBlock.settings = Object.entries(returnBlock.settings).reduce((acc, [key, value]) => {
+          if (key === "generate_block_presets") {
+            acc[key] = "never";
+            return acc;
+          }
           if (blockSchema?.settings?.some((setting) => "id" in setting && setting?.id === key)) {
             acc[key] = value;
             return acc;
@@ -256,8 +260,12 @@ export const syncPresets = async (watch = false) => {
       unnamed: Record<string, ShopifySectionPreset[]>;
       primary: Record<string, ShopifySectionPreset[]>;
       development: Record<string, ShopifySectionPreset[]>;
+      override: Record<string, ShopifySectionPreset[]>;
       no_existing_sections?: boolean;
-      block_presets: Record<string, ShopifySectionPreset[]>;
+      block_presets: {
+        primary: Record<string, ShopifySectionPreset[]>;
+        override: Record<string, ShopifySectionPreset[]>;
+      };
     }
   > = {};
 
@@ -269,7 +277,7 @@ export const syncPresets = async (watch = false) => {
 
       const name = sectionSchema.name ?? "Unnamed";
       const sectionType = section.type;
-      const sectionId = section.settings?.section_id;
+      const sectionId = section.name || section.settings?.section_id;
       const generatePresets = section.settings?.generate_presets;
 
       // console.log({ sectionId, test: section.name });
@@ -280,7 +288,11 @@ export const syncPresets = async (watch = false) => {
         unnamed: {},
         primary: {},
         development: {},
-        block_presets: {},
+        override: {},
+        block_presets: {
+          primary: {},
+          override: {},
+        },
       };
 
       const category =
@@ -288,11 +300,14 @@ export const syncPresets = async (watch = false) => {
           ? "primary"
           : generatePresets === "development"
           ? "development"
-          : sectionId
+          : generatePresets === "manual_override"
+          ? "override"
+          : section.settings?.section_id
           ? "named"
           : "unnamed";
 
       const key = sectionId || name;
+
       presets[sectionType][category][key] ??= [];
       presets[sectionType][category][key].push(section);
 
@@ -301,8 +316,15 @@ export const syncPresets = async (watch = false) => {
           Object.values(schema.blocks).forEach((blockPreset: ShopifySectionPreset["blocks"][number]) => {
             // @ts-ignore
             if (blockPreset.type?.includes(`_${sectionType}__`) && blockPreset?.settings?.generate_block_presets === "always") {
-              presets[sectionType].block_presets[blockPreset.type] ??= [];
-              presets[sectionType].block_presets[blockPreset.type].push(blockPreset);
+              presets[sectionType].block_presets["primary"][blockPreset.type] ??= [];
+              presets[sectionType].block_presets["primary"][blockPreset.type].push(blockPreset);
+            }
+            if (
+              blockPreset.type?.includes(`_${sectionType}__`) &&
+              blockPreset?.settings?.generate_block_presets === "manual_override"
+            ) {
+              presets[sectionType].block_presets["override"][blockPreset.type] ??= [];
+              presets[sectionType].block_presets["override"][blockPreset.type].push(blockPreset);
             }
             parseBlocks(blockPreset);
           });
@@ -324,7 +346,11 @@ export const syncPresets = async (watch = false) => {
         unnamed: {},
         primary: {},
         development: {},
-        block_presets: {},
+        override: {},
+        block_presets: {
+          primary: {},
+          override: {},
+        },
         no_existing_sections: true,
       };
     }
@@ -332,7 +358,7 @@ export const syncPresets = async (watch = false) => {
 
   await new Promise((resolve, reject) => {
     const promises = Object.entries(presets ?? {}).map(
-      async ([type, { schema, named, unnamed, primary, development, no_existing_sections, block_presets }]) => {
+      async ([type, { schema, named, unnamed, primary, development, override, no_existing_sections, block_presets }]) => {
         const schema_file_path = schema.folder.replace(/^_*/gi, "");
         const filePath = path.join(config.folders.sections, schema.folder, "_presets.ts");
         const existingPresets = importFresh(filePath)[`${toCamelCase(type)}Presets`] ?? [];
@@ -342,16 +368,20 @@ export const syncPresets = async (watch = false) => {
         const sectionBlocksPresetOutput = {};
         const sectionPresetOutput = [];
 
-        const addPresets = (presetGroup: Record<string, ShopifySectionPreset[]>, developmentOnly = false) => {
+        const addPresets = (presetGroup: Record<string, ShopifySectionPreset[]>, developmentOnly = false, override = false) => {
           Object.entries(presetGroup).forEach(([name, presets]) => {
-            if (sectionPresetOutput.some((preset) => preset.name === name)) return;
+            const sectionFoundIndex = sectionPresetOutput.findIndex((preset) => preset.name === name);
+            if (sectionFoundIndex !== -1 && !override) {
+              return;
+            }
 
             const preset = presets[0];
             const presetObject: ShopifySectionPreset = {
               name,
+              ...(override && { manual_preset: true }),
               ...(developmentOnly && { development_only: true }),
             };
-            if (preset.manual_preset) {
+            if (preset.manual_preset || override) {
               presetObject.manual_preset = true;
             }
 
@@ -371,7 +401,11 @@ export const syncPresets = async (watch = false) => {
               presetObject.blocks = mapPresetBlocks(preset.blocks, structuredClone(schema));
             }
 
-            sectionPresetOutput.push(presetObject);
+            if (sectionFoundIndex !== -1 && override) {
+              sectionPresetOutput[sectionFoundIndex] = presetObject;
+            } else {
+              sectionPresetOutput.push(presetObject);
+            }
           });
         };
 
@@ -394,6 +428,7 @@ export const syncPresets = async (watch = false) => {
         addPresets(named, true);
         addPresets(unnamed, true);
         addPresets(development, true);
+        addPresets(override, false, true);
 
         if (sectionPresetOutput.length === 0) {
           sectionPresetOutput.push({ name: schema.name });
@@ -416,21 +451,24 @@ export const syncPresets = async (watch = false) => {
           return null;
         };
 
-        const addBlockPresets = (type, blockPresets, existingPreset = false) => {
+        const addBlockPresets = (type, blockPresets, existingPreset = false, override = false) => {
           const blockSchema = findBlockById(schema, type);
           if (blockSchema && blockPresets?.length) {
             sectionBlocksPresetOutput[type] ??= [];
 
             blockPresets.forEach((preset) => {
               const name = existingPreset ? preset.name : preset.settings?.title || preset.name || blockSchema.name;
+              const blockFoundIndex = sectionBlocksPresetOutput[type].findIndex((preset) => preset.name === name);
 
-              if (sectionBlocksPresetOutput[type].some((preset) => preset.name === name)) return;
+              if (blockFoundIndex !== -1 && !override) {
+                return;
+              }
 
               const presetObject: ShopifySectionPreset = {
                 name,
               };
 
-              if (preset.manual_preset) {
+              if (preset.manual_preset || override) {
                 presetObject.manual_preset = true;
               }
 
@@ -451,7 +489,11 @@ export const syncPresets = async (watch = false) => {
                 presetObject.blocks = mapPresetBlocks(preset.blocks, structuredClone(blockSchema), structuredClone(schema));
               }
 
-              sectionBlocksPresetOutput[type].push(presetObject);
+              if (blockFoundIndex !== -1 && override) {
+                sectionBlocksPresetOutput[type][blockFoundIndex] = presetObject;
+              } else {
+                sectionBlocksPresetOutput[type].push(presetObject);
+              }
             });
           }
         };
@@ -464,14 +506,21 @@ export const syncPresets = async (watch = false) => {
               true
             );
 
-            if (!block_presets[type]?.length && !sectionBlocksPresetOutput[type]) {
+            if (
+              !block_presets.primary?.[type]?.length &&
+              !block_presets.override?.[type]?.length &&
+              !sectionBlocksPresetOutput[type]
+            ) {
               addBlockPresets(type, [presets[0]], true);
             }
           });
         }
 
-        Object.entries(block_presets).forEach(([type, blockPresets]) => {
-          addBlockPresets(type, blockPresets);
+        Object.entries(block_presets.primary).forEach(([type, blockPresets]) => {
+          addBlockPresets(type, blockPresets, false, false);
+        });
+        Object.entries(block_presets.override).forEach(([type, blockPresets]) => {
+          addBlockPresets(type, blockPresets, false, true);
         });
 
         // **Deep Equality Check to Avoid Unnecessary Updates**
