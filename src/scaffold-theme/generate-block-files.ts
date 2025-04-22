@@ -223,9 +223,16 @@ export const generateBlockFileSchema = (
     presets: rootBlock.presets
       ?.filter(({ development_only }) => !development_only || (config?.all_presets && !rootBlock.hide_development_presets))
       ?.map(({ name, development_only, ...preset }) => {
+        const mapBlockPresets = (blocks: any[]) => {
+          return blocks && Array.isArray(blocks) && blocks?.length
+            ? { blocks: blocks?.map(({ name, ...block }) => ({ ...block, ...mapBlockPresets(block?.blocks) })) }
+            : {};
+        };
+
         return {
           name: name?.length <= 25 ? name : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
           ...preset,
+          ...mapBlockPresets(preset?.blocks),
         };
       }),
   };

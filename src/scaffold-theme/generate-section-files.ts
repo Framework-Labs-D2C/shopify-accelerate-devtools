@@ -314,9 +314,15 @@ export const generateSectionFiles = ({
     presets: section.presets
       ?.filter(({ development_only }) => !development_only || (config?.all_presets && !hide_development_presets))
       ?.map(({ name, development_only, manual_preset, ...preset }) => {
+        const mapBlockPresets = (blocks: any[]) => {
+          return blocks && Array.isArray(blocks) && blocks?.length
+            ? { blocks: blocks?.map(({ name, ...block }) => ({ ...block, ...mapBlockPresets(block?.blocks) })) }
+            : {};
+        };
         return {
           name: name?.length <= 25 ? name : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
           ...preset,
+          ...mapBlockPresets(preset?.blocks),
         };
       }),
   };
