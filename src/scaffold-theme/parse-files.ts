@@ -108,10 +108,10 @@ export const getSources = async () => {
     if (isConfig(filePath)) {
       configs.push(filePath);
     }
-    if (isTemplate(filePath) && !isCustomerTemplate(filePath)) {
+    if (isTemplate(filePath) && !isCustomerTemplate(filePath) && !isSectionGroup(filePath)) {
       templates.push(filePath);
     }
-    if (isCustomerTemplate(filePath)) {
+    if (isCustomerTemplate(filePath) && !isSectionGroup(filePath)) {
       customerTemplates.push(filePath);
     }
     if (isAsset(filePath)) {

@@ -38,7 +38,7 @@ const mapPresetBlocks = (
   containerSchema: (ShopifySection & { path: string; folder: string }) | (ShopifyThemeBlock & { path: string; folder: string }),
   schema?: any
 ) => {
-  schema ??= containerSchema;
+  schema ??= structuredClone(containerSchema);
 
   if (schema?.blocks) {
     schema.blocks = schema?.blocks?.reduce((acc, block) => {

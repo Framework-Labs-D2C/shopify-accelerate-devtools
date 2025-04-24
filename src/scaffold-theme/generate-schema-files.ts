@@ -42,7 +42,7 @@ export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}S
     },
   ],`
   }
-  blockPresets: ${presetsFile ? `${toCamelCase(fileName)}BlockPresets,` : `{}`},
+  blockPresets: ${presetsFile ? `${toCamelCase(fileName)}BlockPresets` : `{}`},
   disabled_on: {
     groups: ["custom.global", "custom.header", "custom.modal", "custom.card"],
   },
