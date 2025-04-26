@@ -28,10 +28,12 @@ import { parseLocales } from "./parse-locales";
  * Formats block type by removing leading underscores and ensuring consistency
  */
 const formatBlockType = (blockType: string, folder: string) =>
-  `_${folder.replace(/^_*/g, "")}__${blockType}`.replace(
-    `_${folder.replace(/^_*/g, "")}___${folder.replace(/^_*/g, "")}__`,
-    `_${folder.replace(/^_*/g, "")}__`
-  );
+  /[^_]__/gi.test(blockType)
+    ? blockType
+    : `_${folder.replace(/^_*/g, "")}__${blockType}`.replace(
+        `_${folder.replace(/^_*/g, "")}___${folder.replace(/^_*/g, "")}__`,
+        `_${folder.replace(/^_*/g, "")}__`
+      );
 
 const mapPresetBlocks = (
   blocks: ShopifySectionPreset["blocks"],
