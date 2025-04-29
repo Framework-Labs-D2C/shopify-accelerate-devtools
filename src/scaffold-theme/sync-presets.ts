@@ -271,6 +271,28 @@ export const syncPresets = async (watch = false) => {
     }
   > = {};
 
+  Object.values(config.sources.sectionSchemas).forEach((entry) => {
+    const sectionType = entry.folder.replace(/^_*/gi, "");
+
+    if (!presets[sectionType]) {
+      const sectionSchema = structuredClone(entry);
+
+      presets[sectionType] ??= {
+        schema: sectionSchema,
+        named: {},
+        unnamed: {},
+        primary: {},
+        development: {},
+        override: {},
+        block_presets: {
+          primary: {},
+          override: {},
+        },
+        no_existing_sections: true,
+      };
+    }
+  });
+
   templateData.forEach(({ sections }) => {
     if (!sections) return;
     Object.values(sections).forEach((section) => {
@@ -317,45 +339,25 @@ export const syncPresets = async (watch = false) => {
         if (schema.blocks && Object.keys(schema.blocks ?? {})?.length) {
           Object.values(schema.blocks).forEach((blockPreset: ShopifySectionPreset["blocks"][number]) => {
             // @ts-ignore
-            if (blockPreset.type?.includes(`_${sectionType}__`) && blockPreset?.settings?.generate_block_presets === "always") {
-              presets[sectionType].block_presets["primary"][blockPreset.type] ??= [];
-              presets[sectionType].block_presets["primary"][blockPreset.type].push(blockPreset);
+            const match = blockPreset.type?.match(/^_(.*?)__/);
+
+            const currentSectionType = match ? match[1] : sectionType;
+
+            if (blockPreset?.settings?.generate_block_presets === "always") {
+              presets[currentSectionType].block_presets["primary"][blockPreset.type] ??= [];
+              presets[currentSectionType].block_presets["primary"][blockPreset.type].push(blockPreset);
             }
-            if (
-              blockPreset.type?.includes(`_${sectionType}__`) &&
-              blockPreset?.settings?.generate_block_presets === "manual_override"
-            ) {
-              presets[sectionType].block_presets["override"][blockPreset.type] ??= [];
-              presets[sectionType].block_presets["override"][blockPreset.type].push(blockPreset);
+            if (blockPreset?.settings?.generate_block_presets === "manual_override") {
+              presets[currentSectionType].block_presets["override"][blockPreset.type] ??= [];
+              presets[currentSectionType].block_presets["override"][blockPreset.type].push(blockPreset);
             }
+
             parseBlocks(blockPreset);
           });
         }
       };
       parseBlocks(section);
     });
-  });
-
-  Object.values(config.sources.sectionSchemas).forEach((entry) => {
-    const sectionType = entry.folder.replace(/^_*/gi, "");
-
-    if (!presets[sectionType]) {
-      const sectionSchema = structuredClone(entry);
-
-      presets[sectionType] ??= {
-        schema: sectionSchema,
-        named: {},
-        unnamed: {},
-        primary: {},
-        development: {},
-        override: {},
-        block_presets: {
-          primary: {},
-          override: {},
-        },
-        no_existing_sections: true,
-      };
-    }
   });
 
   await new Promise((resolve, reject) => {
@@ -455,6 +457,7 @@ export const syncPresets = async (watch = false) => {
 
         const addBlockPresets = (type, blockPresets, existingPreset = false, override = false) => {
           const blockSchema = findBlockById(schema, type);
+
           if (blockSchema && blockPresets?.length) {
             sectionBlocksPresetOutput[type] ??= [];
 
