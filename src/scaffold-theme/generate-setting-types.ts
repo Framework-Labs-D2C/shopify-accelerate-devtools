@@ -33,7 +33,7 @@ export const generateSettingTypes = () => {
       ];
     }, []) ?? [];
 
-  const localTypes = [];
+  const localTypes = ["_Blog_liquid"];
   const analyseSetting = (setting) => {
     if (setting.type === "richtext") {
       if (localTypes.includes("_BlockTag")) return;

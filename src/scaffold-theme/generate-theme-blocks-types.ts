@@ -51,7 +51,7 @@ export const generateThemeBlocksTypes = () => {
 };
 
 export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections: { [T: string]: ShopifySection }) => {
-  const localTypes = [];
+  const localTypes = ["_Blog_liquid"];
 
   const analyseSetting = (setting) => {
     if (setting.type === "richtext") {

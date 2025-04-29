@@ -29,7 +29,7 @@ export const generateSectionsTypes = () => {
 };
 
 export const getImports = (sections: { [T: string]: ShopifySection }) => {
-  const localTypes = [];
+  const localTypes = ["_Blog_liquid"];
   let themeBlocks = false;
   let classicThemeBlocks = false;
   const analyseSetting = (setting) => {
