@@ -211,6 +211,7 @@ const mapPresetBlocks = (
             return acc;
           }
           if (blockSchema?.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+            if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
             acc[key] = value;
             return acc;
           }
@@ -392,6 +393,7 @@ export const syncPresets = async (watch = false) => {
             if (preset.settings) {
               presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
                 if (schema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+                  if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
                   acc[key] = value;
                 }
                 return acc;
@@ -480,6 +482,7 @@ export const syncPresets = async (watch = false) => {
               if (preset.settings) {
                 presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
                   if (blockSchema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+                    if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
                     acc[key] = value;
                   }
                   return acc;

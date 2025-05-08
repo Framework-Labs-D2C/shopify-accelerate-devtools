@@ -44,11 +44,13 @@ export type ShopifyHeader = {
   content: string;
   type: "header";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyParagraph = {
   content: string;
   type: "paragraph";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 
 export type ShopifyColorThemeGroupDefinition = ShopifyColor | ShopifyColor_background | ShopifyHeader | ShopifyParagraph;
@@ -119,6 +121,7 @@ export type ShopifyColorTheme = {
   type: "color_scheme";
   default?: string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 
 export type ShopifyStyleSettings = ShopifyStyleSizePanel | ShopifyStyleSpacingPanel | ShopifyStyleLayoutPanel;
@@ -244,6 +247,7 @@ export type ShopifyCheckbox = {
   type: "checkbox";
   default?: boolean;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyNumber = {
   id: string;
@@ -252,6 +256,7 @@ export type ShopifyNumber = {
   default?: number;
   info?: string;
   placeholder?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyRadio = {
   id: string;
@@ -260,6 +265,7 @@ export type ShopifyRadio = {
   type: "radio";
   default?: string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyRange = {
   default: number;
@@ -271,6 +277,7 @@ export type ShopifyRange = {
   type: "range";
   info?: string;
   unit?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifySelect = {
   id: string;
@@ -279,6 +286,7 @@ export type ShopifySelect = {
   type: "select";
   default?: string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyText = {
   id: string;
@@ -287,6 +295,7 @@ export type ShopifyText = {
   default?: string;
   info?: string;
   placeholder?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyTextarea = {
   id: string;
@@ -295,6 +304,7 @@ export type ShopifyTextarea = {
   default?: string;
   info?: string;
   placeholder?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyArticle = {
   id: string;
@@ -327,6 +337,7 @@ export type ShopifyColor = {
   type: "color";
   default?: string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyColor_background = {
   id: string;
@@ -334,6 +345,7 @@ export type ShopifyColor_background = {
   type: "color_background";
   default?: string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyFont_picker = {
   default: string;
@@ -341,6 +353,7 @@ export type ShopifyFont_picker = {
   label: string;
   type: "font_picker";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyFont = {
   id: string;
@@ -348,6 +361,7 @@ export type ShopifyFont = {
   type: "font";
   default?: string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyHtml = {
   id: string;
@@ -356,12 +370,14 @@ export type ShopifyHtml = {
   default?: string;
   info?: string;
   placeholder?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyImage_picker = {
   id: string;
   label: string;
   type: "image_picker";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyLink_list = {
   id: string;
@@ -369,12 +385,15 @@ export type ShopifyLink_list = {
   type: "link_list";
   default?: "main-menu" | "footer" | string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyLiquid = {
   id: string;
   label: string;
   type: "liquid";
   info?: string;
+  default?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyPage = {
   id: string;
@@ -401,6 +420,7 @@ export type ShopifyRichtext = {
   type: "richtext";
   default?: `<${_BlockTag}${string}</${_BlockTag}>`;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyInlineRichtext = {
   id: string;
@@ -409,6 +429,7 @@ export type ShopifyInlineRichtext = {
   default?: string;
   info?: string;
   placeholder?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyUrl = {
   id: string;
@@ -416,6 +437,7 @@ export type ShopifyUrl = {
   type: "url";
   default?: string;
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyVideo_url = {
   accept: ("youtube" | "vimeo")[];
@@ -425,6 +447,7 @@ export type ShopifyVideo_url = {
   default?: string;
   info?: string;
   placeholder?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyTextAlignment = {
   id: string;
@@ -432,6 +455,7 @@ export type ShopifyTextAlignment = {
   type: "text_alignment";
   default?: "left" | "center" | "right";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 
 export type ShopifyVideo = {
@@ -441,6 +465,7 @@ export type ShopifyVideo = {
   default?: string;
   info?: string;
   placeholder?: string;
+  visible_if?: `{{${string}}}`;
 };
 
 export type ShopifySettingsInput =
