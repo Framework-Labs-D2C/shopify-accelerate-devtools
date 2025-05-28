@@ -13,8 +13,9 @@ export const generateSectionFiles = ({
   folder,
   hide_development_presets,
   blockPresets,
+  type,
   ...section
-}: ShopifySection & { path: string; folder: string }) => {
+}: ShopifySection & { path: string; folder: string; type: string }) => {
   const sectionName = toLocaleFriendlySnakeCase(name);
   const { sources, disabled_locales } = config;
   const localeDuplicates = sources.locale_duplicates;
@@ -316,7 +317,7 @@ export const generateSectionFiles = ({
       ?.map(({ name, development_only, manual_preset, ...preset }) => {
         const mapBlockPresets = (blocks: any[]) => {
           return blocks && Array.isArray(blocks) && blocks?.length
-            ? { blocks: blocks?.map(({ name, ...block }) => ({ ...block, ...mapBlockPresets(block?.blocks) })) }
+            ? { blocks: blocks?.map(({ ...block }) => ({ ...block, ...mapBlockPresets(block?.blocks) })) }
             : {};
         };
         return {

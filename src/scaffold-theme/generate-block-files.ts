@@ -225,7 +225,7 @@ export const generateBlockFileSchema = (
       ?.map(({ name, development_only, ...preset }) => {
         const mapBlockPresets = (blocks: any[]) => {
           return blocks && Array.isArray(blocks) && blocks?.length
-            ? { blocks: blocks?.map(({ name, ...block }) => ({ ...block, ...mapBlockPresets(block?.blocks) })) }
+            ? { blocks: blocks?.map(({ ...block }) => ({ ...block, ...mapBlockPresets(block?.blocks) })) }
             : {};
         };
 

@@ -196,8 +196,8 @@ const mapPresetBlocks = (
       };
       if (blocks) {
         const nextContainerSchema = containerSchema?.blocks?.find((containerBlock) => containerBlock.type === block.type) as
-          | (ShopifySection & { path: string; folder: string; themeBlock: ShopifySection })
-          | (ShopifyThemeBlock & { path: string; folder: string; themeBlock: ShopifySection });
+          | (ShopifySection & { path: string; folder: string; type?: string; themeBlock: ShopifySection })
+          | (ShopifyThemeBlock & { path: string; folder: string; type?: string; themeBlock: ShopifySection });
 
         returnBlock.blocks = mapPresetBlocks(blocks, nextContainerSchema, nextContainerSchema?.themeBlock || schema);
       }
@@ -210,8 +210,10 @@ const mapPresetBlocks = (
             acc[key] = "never";
             return acc;
           }
-          if (blockSchema?.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+          const blockSchemaSettings = blockSchema?.settings?.find((setting) => "id" in setting && setting?.id === key);
+          if (blockSchemaSettings) {
             if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
+            if (blockSchemaSettings?.type === "article") return acc;
             acc[key] = value;
             return acc;
           }
@@ -392,8 +394,10 @@ export const syncPresets = async (watch = false) => {
 
             if (preset.settings) {
               presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
-                if (schema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+                const blockSchemaSettings = schema.settings?.find((setting) => "id" in setting && setting?.id === key);
+                if (blockSchemaSettings) {
                   if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
+                  if (blockSchemaSettings?.type === "article") return acc;
                   acc[key] = value;
                 }
                 return acc;
@@ -481,8 +485,10 @@ export const syncPresets = async (watch = false) => {
 
               if (preset.settings) {
                 presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
-                  if (blockSchema.settings?.some((setting) => "id" in setting && setting?.id === key)) {
+                  const blockSchemaSettings = blockSchema.settings?.find((setting) => "id" in setting && setting?.id === key);
+                  if (blockSchemaSettings) {
                     if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
+                    if (blockSchemaSettings?.type === "article") return acc;
                     acc[key] = value;
                   }
                   return acc;

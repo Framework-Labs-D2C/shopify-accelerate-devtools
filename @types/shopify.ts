@@ -311,18 +311,21 @@ export type ShopifyArticle = {
   label: string;
   type: "article";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyBlog = {
   id: string;
   label: string;
   type: "blog";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyCollection = {
   id: string;
   label: string;
   type: "collection";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyCollection_list = {
   id: string;
@@ -330,6 +333,7 @@ export type ShopifyCollection_list = {
   type: "collection_list";
   info?: string;
   limit?: number;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyColor = {
   id: string;
@@ -400,12 +404,14 @@ export type ShopifyPage = {
   label: string;
   type: "page";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyProduct = {
   id: string;
   label: string;
   type: "product";
   info?: string;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyProduct_list = {
   id: string;
@@ -413,6 +419,7 @@ export type ShopifyProduct_list = {
   type: "product_list";
   info?: string;
   limit?: number;
+  visible_if?: `{{${string}}}`;
 };
 export type ShopifyRichtext = {
   id: string;
@@ -1051,10 +1058,21 @@ export type _Blog_liquid = {
   moderated?: any;
 };
 
+export type _Comment_liquid = {
+  created_at: string;
+  id: number;
+  author: string;
+  email: string;
+  content: string;
+  status: string;
+  updated_at: string;
+  url: string;
+};
+
 export type _Article_liquid = {
   author: string;
   comment_post_url: string;
-  comments: any[];
+  comments: _Comment_liquid[];
   comments_count: number;
   content: string;
   created_at: string;

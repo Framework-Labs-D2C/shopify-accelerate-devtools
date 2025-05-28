@@ -1,7 +1,8 @@
 import chalk from "chalk";
 import importFresh from "import-fresh";
 import path from "path";
-import { ShopifyBlock, ShopifySection, ShopifySettings } from "../../@types/shopify";
+import { toCamelCase } from "../utils/to-camel-case";
+import { ShopifyBlock, ShopifySection, ShopifySectionGeneratedThemeBlock, ShopifySettings, ShopifyThemeBlock } from "../../@types/shopify";
 import { config } from "../../shopify-accelerate";
 import { getAllFiles } from "../utils/fs";
 import { importAndTransformSchema } from "./import-and-transform-schema";
@@ -148,7 +149,35 @@ export const getSources = async () => {
     ? (importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings })?.settingsSchema
     : [];
 
-  let acc: { [T: string]: ShopifySection & { path: string; folder: string } } = {};
+  let acc: { [T: string]: ShopifySection & { path: string; folder: string; type: string } } = {};
+
+  config.sources.blockSchemas = blocksSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
+
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = {
+              ...val,
+              folder: file.split(/[\\/]/gi).at(-2),
+              path: file,
+              type: file.split(/[\\/]/gi).at(-2)?.replace(/^__/gi, "_"),
+            };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifyBlock }
+  );
+  config.sources.allBlockSchemas = { ...config.sources.blockSchemas };
+
   for (let i = 0; i < sectionsSchemaFiles.length; i++) {
     const file = sectionsSchemaFiles[i];
     try {
@@ -158,19 +187,20 @@ export const getSources = async () => {
         ...acc,
         ...Object.entries(data).reduce((acc2, [key, schema]) => {
           // @ts-ignore
-
           const folder = file.split(/[\\/]/gi).at(-2);
           const schema_file_path = folder.replace(/^_*/gi, "");
-          acc2[key] = {
-            ...schema,
-            blocks: schema?.blocks?.some((block) => block.theme_block)
-              ? schema.blocks.map((block) => {
+
+          const mapBlocks = (blocks?: any[]) => {
+            return blocks?.some((block) => block.theme_block)
+              ? blocks.map((block) => {
                   const sectionBlockType = `_${schema_file_path}__${block.type}`;
                   const blockPresets = schema.blockPresets?.[sectionBlockType];
 
-                  return {
+                  const results = {
                     ...block,
+                    type: block.name ? sectionBlockType : block.type,
                     theme_block: block.name ? true : undefined,
+                    blocks: mapBlocks(block?.blocks),
                     presets:
                       block.presets && Array.isArray(block.presets)
                         ? block.presets
@@ -180,10 +210,21 @@ export const getSources = async () => {
                         ? [{ name: block.name }]
                         : undefined,
                   };
+                  if (block.name) {
+                    config.sources.allBlockSchemas[toCamelCase(sectionBlockType)] = results;
+                  }
+
+                  return results;
                 })
-              : schema?.blocks,
+              : blocks;
+          };
+
+          acc2[key] = {
+            ...schema,
+            blocks: mapBlocks(schema?.blocks),
             folder,
             path: file,
+            type: folder?.replace(/^_+/gi, ""),
           };
 
           return acc2;
@@ -197,26 +238,6 @@ export const getSources = async () => {
 
   config.sources.sectionSchemas = acc;
 
-  config.sources.blockSchemas = blocksSchemaFiles.reduce(
-    (acc, file) => {
-      try {
-        const data = importFresh(file);
-
-        return {
-          ...acc,
-          ...Object.entries(data).reduce((acc2, [key, val]) => {
-            // @ts-ignore
-            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
-            return acc2;
-          }, {}),
-        };
-      } catch (err) {
-        console.log(chalk.redBright(err.message));
-        return acc;
-      }
-    },
-    {} as { [T: string]: ShopifyBlock }
-  );
   config.sources.classic_blockSchemas = classic_blocksSchemaFiles.reduce(
     (acc, file) => {
       try {
@@ -226,7 +247,11 @@ export const getSources = async () => {
           ...acc,
           ...Object.entries(data).reduce((acc2, [key, val]) => {
             // @ts-ignore
-            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
+            acc2[key] = {
+              ...val,
+              folder: file.split(/[\\/]/gi).at(-2),
+              path: file,
+            };
             return acc2;
           }, {}),
         };
@@ -360,32 +385,58 @@ export const getSchemaSources = async () => {
     ? (importFresh(settingsFiles[0]) as { settingsSchema: ShopifySettings })?.settingsSchema
     : [];
 
-  let acc: { [T: string]: ShopifySection & { path: string; folder: string } } = {};
+  let acc: { [T: string]: ShopifySection & { path: string; folder: string; type: string } } = {};
+
+  config.sources.blockSchemas = blocksSchemaFiles.reduce(
+    (acc, file) => {
+      try {
+        const data = importFresh(file);
+
+        return {
+          ...acc,
+          ...Object.entries(data).reduce((acc2, [key, val]) => {
+            // @ts-ignore
+            acc2[key] = {
+              ...val,
+              folder: file.split(/[\\/]/gi).at(-2),
+              path: file,
+              type: file.split(/[\\/]/gi).at(-2)?.replace(/^__/gi, "_"),
+            };
+            return acc2;
+          }, {}),
+        };
+      } catch (err) {
+        console.log(chalk.redBright(err.message));
+        return acc;
+      }
+    },
+    {} as { [T: string]: ShopifyBlock }
+  );
+  config.sources.allBlockSchemas = { ...config.sources.blockSchemas };
+
   for (let i = 0; i < sectionsSchemaFiles.length; i++) {
     const file = sectionsSchemaFiles[i];
     try {
       const data = await importAndTransformSchema(file);
 
-      /*if (file.includes("navigation")) {
-        console.log(data);
-      }*/
       acc = {
         ...acc,
         ...Object.entries(data).reduce((acc2, [key, schema]) => {
           // @ts-ignore
-
           const folder = file.split(/[\\/]/gi).at(-2);
           const schema_file_path = folder.replace(/^_*/gi, "");
-          acc2[key] = {
-            ...schema,
-            blocks: schema?.blocks?.some((block) => block.theme_block)
-              ? schema.blocks.map((block) => {
+
+          const mapBlocks = (blocks?: any[]) => {
+            return blocks?.some((block) => block.theme_block)
+              ? blocks.map((block) => {
                   const sectionBlockType = `_${schema_file_path}__${block.type}`;
                   const blockPresets = schema.blockPresets?.[sectionBlockType];
 
-                  return {
+                  const results = {
                     ...block,
+                    type: block.name ? sectionBlockType : block.type,
                     theme_block: block.name ? true : undefined,
+                    blocks: mapBlocks(block?.blocks),
                     presets:
                       block.presets && Array.isArray(block.presets)
                         ? block.presets
@@ -395,10 +446,21 @@ export const getSchemaSources = async () => {
                         ? [{ name: block.name }]
                         : undefined,
                   };
+                  if (block.name) {
+                    config.sources.allBlockSchemas[toCamelCase(sectionBlockType)] = results;
+                  }
+
+                  return results;
                 })
-              : schema?.blocks,
+              : blocks;
+          };
+
+          acc2[key] = {
+            ...schema,
+            blocks: mapBlocks(schema?.blocks),
             folder,
             path: file,
+            type: folder?.replace(/^_+/gi, ""),
           };
 
           return acc2;
@@ -411,27 +473,6 @@ export const getSchemaSources = async () => {
   }
 
   config.sources.sectionSchemas = acc;
-
-  config.sources.blockSchemas = blocksSchemaFiles.reduce(
-    (acc, file) => {
-      try {
-        const data = importFresh(file);
-
-        return {
-          ...acc,
-          ...Object.entries(data).reduce((acc2, [key, val]) => {
-            // @ts-ignore
-            acc2[key] = { ...val, folder: file.split(/[\\/]/gi).at(-2), path: file };
-            return acc2;
-          }, {}),
-        };
-      } catch (err) {
-        console.log(chalk.redBright(err.message));
-        return acc;
-      }
-    },
-    {} as { [T: string]: ShopifyBlock }
-  );
 
   config.sources.classic_blockSchemas = classic_blocksSchemaFiles.reduce(
     (acc, file) => {

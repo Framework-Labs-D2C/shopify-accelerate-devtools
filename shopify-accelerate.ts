@@ -107,7 +107,7 @@ export type GlobalsState = {
     blocksLiquid: string[];
     blocksSchemaFiles: string[];
     blocksJs: string[];
-    blockSchemas: { [T: string]: ShopifyThemeBlock & { path: string; folder: string } };
+    blockSchemas: { [T: string]: ShopifyThemeBlock & { path: string; folder: string; type: string } };
     classic_blocksLiquid: string[];
     classic_blocksSchemaFiles: string[];
     classic_blocksJs: string[];
@@ -125,7 +125,8 @@ export type GlobalsState = {
     settingsFile: string;
     locale_duplicates: { [T: string]: string[] };
     settingsSchema: ShopifySettings;
-    sectionSchemas: { [T: string]: ShopifySection & { path: string; folder: string } };
+    sectionSchemas: { [T: string]: ShopifySection & { path: string; folder: string; type: string } };
+    allBlockSchemas: { [T: string]: ShopifyThemeBlock & { path: string; folder: string; type: string } };
   };
   targets: {
     assets: string[];
@@ -203,6 +204,7 @@ export const config: GlobalsState = {
     locale_duplicates: {},
     settingsSchema: null,
     sectionSchemas: {},
+    allBlockSchemas: {},
   },
   targets: {
     assets: [],

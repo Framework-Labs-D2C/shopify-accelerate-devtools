@@ -58,8 +58,27 @@ export const validateTemplates = async (novalidate = false) => {
     }
   });*/
 
+  const sectionTypes = Object.values(config.sources.sectionSchemas)?.map((schema) => schema.type);
+  const blockTypes = Object.values(config.sources.allBlockSchemas)?.map((schema) => schema.type);
+
   if (
-    templates.some((template) => /"(type|id)":\s+(["'`])(?!(shopify:\/\/apps))([^'"`]*-[^'"`]*)\2/gi.test(readFile(template)))
+    templates.some((template) => {
+      if (/"(type|id)":\s+(["'`])(?!(shopify:\/\/apps))([^'"`]*-[^'"`]*)\2/gi.test(readFile(template))) {
+        const templateData: { sections: Sections; order: string[] }[] = [];
+        const content = readFile(template);
+        eval(`"use strict"; templateData.push(${content})`);
+
+        return Object.values(templateData[0].sections ?? {})?.some((section) => {
+          if (/-/gi.test(section.type) && sectionTypes.includes(section.type)) {
+            return true;
+          }
+          console.log(section.type);
+          console.log(blockTypes);
+          return false;
+        });
+      }
+      return false;
+    })
   ) {
     const results = novalidate
       ? { reinitialize: true, shopify_cli_method: "" }
