@@ -60,6 +60,7 @@ export const validateTemplates = async (novalidate = false) => {
 
   const sectionTypes = Object.values(config.sources.sectionSchemas)?.map((schema) => schema.type);
   const blockTypes = Object.values(config.sources.allBlockSchemas)?.map((schema) => schema.type);
+  const allTypes = [...sectionTypes, blockTypes];
 
   if (
     templates.some((template) => {
@@ -69,11 +70,9 @@ export const validateTemplates = async (novalidate = false) => {
         eval(`"use strict"; templateData.push(${content})`);
 
         return Object.values(templateData[0].sections ?? {})?.some((section) => {
-          if (/-/gi.test(section.type) && sectionTypes.includes(section.type)) {
+          if (/-/gi.test(section.type) && allTypes.includes(section.type)) {
             return true;
           }
-          console.log(section.type);
-          console.log(blockTypes);
           return false;
         });
       }

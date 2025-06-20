@@ -63,9 +63,10 @@ export const generateLiquidFiles = () => {
     }
 
     const createBlockSchemas = (block) => {
+      const shortBlockType = block.type.replace(`_${schema_file_path}__`, "");
       if (block.disabled || "theme_block" in block) {
         const targetFile = targets.snippets.find(
-          (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${block.type}.liquid`
+          (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${shortBlockType}.liquid`
         );
         if (targetFile) {
           config.targets.snippets = config.targets.snippets.filter((target) => target !== targetFile);
@@ -74,7 +75,7 @@ export const generateLiquidFiles = () => {
       }
 
       if ("theme_block" in block && block.theme_block) {
-        const sectionBlockType = `_${schema_file_path}__${block.type}`;
+        const sectionBlockType = block.type;
         const blockPresets = schema.blockPresets?.[sectionBlockType];
 
         const blockSchema = {
@@ -88,8 +89,8 @@ export const generateLiquidFiles = () => {
           folder: schema.folder,
         };
 
-        const blockName = `${schema_file_path}.${blockSchema.type}.liquid`;
-        const blockPath = path.join(process.cwd(), theme_path, "blocks", `_${schema_file_path}__${blockSchema.type}.liquid`);
+        const blockName = `${schema_file_path}.${shortBlockType}.liquid`;
+        const blockPath = path.join(process.cwd(), theme_path, "blocks", `${blockSchema.type}.liquid`);
         const targetSnippet = [...snippets].find((snippet) => snippet.includes(blockName));
 
         if (targetSnippet) {
@@ -352,8 +353,9 @@ export const generateLiquidFiles = () => {
 
     const createBlockSchemas = (block) => {
       if (block.disabled || "theme_block" in block) {
+        const shortBlockType = block.type.replace(`${schema_file_path}__`, "");
         const targetFile = targets.snippets.find(
-          (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${block.type}.liquid`
+          (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${shortBlockType}.liquid`
         );
         if (targetFile) {
           config.targets.snippets = config.targets.snippets.filter((target) => target !== targetFile);
@@ -367,14 +369,10 @@ export const generateLiquidFiles = () => {
           presets: "presets" in block ? block.presets : [{ name: block.name }],
           folder: schema.folder,
         };
+        const shortBlockType = block.type.replace(`${schema_file_path}__`, "");
 
-        const blockName = `${schema_file_path}.${blockSchema.type}.liquid`;
-        const blockPath = path.join(
-          process.cwd(),
-          theme_path,
-          "blocks",
-          `_${schema_file_path}__${blockSchema.type}.liquid`.replace(/^_+/gi, "_")
-        );
+        const blockName = `${schema_file_path}.${shortBlockType?.replace(/^_*/gi, "")}.liquid`;
+        const blockPath = path.join(process.cwd(), theme_path, "blocks", `${blockSchema.type}.liquid`.replace(/^_+/gi, "_"));
 
         const targetSnippet = [...snippets].find((snippet) => snippet.includes(blockName));
 
@@ -1150,15 +1148,8 @@ declare global {
       const targetFile =
         sources.blocksLiquid.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1) === fileName) ||
         Object.values(sources.sectionSchemas)?.find((schema) => {
-          const schema_file_path = schema.folder.replace(/^_*/gi, "");
-
           const hasMatchingBlock = (block) => {
-            if (
-              "theme_block" in block &&
-              block.theme_block &&
-              !block.disabled &&
-              `_${schema_file_path}__${block.type}.liquid` === fileName
-            ) {
+            if ("theme_block" in block && block.theme_block && !block.disabled && `${block.type}.liquid` === fileName) {
               return true;
             }
             return block?.blocks?.some(hasMatchingBlock) || false;
@@ -1166,15 +1157,8 @@ declare global {
           return schema.blocks?.some(hasMatchingBlock);
         }) ||
         Object.values(sources.blockSchemas)?.find((schema) => {
-          const schema_file_path = schema.folder.replace(/^_*/gi, "");
-
           const hasMatchingBlock = (block) => {
-            if (
-              "theme_block" in block &&
-              block.theme_block &&
-              !block.disabled &&
-              `_${schema_file_path}__${block.type}.liquid` === fileName
-            ) {
+            if ("theme_block" in block && block.theme_block && !block.disabled && `${block.type}.liquid` === fileName) {
               return true;
             }
             return block?.blocks?.some(hasMatchingBlock) || false;

@@ -2,6 +2,8 @@
 
 import fs from "fs";
 import path from "path";
+import { backupNamesInSettings, restoreNamesInSettingsFromBackup } from "./src/scaffold-theme/backup-names-in-settings";
+import { generateAllMissingBlockPresetsFiles } from "./src/scaffold-theme/generate-blocks-presets-files";
 import { backupTemplates } from "./src/scaffold-theme/backup-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
@@ -105,6 +107,7 @@ export type GlobalsState = {
     sectionsSchemaFiles: string[];
     sectionsJs: string[];
     blocksLiquid: string[];
+    blocksPresetFiles: string[];
     blocksSchemaFiles: string[];
     blocksJs: string[];
     blockSchemas: { [T: string]: ShopifyThemeBlock & { path: string; folder: string; type: string } };
@@ -183,6 +186,7 @@ export const config: GlobalsState = {
     sectionsSchemaFiles: [],
     sectionsJs: [],
     blocksLiquid: [],
+    blocksPresetFiles: [],
     blocksSchemaFiles: [],
     blocksJs: [],
     blockSchemas: {},
@@ -350,6 +354,7 @@ program
     await validateCliOptions(options);
     generateBaseTypes();
     generateAllMissingPresetsFiles();
+    generateAllMissingBlockPresetsFiles();
     await getSources();
     getTargets();
 
@@ -362,6 +367,56 @@ program
     runTailwindCSSWatcher();
     watchTheme();
     backupTemplates();
+  });
+
+program
+  .command("backup-names")
+  .description("Shopify Theme Development")
+  // .argument("<string>", "string to split")
+  .option("-e, --environment <environment_name>", "Development environment name", "development")
+  .option(
+    "-s, --store <store_id>",
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`"
+  )
+  .option(
+    "-t, --theme <theme_id>",
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
+  )
+  .action(async (options) => {
+    config.options = options;
+    await validateCliOptions(options);
+    generateBaseTypes();
+    generateAllMissingPresetsFiles();
+    generateAllMissingBlockPresetsFiles();
+    await getSources();
+    getTargets();
+
+    backupNamesInSettings();
+  });
+
+program
+  .command("restore-names")
+  .description("Shopify Theme Development")
+  // .argument("<string>", "string to split")
+  .option("-e, --environment <environment_name>", "Development environment name", "development")
+  .option(
+    "-s, --store <store_id>",
+    "Shopify store id. I.e `https://admin.shopify.com/store/<store_id>` or `https://<store_id>.myshopify.com`"
+  )
+  .option(
+    "-t, --theme <theme_id>",
+    "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
+  )
+  .action(async (options) => {
+    config.options = options;
+    await validateCliOptions(options);
+    generateBaseTypes();
+    generateAllMissingPresetsFiles();
+    generateAllMissingBlockPresetsFiles();
+    await getSources();
+    getTargets();
+
+    restoreNamesInSettingsFromBackup();
   });
 
 program

@@ -784,6 +784,7 @@ export type PresetSchema<T = never> = {
 export type ShopifySectionBlock =
   | {
       name: string;
+      category: ShopifyThemeCategories;
       disabled?: boolean;
       hide_development_presets?: boolean;
       theme_block?: never;
@@ -813,6 +814,7 @@ export type ShopifySectionBlock =
 export type ShopifySectionGeneratedThemeBlock =
   | {
       name: string;
+      category: ShopifyThemeCategories;
       /* The theme_block setting has to be active on all blocks. Mixing normal blocks with Theme blocks is not possible*/
       theme_block: true;
       disabled?: boolean;
@@ -881,8 +883,38 @@ export type ShopifySectionBlockPresetMap<T extends { type: string }> = {
   [K in T["type"]]?: ShopifySectionPreset<Extract<T, { type: K }>>[];
 };
 
+export type ShopifyThemeCategories =
+  | "Basic"
+  | "Layout"
+  | "Settings"
+  | "Custom"
+  | "Cards"
+  | "Slider"
+  | "Markets"
+  | "Social"
+  | "Testimonial"
+  | "Utilities"
+  | "Product"
+  | "Collection"
+  | "Blog"
+  | "Links"
+  | "Interactive"
+  | "Design System"
+  | "Navigation"
+  | "Account"
+  | "Pagination"
+  | "Forms"
+  | "Banner"
+  | "Bundle"
+  | "Search"
+  | "Page"
+  | "Cart"
+  | "Data"
+  | string;
+
 export type ShopifySection<T = never> = {
   name: string;
+  category: ShopifyThemeCategories;
   hide_development_presets?: boolean;
   blocks?: ShopifySectionBlock[] | ShopifySectionGeneratedThemeBlock[];
   class?: string;
@@ -935,9 +967,11 @@ export type ShopifyThemeBlock<T = never> = {
   name: string;
   hide_development_presets?: boolean;
   blocks?: ShopifySectionGeneratedThemeBlock[];
+  category: ShopifyThemeCategories;
   class?: string;
   disabled?: boolean;
   presets?: ShopifySectionPreset<T>[];
+  blockPresets?: ShopifySectionBlockPresetMap<T extends { blocks: { type: string }[] } ? T["blocks"][number] : never>;
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
   /* Used for direct dynamic block use only */
@@ -946,6 +980,7 @@ export type ShopifyThemeBlock<T = never> = {
 
 export type ShopifyBlock<T = never> = {
   name: string;
+  category: ShopifyThemeCategories;
   class?: string;
   disabled?: boolean;
   hide_development_presets?: boolean;

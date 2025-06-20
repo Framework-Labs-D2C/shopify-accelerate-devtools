@@ -3,6 +3,7 @@ import fs from "fs";
 import watch from "node-watch";
 import os from "os";
 import path from "path";
+import { generateBlocksMissingPresetsFiles } from "../scaffold-theme/generate-blocks-presets-files";
 import { backupTemplates } from "../scaffold-theme/backup-templates";
 import { syncPresets } from "../scaffold-theme/sync-presets";
 import { generateMissingPresetsFiles } from "../scaffold-theme/generate-presets-files";
@@ -58,6 +59,7 @@ export const watchTheme = () => {
           await delay(20);
           if (fs.existsSync(name.replace(/[\\/]_schema\.ts$/gi, ""))) {
             generateMissingPresetsFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
+            generateBlocksMissingPresetsFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
             generateSchemaFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
           }
         }
@@ -65,6 +67,7 @@ export const watchTheme = () => {
           await delay(20);
           if (fs.existsSync(name.replace(/[\\/]_presets\.ts$/gi, ""))) {
             generateMissingPresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
+            generateBlocksMissingPresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
           }
         }
         running = false;
@@ -73,6 +76,7 @@ export const watchTheme = () => {
 
       if (/^_schema\.ts$/gi.test(fileName)) {
         generateMissingPresetsFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
+        generateBlocksMissingPresetsFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
         generateSchemaFiles(name.replace(/[\\/]_schema\.ts$/gi, ""));
         getTargets();
         await getSchemaSources();
@@ -80,11 +84,13 @@ export const watchTheme = () => {
 
       if (/^_presets\.ts$/gi.test(fileName)) {
         generateMissingPresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
+        generateBlocksMissingPresetsFiles(name.replace(/[\\/]_presets\.ts$/gi, ""));
       }
 
       if (fs.statSync(name).isDirectory() && !fs.existsSync(path.join(name, "_schema.ts"))) {
         if (fs.existsSync(name)) {
           generateMissingPresetsFiles(name);
+          generateBlocksMissingPresetsFiles(name);
           generateSchemaFiles(name);
           getTargets();
           await getSchemaSources();

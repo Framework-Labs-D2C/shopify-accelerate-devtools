@@ -120,7 +120,7 @@ export const getImports = (sections: { [T: string]: ShopifySection }) => {
   }
 
   if (themeBlocks) {
-    returnArr.push(`import { ThemeBlocks } from "./blocks";`);
+    returnArr.push(`import { ThemeBlocks, GlobalThemeBlocks } from "./blocks";`);
   }
   if (classicThemeBlocks) {
     returnArr.push(`import { ClassicThemeBlocks } from "./classic-blocks";`);
@@ -236,31 +236,36 @@ export const sectionToTypes = (section, key) => {
     });
   }
 
-  if (section.blocks?.length && section.blocks?.length === 1) {
-    const block = section.blocks[0];
-    if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
+  if (section.blocks?.filter((block) => block.type !== "@app")?.length && section.blocks?.length === 1) {
+    const block = section.blocks?.filter((block) => block.type !== "@app")[0];
+    if (block.type === "@app" || block.type === "@classic_theme") {
+    } else if (block.type === "@theme") {
+      arr.push("");
+      arr.push(`export type ${capitalize(key)}Blocks = GlobalThemeBlocks;`);
     } else if (!block.name && block.type) {
       arr.push("");
       arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
     } else if (block.theme_block) {
       arr.push("");
-      arr.push(
-        `export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${section.folder.replace(/^_*/gi, "")}__${
-          block.type
-        }" }>;`
-      );
+      arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
     } else {
       arr.push("");
       arr.push(`export type ${capitalize(key)}Blocks = ${capitalize(key)}Blocks${toPascalCase(block.type.replace("@", ""))};`);
     }
   }
 
-  if (section.blocks?.length && section.blocks?.length > 1) {
+  if (section.blocks?.filter((block) => block.type !== "@app")?.length && section.blocks?.length > 1) {
     arr.push("");
     arr.push(`export type ${capitalize(key)}Blocks =`);
 
     section.blocks?.forEach((block, i) => {
-      if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
+      if (block.type === "@app" || block.type === "@classic_theme") {
+      } else if (block.type === "@theme") {
+        if (section.blocks?.length - 1 === i) {
+          arr.push(`  | GlobalThemeBlocks;`);
+        } else {
+          arr.push(`  | GlobalThemeBlocks`);
+        }
       } else if (!block.name && block.type) {
         if (section.blocks?.length - 1 === i) {
           arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
@@ -269,9 +274,9 @@ export const sectionToTypes = (section, key) => {
         }
       } else if (block.theme_block) {
         if (section.blocks?.length - 1 === i) {
-          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder.replace(/^_*/gi, "")}__${block.type}" }>;`);
+          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
         } else {
-          arr.push(`  | Extract<ThemeBlocks, { type: "_${section.folder.replace(/^_*/gi, "")}__${block.type}" }>`);
+          arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>`);
         }
       } else {
         if (section.blocks?.length - 1 === i) {

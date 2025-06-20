@@ -29,7 +29,7 @@ export const writeCompareFile = (file_path, content, successCallback = (updated:
     encoding: "utf-8",
   });
 
-  if (contentVerification !== content) {
+  if (contentVerification.replace(/[\n|\s]*$/gi, "") !== content.replace(/[\n|\s]*$/gi, "")) {
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.blueBright(`Updated: ${file_path.replace(process.cwd(), "")}`)}`
     );

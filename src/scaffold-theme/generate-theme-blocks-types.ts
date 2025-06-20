@@ -14,14 +14,20 @@ export const generateThemeBlocksTypes = () => {
 
   const imports = getImports(blocks, sections);
   let sectionUnionType = "export type ThemeBlocks =";
+  let globalThemeBlocksUnionType = "export type GlobalThemeBlocks =";
   let typeContent = "";
 
   const generateBlockTypes = (block, folder, key, rootSchema?: ShopifyThemeBlock | ShopifySection) => {
     if ("theme_block" in block && block.theme_block) {
-      const newBlock = { ...block, folder: folder, filename: `_${folder}__${block.type}` };
+      const newBlock = { ...block, folder: folder, filename: `${block.type}` };
 
-      typeContent += `${blockToTypes(newBlock, `${capitalize(key)}${toPascalCase(newBlock.type)}`, true, rootSchema)}\n`;
-      sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type)}Block`;
+      typeContent += `${blockToTypes(
+        newBlock,
+        `${capitalize(key)}${toPascalCase(newBlock.type).replace(capitalize(key), "")}`,
+        true,
+        rootSchema
+      )}\n`;
+      sectionUnionType += `\n  | ${capitalize(key)}${toPascalCase(newBlock.type).replace(capitalize(key), "")}Block`;
 
       block?.blocks?.forEach((childBlock) => generateBlockTypes(childBlock, folder, key, rootSchema));
     }
@@ -35,6 +41,9 @@ export const generateThemeBlocksTypes = () => {
 
     typeContent += `${blockToTypes(schema, key)}\n`;
     sectionUnionType += `\n  | ${capitalize(key)}Block`;
+    if (!/^_/gi.test(schema.folder)) {
+      globalThemeBlocksUnionType += `\n  | ${capitalize(key)}Block`;
+    }
   }
 
   for (const key in sections) {
@@ -45,13 +54,13 @@ export const generateThemeBlocksTypes = () => {
 
   if (!typeContent) return;
 
-  const finalContent = `${imports + typeContent + sectionUnionType};\n`;
+  const finalContent = `${imports + typeContent + sectionUnionType};\n\n${globalThemeBlocksUnionType};`;
 
   writeCompareFile(blockTypesPath, finalContent);
 };
 
 export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections: { [T: string]: ShopifySection }) => {
-  const localTypes = ["_Blog_liquid"];
+  const localTypes = ["_Blog_liquid", "_Collection_liquid"];
 
   const analyseSetting = (setting) => {
     if (setting.type === "richtext") {
@@ -202,21 +211,20 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false, rootSchem
 
   const addBlockTypes = (schema, skipSingle = false, isLast = false) => {
     if (!skipSingle) {
-      if (schema.blocks?.length && schema.blocks?.length === 1) {
-        const block = schema.blocks[0];
-        if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
+      if (schema.blocks?.filter((block) => block.type !== "@app")?.length && schema.blocks?.length === 1) {
+        const block = schema.blocks?.filter((block) => block.type !== "@app")[0];
+        if (block.type === "@app" || block.type === "@classic_theme") {
         } else if (block.type === "@section_blocks") {
           addBlockTypes(rootSchema);
+        } else if (block.type === "@theme") {
+          arr.push("");
+          arr.push(`export type ${capitalize(key)}Blocks = GlobalThemeBlocks;`);
         } else if (!block.name && block.type) {
           arr.push("");
           arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
         } else if (block.theme_block) {
           arr.push("");
-          arr.push(
-            `export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "_${schema.folder.replace(/^_*/gi, "")}__${
-              block.type
-            }" }>;`
-          );
+          arr.push(`export type ${capitalize(key)}Blocks = Extract<ThemeBlocks, { type: "${block.type}" }>;`);
         } else {
           arr.push("");
           arr.push(
@@ -226,19 +234,25 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false, rootSchem
       }
     }
 
-    if (schema.blocks?.length && (schema.blocks?.length > 1 || skipSingle)) {
+    if (schema.blocks?.filter((block) => block.type !== "@app")?.length && (schema.blocks?.length > 1 || skipSingle)) {
       if (!skipSingle) {
         arr.push("");
         arr.push(`export type ${capitalize(key)}Blocks =`);
       }
 
       schema.blocks?.forEach((block, i) => {
-        if (block.type === "@app" || block.type === "@theme" || block.type === "@classic_theme") {
+        if (block.type === "@app" || block.type === "@classic_theme") {
         } else if (block.type === "@section_blocks") {
           if (schema.blocks?.length - 1 === i) {
             addBlockTypes(rootSchema, true, true);
           } else {
             addBlockTypes(rootSchema, true);
+          }
+        } else if (block.type === "@theme") {
+          if (schema.blocks?.length - 1 === i && (!skipSingle || isLast)) {
+            arr.push(`  | GlobalThemeBlocks;`);
+          } else {
+            arr.push(`  | GlobalThemeBlocks`);
           }
         } else if (!block.name && block.type) {
           if (schema.blocks?.length - 1 === i && (!skipSingle || isLast)) {
@@ -248,9 +262,9 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false, rootSchem
           }
         } else if (block.theme_block) {
           if (schema.blocks?.length - 1 === i && (!skipSingle || isLast)) {
-            arr.push(`  | Extract<ThemeBlocks, { type: "_${schema.folder.replace(/^_*/gi, "")}__${block.type}" }>;`);
+            arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>;`);
           } else {
-            arr.push(`  | Extract<ThemeBlocks, { type: "_${schema.folder.replace(/^_*/gi, "")}__${block.type}" }>`);
+            arr.push(`  | Extract<ThemeBlocks, { type: "${block.type}" }>`);
           }
         } else {
           if (schema.blocks?.length - 1 === i && (!skipSingle || isLast)) {

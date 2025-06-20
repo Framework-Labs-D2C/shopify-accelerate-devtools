@@ -10,11 +10,13 @@ export const generateBlockFileSchema = (
     folder,
     /* @ts-ignore */
     theme_block,
+    blockPresets,
+    category,
     type,
     tag,
     ...rootBlock
-  }: ShopifyThemeBlock & { path?: string; folder?: string },
-  section?: ShopifySection & { path?: string; folder?: string }
+  }: ShopifyThemeBlock & { path?: string; folder?: string; type: string },
+  section?: ShopifySection & { path?: string; folder?: string; type: string }
 ) => {
   const sectionName = toLocaleFriendlySnakeCase(name);
   const { sources, disabled_locales } = config;
@@ -104,7 +106,8 @@ export const generateBlockFileSchema = (
     }),
     blocks: rootBlock?.blocks
       ?.filter((block) => !block?.disabled)
-      ?.reduce((acc, { name, disabled, hide_development_presets, ...block }) => {
+      // @ts-ignore
+      ?.reduce((acc, { name, disabled, hide_development_presets, presets, ...block }) => {
         let paragraphCount = 1;
         let headerCount = 1;
 
@@ -113,7 +116,7 @@ export const generateBlockFileSchema = (
           return acc;
         }
         if ("theme_block" in block && block.theme_block) {
-          acc.push({ type: `_${folder.replace(/^_*/gi, "")}__${block.type}` });
+          acc.push({ type: block.type });
           return acc;
         }
 
@@ -122,7 +125,7 @@ export const generateBlockFileSchema = (
             if (sectionBlock.type && !sectionBlock.name) {
               acc.push({ type: sectionBlock.type });
             } else {
-              acc.push({ type: `_${section.folder.replace(/^_*/gi, "")}__${sectionBlock.type}` });
+              acc.push({ type: sectionBlock.type });
             }
           });
 
@@ -230,8 +233,10 @@ export const generateBlockFileSchema = (
         };
 
         return {
-          name: name?.length <= 25 ? name : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+          // name: name?.length <= 25 ? name : `t:blocks.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+          name: name,
           ...preset,
+          category: preset.category ?? category,
           ...mapBlockPresets(preset?.blocks),
         };
       }),

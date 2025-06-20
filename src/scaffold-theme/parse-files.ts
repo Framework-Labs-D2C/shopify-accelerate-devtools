@@ -33,6 +33,7 @@ export const getSources = async () => {
   const sectionsPresetFiles = [];
   const sectionsJs = [];
   const settingsFiles = [];
+  const blocksPresetFiles = [];
   const blocksLiquid = [];
   const blocksSchemaFiles = [];
   const blocksJs = [];
@@ -73,6 +74,9 @@ export const getSources = async () => {
     }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
+    }
+    if (isBlockPreset(filePath)) {
+      blocksPresetFiles.push(filePath);
     }
     if (isBlockSchema(filePath)) {
       blocksSchemaFiles.push(filePath);
@@ -130,6 +134,7 @@ export const getSources = async () => {
   config.sources.sectionsPresetFiles = sectionsPresetFiles;
   config.sources.sectionsJs = sectionsJs;
   config.sources.blocksLiquid = blocksLiquid;
+  config.sources.blocksPresetFiles = blocksPresetFiles;
   config.sources.blocksSchemaFiles = blocksSchemaFiles;
   config.sources.blocksJs = blocksJs;
   config.sources.classic_blocksLiquid = classic_blocksLiquid;
@@ -158,13 +163,37 @@ export const getSources = async () => {
 
         return {
           ...acc,
-          ...Object.entries(data).reduce((acc2, [key, val]) => {
+          ...Object.entries(data).reduce((acc2, [key, schema]) => {
+            const folder = file.split(/[\\/]/gi).at(-2);
+            const schema_file_path = folder.replace(/^_*/gi, "");
+
+            const mapBlocks = (blocks?: any[]) => {
+              return blocks?.some((block) => block.theme_block)
+                ? blocks.map((block) => {
+                    const sectionBlockType = `_${schema_file_path}__${block.type}`;
+
+                    const results = {
+                      ...block,
+                      type: block.name ? sectionBlockType : block.type,
+                      theme_block: block.name ? true : undefined,
+                      blocks: mapBlocks(block?.blocks),
+                    };
+                    if (block.name) {
+                      config.sources.allBlockSchemas[toCamelCase(sectionBlockType)] = results;
+                    }
+
+                    return results;
+                  })
+                : blocks;
+            };
+
             // @ts-ignore
             acc2[key] = {
-              ...val,
-              folder: file.split(/[\\/]/gi).at(-2),
+              ...schema,
+              folder,
+              blocks: mapBlocks(schema?.blocks),
               path: file,
-              type: file.split(/[\\/]/gi).at(-2)?.replace(/^__/gi, "_"),
+              type: folder?.replace(/^__/gi, "_"),
             };
             return acc2;
           }, {}),
@@ -193,7 +222,7 @@ export const getSources = async () => {
           const mapBlocks = (blocks?: any[]) => {
             return blocks?.some((block) => block.theme_block)
               ? blocks.map((block) => {
-                  const sectionBlockType = `_${schema_file_path}__${block.type}`;
+                  const sectionBlockType = `_${schema_file_path}__${block.type?.replace(`_${schema_file_path}__`, "")}`;
                   const blockPresets = schema.blockPresets?.[sectionBlockType];
 
                   const results = {
@@ -306,6 +335,7 @@ export const getSchemaSources = async () => {
   const sectionsPresetFiles = [];
   const settingsFiles = [];
   const blocksLiquid = [];
+  const blocksPresetFiles = [];
   const blocksSchemaFiles = [];
   const classic_blocksLiquid = [];
   const classic_blocksSchemaFiles = [];
@@ -336,6 +366,9 @@ export const getSchemaSources = async () => {
     }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
+    }
+    if (isBlockPreset(filePath)) {
+      blocksPresetFiles.push(filePath);
     }
     if (isBlockSchema(filePath)) {
       blocksSchemaFiles.push(filePath);
@@ -377,6 +410,7 @@ export const getSchemaSources = async () => {
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
   config.sources.sectionsPresetFiles = sectionsPresetFiles;
   config.sources.blocksLiquid = blocksLiquid;
+  config.sources.blocksPresetFiles = blocksPresetFiles;
   config.sources.classic_blocksLiquid = classic_blocksLiquid;
   config.sources.cardsLiquid = cardsLiquid;
   config.sources.giftCards = giftCards;
@@ -394,13 +428,37 @@ export const getSchemaSources = async () => {
 
         return {
           ...acc,
-          ...Object.entries(data).reduce((acc2, [key, val]) => {
+          ...Object.entries(data).reduce((acc2, [key, schema]) => {
+            const folder = file.split(/[\\/]/gi).at(-2);
+            const schema_file_path = folder.replace(/^_*/gi, "");
+
+            const mapBlocks = (blocks?: any[]) => {
+              return blocks?.some((block) => block.theme_block)
+                ? blocks.map((block) => {
+                    const sectionBlockType = `_${schema_file_path}__${block.type}`;
+
+                    const results = {
+                      ...block,
+                      type: block.name ? sectionBlockType : block.type,
+                      theme_block: block.name ? true : undefined,
+                      blocks: mapBlocks(block?.blocks),
+                    };
+                    if (block.name) {
+                      config.sources.allBlockSchemas[toCamelCase(sectionBlockType)] = results;
+                    }
+
+                    return results;
+                  })
+                : blocks;
+            };
+
             // @ts-ignore
             acc2[key] = {
-              ...val,
-              folder: file.split(/[\\/]/gi).at(-2),
+              ...schema,
+              folder,
+              blocks: mapBlocks(schema?.blocks),
               path: file,
-              type: file.split(/[\\/]/gi).at(-2)?.replace(/^__/gi, "_"),
+              type: folder?.replace(/^__/gi, "_"),
             };
             return acc2;
           }, {}),
@@ -429,7 +487,7 @@ export const getSchemaSources = async () => {
           const mapBlocks = (blocks?: any[]) => {
             return blocks?.some((block) => block.theme_block)
               ? blocks.map((block) => {
-                  const sectionBlockType = `_${schema_file_path}__${block.type}`;
+                  const sectionBlockType = `_${schema_file_path}__${block.type?.replace(`_${schema_file_path}__`, "")}`;
                   const blockPresets = schema.blockPresets?.[sectionBlockType];
 
                   const results = {
@@ -600,6 +658,9 @@ export const isSectionSchema = (name: string) =>
 export const isSectionPreset = (name: string) =>
   name.includes(config.folders.sections) && /[\\/][^\\/]*[\\/]_presets\.ts$/gi.test(name);
 
+export const isBlockPreset = (name: string) =>
+  name.includes(config.folders.blocks) && /[\\/][^\\/]*[\\/]_presets\.ts$/gi.test(name);
+
 export const isSectionTs = (name: string) =>
   name.includes(config.folders.sections) &&
   !isSectionSchema(name) &&
@@ -629,7 +690,10 @@ export const isBlockSchema = (name: string) =>
   name.includes(config.folders.blocks) && /[\\/][^\\/]*[\\/]_schema\.ts$/gi.test(name);
 
 export const isBlockTs = (name: string) =>
-  name.includes(config.folders.blocks) && !isBlockSchema(name) && /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
+  name.includes(config.folders.blocks) &&
+  !isBlockSchema(name) &&
+  !isBlockPreset(name) &&
+  /[\\/][^\\/]*[\\/][^\\/]*?\.ts$/gi.test(name);
 
 export const isClassicBlockLiquid = (name: string) =>
   name.includes(config.folders.classic_blocks) && /[\\/][^\\/]*[\\/][^.\\/]*\.liquid$/gi.test(name);

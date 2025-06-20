@@ -52,20 +52,30 @@ export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}S
   }
 
   if (dirName.includes(config.folders.blocks) && dirName !== config.folders.blocks) {
+    const presetsFile = config.sources.blocksPresetFiles.find((file) => file.includes(dirName));
     writeFile(
       path.join(dirName, "_schema.ts"),
       `import { ShopifyThemeBlock } from "types/shopify";
 import { ${toPascalCase(fileName)}Block } from "types/blocks";
-
+${
+  presetsFile
+    ? `import { ${toCamelCase(fileName)}Presets, ${toCamelCase(fileName)}BlockPresets } from "blocks/${folder}/_presets";\n`
+    : ""
+}
 export const ${toCamelCase(fileName)}: ShopifyThemeBlock<${toPascalCase(fileName)}Block> = {
   name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",
   settings: [],
   tag: null,
-  presets: [
+  presets: ${
+    presetsFile
+      ? `${toCamelCase(fileName)}Presets,`
+      : `[
     {
       name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",
     },
-  ],
+  ],`
+  }
+  blockPresets: ${presetsFile ? `${toCamelCase(fileName)}BlockPresets` : `{}`},
 };
 `
     );

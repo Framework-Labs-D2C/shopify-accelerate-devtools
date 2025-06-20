@@ -1,3 +1,4 @@
+import { generateAllMissingBlockPresetsFiles } from "./generate-blocks-presets-files";
 import { fixNamingConventions } from "./fix-naming-conventions";
 import { generateAssetFiles } from "./generate-asset-files";
 import { generateCardsTypes } from "./generate-card-types";
@@ -17,6 +18,7 @@ export const buildTheme = async () => {
 
   parseLocales();
   generateAllMissingPresetsFiles();
+  generateAllMissingBlockPresetsFiles();
   await generateAllMissingSchemaFiles();
   generateSchemaVariables();
   generateSchemaLocales();

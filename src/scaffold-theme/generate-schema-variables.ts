@@ -28,6 +28,7 @@ export const generateSchemaVariables = () => {
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
+      if (["generate_presets", "category_name", "generate_block_presets", "hidden_name_backup"].includes(setting.id)) return;
       variables.push(
         `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = section.settings.${setting.id}`
       );
@@ -77,21 +78,19 @@ export const generateSchemaVariables = () => {
       if (Array.isArray(schema.generate_block_files) && !schema.generate_block_files?.includes(block.type)) {
         return;
       }
+      const shortBlockType = block.type.replace(`_${schema_file_path}__`, "");
 
-      const blockPath = path.join(folders.sections, schema.folder, `${schema_file_path}.${block.type}.liquid`);
+      const blockPath = path.join(folders.sections, schema.folder, `${schema_file_path}.${shortBlockType}.liquid`);
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
 
-      if ("theme_block" in block && block.theme_block) {
-        blockVariables.push(`  assign block_type = "_${schema_file_path}__${block.type}"`);
-      } else {
-        blockVariables.push(`  assign block_type = "${block.type}"`);
-      }
+      blockVariables.push(`  assign block_type = "${block.type}"`);
 
       blockVariables.push(`  assign section_type = "${schema_file_path}"`);
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
+        if (["generate_presets", "category_name", "generate_block_presets", "hidden_name_backup"].includes(setting.id)) return;
         blockVariables.push(
           `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
         );
@@ -157,6 +156,7 @@ export const generateSchemaVariables = () => {
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
+      if (["generate_presets", "category_name", "generate_block_presets", "hidden_name_backup"].includes(setting.id)) return;
       variables.push(
         `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
       );
@@ -206,21 +206,22 @@ export const generateSchemaVariables = () => {
       if (Array.isArray(schema.generate_block_files) && !schema.generate_block_files?.includes(block.type)) {
         return;
       }
-
-      const blockPath = path.join(folders.blocks, schema.folder, `${schema_file_path}.${block.type}.liquid`);
+      const shortBlockType = block.type.replace(`${schema_file_path}__`, "");
+      const blockPath = path.join(
+        folders.blocks,
+        schema.folder,
+        `${schema_file_path}.${shortBlockType.replace(/^_*/gi, "")}.liquid`
+      );
 
       const blockVariables = [start];
       blockVariables.push("{%- liquid");
 
-      if ("theme_block" in block && block.theme_block) {
-        blockVariables.push(`  assign block_type = "${`_${schema_file_path}`.replace(/^_+/gi, "_")}__${block.type}"`);
-      } else {
-        blockVariables.push(`  assign block_type = "${block.type}"`);
-      }
+      blockVariables.push(`  assign block_type = "${block.type}"`);
 
       blockVariables.push(`  assign section_type = "${schema_file_path}"`);
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
+        if (["generate_presets", "category_name", "generate_block_presets", "hidden_name_backup"].includes(setting.id)) return;
         blockVariables.push(
           `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
         );
@@ -279,6 +280,7 @@ export const generateSchemaVariables = () => {
 
       block?.settings?.forEach((setting) => {
         if (setting.type === "header" || setting.type === "paragraph") return;
+        if (["generate_presets", "category_name", "generate_block_presets", "hidden_name_backup"].includes(setting.id)) return;
         blockVariables.push(
           `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
         );
@@ -355,6 +357,7 @@ export const generateSchemaVariables = () => {
 
     schema.settings?.forEach((setting) => {
       if (setting.type === "header" || setting.type === "paragraph") return;
+      if (["generate_presets", "category_name", "generate_block_presets", "hidden_name_backup"].includes(setting.id)) return;
       variables.push(
         `  assign ${RESERVED_VARIABLES.includes(setting.id) ? `_${setting.id}` : setting.id} = block.settings.${setting.id}`
       );

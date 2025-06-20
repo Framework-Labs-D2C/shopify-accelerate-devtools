@@ -9,6 +9,7 @@ export const generateSectionFiles = ({
   /* @ts-ignore */
   theme_block,
   disabled,
+  category,
   path,
   folder,
   hide_development_presets,
@@ -104,7 +105,8 @@ export const generateSectionFiles = ({
     }),
     blocks: section?.blocks
       ?.filter((block) => !block?.disabled)
-      ?.reduce((acc, { name, disabled, hide_development_presets, ...block }) => {
+      /* @ts-ignore */
+      ?.reduce((acc, { name, disabled, category, hide_development_presets, presets, ...block }) => {
         let paragraphCount = 1;
         let headerCount = 1;
 
@@ -113,16 +115,12 @@ export const generateSectionFiles = ({
           return acc;
         }
         if ("theme_block" in block && block.theme_block) {
-          acc.push({ type: `_${folder.replace(/^_*/gi, "")}__${block.type}` });
+          acc.push({ type: block.type });
           return acc;
         }
         if (block.type === "@section_blocks") {
           section.blocks.forEach((rootBlock) => {
-            if (block.type && !name) {
-              acc.push({ type: block.type });
-            } else {
-              acc.push({ type: `_${folder.replace(/^_*/gi, "")}__${block.type}` });
-            }
+            acc.push({ type: block.type });
           });
 
           acc = acc.filter((a, i, arr) => arr.findIndex((b) => a.type === b.type) === i);
@@ -321,8 +319,10 @@ export const generateSectionFiles = ({
             : {};
         };
         return {
-          name: name?.length <= 25 ? name : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+          // name: name?.length <= 25 ? name : `t:sections.${sectionName}.presets.${toLocaleFriendlySnakeCase(name)}.name`,
+          name: name,
           ...preset,
+          category: preset.category ?? category,
           ...mapBlockPresets(preset?.blocks),
         };
       }),
