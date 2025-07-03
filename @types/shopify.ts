@@ -335,6 +335,25 @@ export type ShopifyCollection_list = {
   limit?: number;
   visible_if?: `{{${string}}}`;
 };
+
+export type ShopifyMetaobject = {
+  id: string;
+  label: string;
+  type: "metaobject";
+  info?: string;
+  visible_if?: `{{${string}}}`;
+  metaobject_type: string;
+};
+
+export type ShopifyMetaobject_list = {
+  id: string;
+  label: string;
+  type: "metaobject_list";
+  info?: string;
+  limit?: number;
+  visible_if?: `{{${string}}}`;
+  metaobject_type: string;
+};
 export type ShopifyColor = {
   id: string;
   label: string;
@@ -506,6 +525,8 @@ export type ShopifySettingsInput =
   | ShopifyColorTheme
   | ShopifyColorThemeGroup
   | ShopifyTextAlignment
+  | ShopifyMetaobject
+  | ShopifyMetaobject_list
   | ShopifyStyleSettings;
 
 export type HeadlessSettingsInput =

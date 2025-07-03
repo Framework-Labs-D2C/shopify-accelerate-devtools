@@ -25,7 +25,7 @@ const runEsBuild = () => {
   build({
     entryPoints: entryPoints,
     metafile: true,
-    target: "es2020",
+    target: "es2019",
     // sourcemap: "external",
     treeShaking: true,
     bundle: true,
@@ -70,7 +70,7 @@ const runSectionJsEsbuild = (entryFile) => {
   build({
     entryPoints: [entryFile],
     metafile: true,
-    target: "es2020",
+    target: "es2019",
     // sourcemap: "external",
     treeShaking: true,
     // bundle: true,
@@ -112,7 +112,7 @@ const runBlockJsEsbuild = (entryFile) => {
   build({
     entryPoints: [entryFile],
     metafile: true,
-    target: "es2020",
+    target: "es2019",
     // sourcemap: "external",
     treeShaking: true,
     // bundle: true,
@@ -154,7 +154,7 @@ const runClassicBlockJsEsbuild = (entryFile) => {
   build({
     entryPoints: [entryFile],
     metafile: true,
-    target: "es2020",
+    target: "es2019",
     // sourcemap: "external",
     treeShaking: true,
     // bundle: true,

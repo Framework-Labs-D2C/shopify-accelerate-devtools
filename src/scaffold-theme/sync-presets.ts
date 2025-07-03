@@ -526,10 +526,10 @@ export const syncPresets = async (watch = false) => {
                 return acc;
               }, {});
               if ("generate_presets" in presetObject.settings) {
-                presetObject.settings.generate_presets = "never";
+                delete presetObject.settings.generate_presets;
               }
               if ("generate_block_presets" in presetObject.settings) {
-                presetObject.settings.generate_block_presets = "never";
+                delete presetObject.settings.generate_block_presets;
               }
               if ("category_name" in presetObject.settings && presetObject.settings.category_name) {
                 presetObject.category = presetObject.settings.category_name as string;
@@ -637,10 +637,10 @@ export const syncPresets = async (watch = false) => {
                 }, {});
 
                 if ("generate_presets" in presetObject.settings) {
-                  presetObject.settings.generate_presets = "never";
+                  delete presetObject.settings.generate_presets;
                 }
                 if ("generate_block_presets" in presetObject.settings) {
-                  presetObject.settings.generate_block_presets = "never";
+                  delete presetObject.settings.generate_block_presets;
                 }
                 if ("category_name" in presetObject.settings && presetObject.settings.category_name) {
                   presetObject.category = presetObject.settings.category_name as string;
@@ -850,10 +850,10 @@ export const syncPresets = async (watch = false) => {
                 return acc;
               }, {});
               if ("generate_presets" in presetObject.settings) {
-                presetObject.settings.generate_presets = "never";
+                delete presetObject.settings.generate_presets;
               }
               if ("generate_block_presets" in presetObject.settings) {
-                presetObject.settings.generate_block_presets = "never";
+                delete presetObject.settings.generate_block_presets;
               }
               if ("category_name" in presetObject.settings && presetObject.settings.category_name) {
                 presetObject.category = presetObject.settings.category_name as string;
@@ -961,10 +961,10 @@ export const syncPresets = async (watch = false) => {
                 }, {});
 
                 if ("generate_presets" in presetObject.settings) {
-                  presetObject.settings.generate_presets = "never";
+                  delete presetObject.settings.generate_presets;
                 }
                 if ("generate_block_presets" in presetObject.settings) {
-                  presetObject.settings.generate_block_presets = "never";
+                  delete presetObject.settings.generate_block_presets;
                 }
                 if ("category_name" in presetObject.settings && presetObject.settings.category_name) {
                   presetObject.category = presetObject.settings.category_name as string;

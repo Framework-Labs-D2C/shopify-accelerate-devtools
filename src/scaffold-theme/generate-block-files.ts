@@ -225,7 +225,7 @@ export const generateBlockFileSchema = (
       }, []),
     presets: rootBlock.presets
       ?.filter(({ development_only }) => !development_only || (config?.all_presets && !rootBlock.hide_development_presets))
-      ?.map(({ name, development_only, ...preset }) => {
+      ?.map(({ name, development_only, manual_preset, ...preset }) => {
         const mapBlockPresets = (blocks: any[]) => {
           return blocks && Array.isArray(blocks) && blocks?.length
             ? { blocks: blocks?.map(({ ...block }) => ({ ...block, ...mapBlockPresets(block?.blocks) })) }
