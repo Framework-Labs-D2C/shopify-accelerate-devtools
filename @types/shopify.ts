@@ -311,21 +311,21 @@ export type ShopifyArticle = {
   label: string;
   type: "article";
   info?: string;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
 };
 export type ShopifyBlog = {
   id: string;
   label: string;
   type: "blog";
   info?: string;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
 };
 export type ShopifyCollection = {
   id: string;
   label: string;
   type: "collection";
   info?: string;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
 };
 export type ShopifyCollection_list = {
   id: string;
@@ -333,7 +333,7 @@ export type ShopifyCollection_list = {
   type: "collection_list";
   info?: string;
   limit?: number;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
 };
 
 export type ShopifyMetaobject = {
@@ -341,7 +341,7 @@ export type ShopifyMetaobject = {
   label: string;
   type: "metaobject";
   info?: string;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
   metaobject_type: string;
 };
 
@@ -351,13 +351,14 @@ export type ShopifyMetaobject_list = {
   type: "metaobject_list";
   info?: string;
   limit?: number;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
   metaobject_type: string;
 };
 export type ShopifyColor = {
   id: string;
   label: string;
   type: "color";
+  alpha?: boolean;
   default?: string;
   info?: string;
   visible_if?: `{{${string}}}`;
@@ -423,14 +424,14 @@ export type ShopifyPage = {
   label: string;
   type: "page";
   info?: string;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
 };
 export type ShopifyProduct = {
   id: string;
   label: string;
   type: "product";
   info?: string;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
 };
 export type ShopifyProduct_list = {
   id: string;
@@ -438,7 +439,7 @@ export type ShopifyProduct_list = {
   type: "product_list";
   info?: string;
   limit?: number;
-  visible_if?: `{{${string}}}`;
+  // visible_if?: `{{${string}}}`;
 };
 export type ShopifyRichtext = {
   id: string;
@@ -838,6 +839,7 @@ export type ShopifySectionGeneratedThemeBlock =
       category: ShopifyThemeCategories;
       /* The theme_block setting has to be active on all blocks. Mixing normal blocks with Theme blocks is not possible*/
       theme_block: true;
+      as_snippet?: boolean;
       disabled?: boolean;
       tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
       type: NoDashString<string>;
@@ -1482,7 +1484,7 @@ export type _Variant_liquid = {
   store_availabilities?: {
     available: boolean;
     location: {
-      address: {};
+      address: object;
       id: number;
       latitude: number;
       longitude: number;

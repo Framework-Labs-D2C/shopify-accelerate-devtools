@@ -68,7 +68,8 @@ export const generateLiquidFiles = () => {
         const targetFile = targets.snippets.find(
           (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${shortBlockType}.liquid`
         );
-        if (targetFile) {
+
+        if (targetFile && !block.as_snippet) {
           config.targets.snippets = config.targets.snippets.filter((target) => target !== targetFile);
           deleteFile(path.join(root_dir, targetFile));
         }
@@ -159,7 +160,42 @@ export const generateLiquidFiles = () => {
 
         blockSchema.limit = undefined;
 
-        translationArray.push(generateBlockFileSchema(blockSchema, schema));
+        const liquidSchema = generateBlockFileSchema(blockSchema, schema);
+        const liquidContent = translationArray.join("\n");
+
+        if (block.as_snippet) {
+          const snippetPath = path.join(process.cwd(), theme_path, "snippets", `_blocks.${blockSchema.type}.liquid`);
+          const liquidBase = block.blocks?.length
+            ? `{% capture blocks %}{% content_for 'blocks' %}{% endcapture %}\n` +
+              `{% render '_blocks.${blockSchema.type}', block: block, __blocks: blocks %}`
+            : `{% render '_blocks.${blockSchema.type}', block: block %}`;
+
+          sources.snippets.add(snippetPath);
+
+          if (config.ignore_blocks?.includes(blockPath.split(/[/\\]/)?.at(-1))) {
+            console.log(
+              `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
+                `Ignored: ${blockPath.replace(process.cwd(), "")}`
+              )}`
+            );
+            writeOnlyNew(blockPath, `${liquidBase}\n${liquidSchema}`);
+            writeOnlyNew(
+              snippetPath,
+              `${liquidContent
+                .replace(/\{%-?\s+content_for\s+['"]blocks["']\s+-?%}/gi, "{{ __blocks }}")
+                .replace(/\n(\s*)content_for\s+['"]blocks["'](\s*)\n/gi, "\n$1__blocks$2\n")}`
+            );
+          } else {
+            writeCompareFile(blockPath, `${liquidBase}\n${liquidSchema}`);
+            writeCompareFile(
+              snippetPath,
+              `${liquidContent
+                .replace(/\{%-?\s+content_for\s+['"]blocks["']\s+-?%}/gi, "{{ __blocks }}")
+                .replace(/\n(\s*)content_for\s+['"]blocks["'](\s*)\n/gi, "\n$1echo __blocks$2\n")}`
+            );
+          }
+          return;
+        }
 
         if (config.ignore_blocks?.includes(blockPath.split(/[/\\]/)?.at(-1))) {
           console.log(
@@ -167,9 +203,9 @@ export const generateLiquidFiles = () => {
               `Ignored: ${blockPath.replace(process.cwd(), "")}`
             )}`
           );
-          writeOnlyNew(blockPath, translationArray.join("\n"));
+          writeOnlyNew(blockPath, `${liquidContent}\n${liquidSchema}`);
         } else {
-          writeCompareFile(blockPath, translationArray.join("\n"));
+          writeCompareFile(blockPath, `${liquidContent}\n${liquidSchema}`);
         }
       }
     };
@@ -309,14 +345,35 @@ export const generateLiquidFiles = () => {
             `Ignored: ${snippetPath.replace(process.cwd(), "")}`
           )}`
         );
-        writeOnlyNew(snippetPath, translationArray.join("\n"));
+        writeOnlyNew(
+          snippetPath,
+          translationArray
+            .join("\n")
+            .replace(/\{%-?\s+content_for\s+['"]blocks["']\s+-?%}/gi, "{{ __blocks }}")
+            .replace(/\n(\s*)content_for\s+['"]blocks["'](\s*)\n/gi, "\n$1__blocks$2\n")
+        );
       } else {
-        writeCompareFile(snippetPath, translationArray.join("\n"));
+        writeCompareFile(
+          snippetPath,
+          translationArray
+            .join("\n")
+            .replace(/\{%-?\s+content_for\s+['"]blocks["']\s+-?%}/gi, "{{ __blocks }}")
+            .replace(/\n(\s*)content_for\s+['"]blocks["'](\s*)\n/gi, "\n$1__blocks$2\n")
+        );
       }
 
       snippets.add(snippetPath);
 
-      translationArray = [`{%- render "${schema_file_path}" -%}`];
+      if (
+        schema.blocks?.some((block) => block?.blocks?.length || "theme_block" in block || (block.type !== "@app" && !block.name))
+      ) {
+        translationArray = [
+          `{% capture blocks %}{% content_for 'blocks' %}{% endcapture %}`,
+          `{%- render "${schema_file_path}", __blocks: blocks -%}`,
+        ];
+      } else {
+        translationArray = [`{%- render "${schema_file_path}" -%}`];
+      }
     }
 
     translationArray.push(generateSectionFiles(schema));
@@ -357,6 +414,7 @@ export const generateLiquidFiles = () => {
         const targetFile = targets.snippets.find(
           (target) => target.split(/[\\/]/gi).at(-1) === `${sectionName.replace(".liquid", "")}.${shortBlockType}.liquid`
         );
+
         if (targetFile) {
           config.targets.snippets = config.targets.snippets.filter((target) => target !== targetFile);
           deleteFile(path.join(root_dir, targetFile));
@@ -587,6 +645,7 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
+    // @ts-ignore
     translationArray.push(generateBlockFileSchema(schema));
   }
 
@@ -655,6 +714,7 @@ export const generateLiquidFiles = () => {
       translationArray.push(translatedContent);
     }
 
+    // @ts-ignore
     translationArray.push(generateBlockFileSchema(schema));
   }
 

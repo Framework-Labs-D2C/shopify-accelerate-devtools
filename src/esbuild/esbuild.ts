@@ -39,26 +39,32 @@ const runEsBuild = () => {
     legalComments: "none",
     keepNames: true,
     plugins: [],
-
+    platform: "browser",
     // splitting: true,
   })
     .then((e) => {
       console.log("theme.js/editor.js - bundled");
-      const content = readFile(path.join(root_dir, "assets", "editor.js"), {
-        encoding: "utf-8",
-      });
+      // const outFile = path.join(root_dir, "assets", "theme.js");
+      // fs.appendFileSync(outFile, `\n//# sourceMappingURL=${path.basename(outFile)}.map`);
+      //
+      // const outFileEditor = path.join(root_dir, "assets", "editor.js");
+      // fs.appendFileSync(outFileEditor, `\n//# sourceMappingURL=${path.basename(outFileEditor)}.map`);
 
-      fs.writeFileSync(
-        path.join(root_dir, "assets", "editor.js"),
-        `${content}\n ${content.includes("// random_comment") ? "" : "\n// random_comment "}`
-      );
-      const content2 = readFile(path.join(root_dir, "assets", "theme.js"), {
-        encoding: "utf-8",
-      });
-      fs.writeFileSync(
-        path.join(root_dir, "assets", "theme.js"),
-        `${content2}${content.includes("// random_comment") ? "" : "\n// random_comment "} `
-      );
+      // const content = readFile(path.join(root_dir, "assets", "editor.js"), {
+      //   encoding: "utf-8",
+      // });
+      //
+      // fs.writeFileSync(
+      //   path.join(root_dir, "assets", "editor.js"),
+      //   `${content}\n ${content.includes("// random_comment") ? "" : "\n// random_comment "}`
+      // );
+      // const content2 = readFile(path.join(root_dir, "assets", "theme.js"), {
+      //   encoding: "utf-8",
+      // });
+      // fs.writeFileSync(
+      //   path.join(root_dir, "assets", "theme.js"),
+      //   `${content2}${content.includes("// random_comment") ? "" : "\n// random_comment "} `
+      // );
     })
     .catch((error) => {
       console.error(error);
@@ -67,6 +73,15 @@ const runEsBuild = () => {
 };
 
 const runSectionJsEsbuild = (entryFile) => {
+  const outFile = path.join(
+    root_dir,
+    config.theme_path,
+    "assets",
+    `__section--${entryFile
+      .split(/[\\/]/gi)
+      .at(-1)
+      .replace(/\.(ts)x?$/gi, ".js")}`
+  );
   build({
     entryPoints: [entryFile],
     metafile: true,
@@ -74,15 +89,7 @@ const runSectionJsEsbuild = (entryFile) => {
     // sourcemap: "external",
     treeShaking: true,
     // bundle: true,
-    outfile: path.join(
-      root_dir,
-      config.theme_path,
-      "assets",
-      `__section--${entryFile
-        .split(/[\\/]/gi)
-        .at(-1)
-        .replace(/\.(ts)x?$/gi, ".js")}`
-    ),
+    outfile: outFile,
     // outdir: path.join(root_dir, config.theme_path, "assets"),
     minify: false,
     ignoreAnnotations: true,
@@ -91,7 +98,7 @@ const runSectionJsEsbuild = (entryFile) => {
     legalComments: "none",
     keepNames: true,
     plugins: [],
-
+    platform: "browser",
     // splitting: true,
   })
     .then((e) => {
@@ -101,6 +108,7 @@ const runSectionJsEsbuild = (entryFile) => {
           .at(-1)
           .replace(/\.(ts)x?$/gi, ".js")}- bundled`
       );
+      // fs.appendFileSync(outFile, `\n//# sourceMappingURL=${path.basename(outFile)}.map`);
     })
     .catch((error) => {
       console.error(error);
@@ -109,6 +117,15 @@ const runSectionJsEsbuild = (entryFile) => {
 };
 
 const runBlockJsEsbuild = (entryFile) => {
+  const outFile = path.join(
+    root_dir,
+    config.theme_path,
+    "assets",
+    `__block--${entryFile
+      .split(/[\\/]/gi)
+      .at(-1)
+      .replace(/\.(ts)x?$/gi, ".js")}`
+  );
   build({
     entryPoints: [entryFile],
     metafile: true,
@@ -116,15 +133,7 @@ const runBlockJsEsbuild = (entryFile) => {
     // sourcemap: "external",
     treeShaking: true,
     // bundle: true,
-    outfile: path.join(
-      root_dir,
-      config.theme_path,
-      "assets",
-      `__block--${entryFile
-        .split(/[\\/]/gi)
-        .at(-1)
-        .replace(/\.(ts)x?$/gi, ".js")}`
-    ),
+    outfile: outFile,
     // outdir: path.join(root_dir, config.theme_path, "assets"),
     minify: false,
     ignoreAnnotations: true,
@@ -133,7 +142,7 @@ const runBlockJsEsbuild = (entryFile) => {
     legalComments: "none",
     keepNames: true,
     plugins: [],
-
+    platform: "browser",
     // splitting: true,
   })
     .then((e) => {
@@ -143,6 +152,7 @@ const runBlockJsEsbuild = (entryFile) => {
           .at(-1)
           .replace(/\.(ts)x?$/gi, ".js")} - bundled`
       );
+      // fs.appendFileSync(outFile, `\n//# sourceMappingURL=${path.basename(outFile)}.map`);
     })
     .catch((error) => {
       console.error(error);
@@ -151,6 +161,15 @@ const runBlockJsEsbuild = (entryFile) => {
 };
 
 const runClassicBlockJsEsbuild = (entryFile) => {
+  const outFile = path.join(
+    root_dir,
+    config.theme_path,
+    "assets",
+    `__classic_block--${entryFile
+      .split(/[\\/]/gi)
+      .at(-1)
+      .replace(/\.(ts)x?$/gi, ".js")}`
+  );
   build({
     entryPoints: [entryFile],
     metafile: true,
@@ -158,15 +177,7 @@ const runClassicBlockJsEsbuild = (entryFile) => {
     // sourcemap: "external",
     treeShaking: true,
     // bundle: true,
-    outfile: path.join(
-      root_dir,
-      config.theme_path,
-      "assets",
-      `__classic_block--${entryFile
-        .split(/[\\/]/gi)
-        .at(-1)
-        .replace(/\.(ts)x?$/gi, ".js")}`
-    ),
+    outfile: outFile,
     // outdir: path.join(root_dir, config.theme_path, "assets"),
     minify: false,
     ignoreAnnotations: true,
@@ -175,7 +186,7 @@ const runClassicBlockJsEsbuild = (entryFile) => {
     legalComments: "none",
     keepNames: true,
     plugins: [],
-
+    platform: "browser",
     // splitting: true,
   })
     .then((e) => {
@@ -185,6 +196,7 @@ const runClassicBlockJsEsbuild = (entryFile) => {
           .at(-1)
           .replace(/\.(ts)x?$/gi, ".js")} - bundled`
       );
+      // fs.appendFileSync(outFile, `\n//# sourceMappingURL=${path.basename(outFile)}.map`);
     })
     .catch((error) => {
       console.error(error);

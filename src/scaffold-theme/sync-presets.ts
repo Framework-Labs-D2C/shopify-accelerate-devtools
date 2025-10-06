@@ -250,6 +250,10 @@ const mapPresetBlocks = (
           }
           const blockSchemaSettings = blockSchema?.settings?.find((setting) => "id" in setting && setting?.id === key);
           if (blockSchemaSettings) {
+            if (key === "infinite_scroll" && typeof value === "boolean") {
+              acc[key] = value ? "all" : "off";
+              return acc;
+            }
             if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
             if (typeof value === "string" && /\{\{\s*(product|collection|page|article|blog)\.?\s?[^}]*\}\}/gi.test(value)) {
               value = value.replace(/(\{\{\s*)(product|collection|page|article|blog)(\.?\s?[^}]*\}\})/gi, "$1closest.$2$3");
@@ -355,7 +359,7 @@ export const syncPresets = async (watch = false) => {
   });
 
   Object.values(config.sources.blockSchemas).forEach((entry) => {
-    const type = entry.folder.replace(/^_*/gi, "");
+    const type = entry.folder;
 
     if (!blockPresets[type]) {
       const schema = structuredClone(entry);
@@ -431,7 +435,7 @@ export const syncPresets = async (watch = false) => {
 
             if (!match && globalBlockType && sectionSchema?.blocks?.some((block) => block?.type === "@theme")) {
               blockPresets[blockPreset.type] ??= {
-                schema: blockPreset.type,
+                schema: blockPreset,
                 named: {},
                 unnamed: {},
                 primary: {},
@@ -516,6 +520,10 @@ export const syncPresets = async (watch = false) => {
               presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
                 const blockSchemaSettings = schema.settings?.find((setting) => "id" in setting && setting?.id === key);
                 if (blockSchemaSettings) {
+                  if (key === "infinite_scroll" && typeof value === "boolean") {
+                    acc[key] = value ? "all" : "off";
+                    return acc;
+                  }
                   if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
                   if (typeof value === "string" && /\{\{\s*(product|collection|page|article|blog)\.?\s?[^}]*\}\}/gi.test(value)) {
                     value = value.replace(/(\{\{\s*)(product|collection|page|article|blog)(\.?\s?[^}]*\}\})/gi, "$1closest.$2$3");
@@ -620,6 +628,10 @@ export const syncPresets = async (watch = false) => {
                 presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
                   const blockSchemaSettings = blockSchema.settings?.find((setting) => "id" in setting && setting?.id === key);
                   if (blockSchemaSettings) {
+                    if (key === "infinite_scroll" && typeof value === "boolean") {
+                      acc[key] = value ? "all" : "off";
+                      return acc;
+                    }
                     if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
                     if (
                       typeof value === "string" &&
@@ -840,6 +852,10 @@ export const syncPresets = async (watch = false) => {
               presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
                 const blockSchemaSettings = schema.settings?.find((setting) => "id" in setting && setting?.id === key);
                 if (blockSchemaSettings) {
+                  if (key === "infinite_scroll" && typeof value === "boolean") {
+                    acc[key] = value ? "all" : "off";
+                    return acc;
+                  }
                   if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
                   if (typeof value === "string" && /\{\{\s*(product|collection|page|article|blog)\.?\s?[^}]*\}\}/gi.test(value)) {
                     value = value.replace(/(\{\{\s*)(product|collection|page|article|blog)(\.?\s?[^}]*\}\})/gi, "$1closest.$2$3");
@@ -944,6 +960,10 @@ export const syncPresets = async (watch = false) => {
                 presetObject.settings = Object.entries(preset.settings).reduce((acc, [key, value]) => {
                   const blockSchemaSettings = blockSchema.settings?.find((setting) => "id" in setting && setting?.id === key);
                   if (blockSchemaSettings) {
+                    if (key === "infinite_scroll" && typeof value === "boolean") {
+                      acc[key] = value ? "all" : "off";
+                      return acc;
+                    }
                     if (typeof value === "string" && /^shopify:\/\/files\/videos/gi.test(value)) return acc;
                     if (
                       typeof value === "string" &&

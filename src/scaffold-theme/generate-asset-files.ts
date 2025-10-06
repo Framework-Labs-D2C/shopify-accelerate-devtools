@@ -33,6 +33,7 @@ export const generateAssetFiles = () => {
         /^replo/gi.test(fileName) ||
         /^pandectes/gi.test(fileName) ||
         /^locksmith/gi.test(fileName) ||
+        /\.js\.map$/gi.test(fileName) ||
         /^shogun/gi.test(fileName)
       ) {
         return;

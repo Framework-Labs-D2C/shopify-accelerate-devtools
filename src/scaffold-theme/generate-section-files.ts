@@ -8,6 +8,8 @@ export const generateSectionFiles = ({
   section_as_snippet,
   /* @ts-ignore */
   theme_block,
+  /* @ts-ignore */
+  as_snippet,
   disabled,
   category,
   path,

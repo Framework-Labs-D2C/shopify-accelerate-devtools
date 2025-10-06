@@ -10,6 +10,8 @@ export const generateBlockFileSchema = (
     folder,
     /* @ts-ignore */
     theme_block,
+    /* @ts-ignore */
+    as_snippet,
     blockPresets,
     category,
     type,

@@ -730,7 +730,7 @@ export const isCustomerTemplate = (name: string) =>
 export const isGiftCard = (name: string) => name.includes(config.folders.templates) && /[\\/]gift_card\.liquid$/gi.test(name);
 
 export const isTargetDynamicJs = (name: string) =>
-  /[\\/]assets[\\/](__section--|__block--|__classic_block--)[^\\/]*$/gi.test(name);
+  /[\\/]assets[\\/](__section--|__block--|__classic_block--)[^\\/]*.js$/gi.test(name);
 
 export const isLiquid = (name: string) =>
   isSectionLiquid(name) ||
