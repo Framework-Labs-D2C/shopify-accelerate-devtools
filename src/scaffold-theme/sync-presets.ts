@@ -8,8 +8,8 @@ import importFresh from "import-fresh";
 import fs from "node:fs";
 import path from "node:path";
 import { formatObject } from "../utils/format-object";
-import { Sections } from "types/sections";
-import { ShopifySection, ShopifySectionBlock, ShopifySectionBlockPresetMap, ShopifySectionGeneratedThemeBlock, ShopifySectionPreset, ShopifyThemeBlock } from "types/shopify";
+import type { Sections } from "types/sections";
+import type { ShopifySection, ShopifySectionBlock, ShopifySectionBlockPresetMap, ShopifySectionGeneratedThemeBlock, ShopifySectionPreset, ShopifyThemeBlock } from "types/shopify";
 import { config } from "../../shopify-accelerate";
 import { readFile, writeCompareFile } from "../utils/fs";
 import { toCamelCase, toPascalCase } from "../utils/to-pascal-case";
@@ -730,9 +730,9 @@ export const syncPresets = async (watch = false) => {
         // Prepare new output file content
         const outputArr = [];
 
-        outputArr.push(`import { ThemeBlocks } from "types/blocks";`);
-        outputArr.push(`import { ShopifySectionPreset, ShopifySectionBlockPresetMap } from "types/shopify";`);
-        outputArr.push(`import { ${toPascalCase(type)}Section } from "types/sections";`);
+        outputArr.push(`import type { ThemeBlocks } from "types/blocks";`);
+        outputArr.push(`import type { ShopifySectionPreset, ShopifySectionBlockPresetMap } from "types/shopify";`);
+        outputArr.push(`import type { ${toPascalCase(type)}Section } from "types/sections";`);
         outputArr.push(``);
         outputArr.push(
           `export const ${toCamelCase(type)}Presets: ShopifySectionPreset<${toPascalCase(type)}Section>[] = ${formatObject(
@@ -1062,8 +1062,8 @@ export const syncPresets = async (watch = false) => {
         // Prepare new output file content
         const outputArr = [];
 
-        outputArr.push(`import { ${toPascalCase(type)}Block, ThemeBlocks } from "types/blocks";`);
-        outputArr.push(`import { ShopifySectionPreset, ShopifySectionBlockPresetMap } from "types/shopify";`);
+        outputArr.push(`import type { ${toPascalCase(type)}Block, ThemeBlocks } from "types/blocks";`);
+        outputArr.push(`import type { ShopifySectionPreset, ShopifySectionBlockPresetMap } from "types/shopify";`);
         outputArr.push(``);
         outputArr.push(
           `export const ${toCamelCase(type)}Presets: ShopifySectionPreset<${toPascalCase(type)}Block>[] = ${formatObject(

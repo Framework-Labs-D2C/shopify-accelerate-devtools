@@ -1,4 +1,4 @@
-import { _Article_liquid, _Video_liquid, _BlockTag, _Product_liquid, _Image_liquid, _Color_liquid } from "./shopify";
+import type { _Article_liquid, _Video_liquid, _BlockTag, _Product_liquid, _Image_liquid, _Color_liquid } from "./shopify";
 
 export type ArticleContentBlock = {
   id: string;

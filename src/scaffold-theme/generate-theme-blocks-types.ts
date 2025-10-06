@@ -147,7 +147,7 @@ export const getImports = (blocks: { [T: string]: ShopifyThemeBlock }, sections:
   }
 
   if (localTypes.length) {
-    return `import { ${localTypes.join(", ")} } from "./shopify";\n\n`;
+    return `import type { ${localTypes.join(", ")} } from "./shopify";\n\n`;
   }
   return ``;
 };

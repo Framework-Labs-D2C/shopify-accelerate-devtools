@@ -1,11 +1,7 @@
-import chalk from "chalk";
-import { exec } from "child_process";
-import fs from "fs";
 import path from "path";
-import { Sections } from "types/sections";
-import { delay } from "../utils/delay";
-import { deleteFolder, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
+import type { Sections } from "types/sections";
 import { config } from "../../shopify-accelerate";
+import { deleteFolder, readFile, writeCompareFile } from "../utils/fs";
 
 export const backupNamesInSettings = () => {
   writeCompareFile(path.join(config.theme_path, ".gitignore"), `.template_history\n.shopify`);

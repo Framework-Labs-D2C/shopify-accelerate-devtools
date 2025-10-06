@@ -1,4 +1,4 @@
-import { _Image_liquid, _Color_liquid, _BlockTag, _Linklist_liquid, _Product_liquid, _Video_liquid, _Blog_liquid, _Collection_liquid } from "./shopify";
+import type { _Image_liquid, _Color_liquid, _BlockTag, _Linklist_liquid, _Product_liquid, _Video_liquid, _Blog_liquid, _Collection_liquid } from "./shopify";
 
 export type AppBlock = {
   blocks: never[];

@@ -23,8 +23,8 @@ export const generateSchemaFiles = (dirName: string) => {
     const presetsFile = config.sources.sectionsPresetFiles.find((file) => file.includes(dirName));
     writeFile(
       path.join(dirName, "_schema.ts"),
-      `import { ShopifySection } from "types/shopify";
-import { ${toPascalCase(fileName)}Section } from "types/sections";
+      `import type{ ShopifySection } from "types/shopify";
+import type { ${toPascalCase(fileName)}Section } from "types/sections";
 ${
   presetsFile
     ? `import { ${toCamelCase(fileName)}Presets, ${toCamelCase(fileName)}BlockPresets } from "sections/${folder}/_presets";\n`
@@ -55,8 +55,8 @@ export const ${toCamelCase(fileName)}: ShopifySection<${toPascalCase(fileName)}S
     const presetsFile = config.sources.blocksPresetFiles.find((file) => file.includes(dirName));
     writeFile(
       path.join(dirName, "_schema.ts"),
-      `import { ShopifyThemeBlock } from "types/shopify";
-import { ${toPascalCase(fileName)}Block } from "types/blocks";
+      `import type { ShopifyThemeBlock } from "types/shopify";
+import type { ${toPascalCase(fileName)}Block } from "types/blocks";
 ${
   presetsFile
     ? `import { ${toCamelCase(fileName)}Presets, ${toCamelCase(fileName)}BlockPresets } from "blocks/${folder}/_presets";\n`
@@ -84,8 +84,8 @@ export const ${toCamelCase(fileName)}: ShopifyThemeBlock<${toPascalCase(fileName
   if (dirName.includes(config.folders.classic_blocks) && dirName !== config.folders.classic_blocks) {
     writeFile(
       path.join(dirName, "_schema.ts"),
-      `import { ShopifyBlock } from "types/shopify";
-import { ${toPascalCase(fileName)}Block } from "types/classic-blocks";
+      `import type { ShopifyBlock } from "types/shopify";
+import type { ${toPascalCase(fileName)}Block } from "types/classic-blocks";
 
 export const ${toCamelCase(fileName)}: ShopifyThemeBlock<${toPascalCase(fileName)}Block> = {
   name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",
@@ -103,8 +103,8 @@ export const ${toCamelCase(fileName)}: ShopifyThemeBlock<${toPascalCase(fileName
   if (dirName.includes(config.folders.cards) && dirName !== config.folders.cards) {
     writeFile(
       path.join(dirName, "_schema.ts"),
-      `import { ShopifyCard } from "types/shopify";
-import { ${toPascalCase(fileName)}Card } from "types/cards";
+      `import type { ShopifyCard } from "types/shopify";
+import type { ${toPascalCase(fileName)}Card } from "types/cards";
 
 export const ${toCamelCase(fileName)}: ShopifyCard<${toPascalCase(fileName)}Card> = {
   name: "${capitalize(fileName).replace(/[-_]/gi, " ")}",

@@ -1,4 +1,4 @@
-import { _Metafield_liquid } from "./shopify";
+import type { _Metafield_liquid } from "./shopify";
 
 export type _Article_metafields = { [T: string]: { [T: string]: _Metafield_liquid["value"] } };
 export type _Blog_metafields = { [T: string]: { [T: string]: _Metafield_liquid["value"] } };

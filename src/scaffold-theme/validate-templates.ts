@@ -1,5 +1,5 @@
 import userInput from "prompts";
-import { Sections } from "types/sections";
+import type { Sections } from "types/sections";
 import { config } from "../../shopify-accelerate";
 import { buildTheme } from "../../src/scaffold-theme/build-theme";
 import { getSources, getTargets } from "../../src/scaffold-theme/parse-files";

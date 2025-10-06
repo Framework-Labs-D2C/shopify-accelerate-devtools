@@ -1,5 +1,5 @@
-import { _Color_liquid, _Collection_liquid, _BlockTag, _Image_liquid, _Product_liquid, _Linklist_liquid, _Video_liquid, _Article_liquid, _Blog_liquid, _Page_liquid, _Font_liquid, _Font_options } from "./shopify";
-import { ThemeBlocks } from "./blocks";
+import type { _Color_liquid, _Collection_liquid, _BlockTag, _Image_liquid, _Product_liquid, _Linklist_liquid, _Video_liquid, _Article_liquid, _Blog_liquid, _Page_liquid, _Font_liquid, _Font_options } from "./shopify";
+import type { ThemeBlocks } from "./blocks";
 
 export type MainCartSection = {
   blocks: MainCartBlocks[];

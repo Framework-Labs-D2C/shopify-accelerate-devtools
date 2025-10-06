@@ -116,14 +116,14 @@ export const getImports = (sections: { [T: string]: ShopifySection }) => {
   const returnArr = [];
 
   if (localTypes.length) {
-    returnArr.push(`import { ${localTypes.join(", ")} } from "./shopify";`);
+    returnArr.push(`import type { ${localTypes.join(", ")} } from "./shopify";`);
   }
 
   if (themeBlocks) {
-    returnArr.push(`import { ThemeBlocks, GlobalThemeBlocks } from "./blocks";`);
+    returnArr.push(`import type { ThemeBlocks, GlobalThemeBlocks } from "./blocks";`);
   }
   if (classicThemeBlocks) {
-    returnArr.push(`import { ClassicThemeBlocks } from "./classic-blocks";`);
+    returnArr.push(`import type { ClassicThemeBlocks } from "./classic-blocks";`);
   }
   returnArr.push(``);
   return returnArr.join("\n");
