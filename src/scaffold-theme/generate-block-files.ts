@@ -30,6 +30,7 @@ export const generateBlockFileSchema = (
     name: name ? (name?.length <= 25 ? name : `t:blocks.${sectionName}.name`) : undefined,
     ...rootBlock,
     tag: tag ?? null,
+    class: `shopify_block__${type}`,
     settings: rootBlock?.settings?.map((setting) => {
       const settingsBase = `t:blocks.${sectionName}.settings`;
       if (setting.type === "paragraph") {

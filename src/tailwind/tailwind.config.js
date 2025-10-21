@@ -4,7 +4,9 @@ require("dotenv").config();
 
 module.exports = {
   content: [
-    `${process.env.THEME_PATH}/**/*{html,liquid,js,json}`,
+    `${process.env.THEME_PATH}/**/*{html,liquid,json}`,
+    `${process.env.THEME_PATH}/assets/theme.module.js`,
+    `${process.env.THEME_PATH}/assets/custom.js`,
     `!${process.env.THEME_PATH}/**/*.css.liquid`,
     `!${process.env.THEME_PATH}/**/*.css`,
   ],
@@ -153,23 +155,9 @@ module.exports = {
       addVariant("group-ac", [".group.active &"]);
 
       addVariant("group-hfva", [".group:hover &", ".group:focus-visible &", ".group:active &"]);
-      addVariant("group-hfwa", [
-        ".group:hover &",
-        ".group:focus-visible &",
-        ".group:focus-within &",
-        ".group:active &",
-      ]);
-      addVariant("group-hfw", [
-        ".group:hover &",
-        ".group:focus-visible &",
-        ".group:focus-within &",
-      ]);
-      addVariant("peer-hfwa", [
-        ".peer:hover ~ &",
-        ".peer:focus-visible ~ &",
-        ".peer:focus-within ~ &",
-        ".peer:active ~ &",
-      ]);
+      addVariant("group-hfwa", [".group:hover &", ".group:focus-visible &", ".group:focus-within &", ".group:active &"]);
+      addVariant("group-hfw", [".group:hover &", ".group:focus-visible &", ".group:focus-within &"]);
+      addVariant("peer-hfwa", [".peer:hover ~ &", ".peer:focus-visible ~ &", ".peer:focus-within ~ &", ".peer:active ~ &"]);
       matchUtilities(
         {
           "top-spacing": (value) => ({

@@ -1,7 +1,7 @@
-import type { ThemeBlocks } from "./blocks";
-import type { _Article_metafields, _Blog_metafields, _Collection_metafields, _Page_metafields, _Product_metafields, _Shop_metafields, _Variant_metafields } from "./metafields";
-import type { Sections } from "./sections";
-import type { SettingsSchema } from "./settings";
+import type { ThemeBlocks } from "./blocks.js";
+import type { _Article_metafields, _Blog_metafields, _Collection_metafields, _Page_metafields, _Product_metafields, _Shop_metafields, _Variant_metafields } from "./metafields.js";
+import type { Sections } from "./sections.js";
+import type { SettingsSchema } from "./settings.js";
 
 type BlockChars =
   | "a"

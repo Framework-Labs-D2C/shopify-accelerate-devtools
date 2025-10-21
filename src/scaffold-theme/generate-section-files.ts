@@ -29,6 +29,7 @@ export const generateSectionFiles = ({
   const localizedSection = {
     name: name?.length <= 25 ? name : `t:sections.${sectionName}.name`,
     ...section,
+    class: `shopify_section__${type}`,
     settings: section?.settings?.map((setting) => {
       const settingsBase = `t:sections.${sectionName}.settings`;
       if (setting.type === "paragraph") {

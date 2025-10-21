@@ -27,13 +27,19 @@ export const generateAssetFiles = () => {
   if (delete_external_assets) {
     targets.assets.forEach((file) => {
       const fileName = file.split(/[\\/]/gi).at(-1);
-      const targetFile = sources.assets.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1).includes(fileName));
+      const targetFile =
+        sources.assets.find((sourcePath) => sourcePath.split(/[\\/]/gi).at(-1).includes(fileName)) ||
+        sources.assetsTs.find((sourcePath) =>
+          sourcePath.split(/[\\/]/gi).at(-1).includes(fileName.replace(/\.js/gi, "").replace(/^_+/gi, ""))
+        );
 
       if (
         /^replo/gi.test(fileName) ||
         /^pandectes/gi.test(fileName) ||
         /^locksmith/gi.test(fileName) ||
+        /^theme/gi.test(fileName) ||
         /\.js\.map$/gi.test(fileName) ||
+        /\.d\.ts/gi.test(fileName) ||
         /^shogun/gi.test(fileName)
       ) {
         return;

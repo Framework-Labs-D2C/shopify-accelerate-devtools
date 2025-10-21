@@ -1,6 +1,6 @@
 {
   "name": "shopify-accelerate",
-  "version": "2.0.5-beta.22",
+  "version": "4.4.0-alpha.0",
   "description": "Shopify Theme development with full Typescript Support",
   "author": "Felix Tellmann",
   "license": "MIT",
@@ -60,6 +60,7 @@
     "prompts": "^2.4.2",
     "regenerator-runtime": "^0.14.1",
     "shopify-typed-node-api": "^2.1.1",
+    "sucrase": "^3.35.0",
     "tailwindcss": "0.0.0-insiders.f1f419a",
     "tailwindcss-container-queries-with-max-width": "^0.1.5",
     "toml": "^3.0.0",

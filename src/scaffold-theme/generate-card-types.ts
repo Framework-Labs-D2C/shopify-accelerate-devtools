@@ -10,10 +10,12 @@ export const generateCardsTypes = () => {
 
   const blockTypesPath = path.join(folders.types, "cards.ts");
 
+  // @ts-ignore
   const imports = getImports(sections);
   let sectionUnionType = "export type Cards =";
   let typeContent = "";
   for (const key in sections) {
+    // @ts-ignore
     const schema = sections[key] as ShopifyBlock;
 
     typeContent += `${blockToTypes(schema, key)}\n`;
@@ -25,6 +27,10 @@ export const generateCardsTypes = () => {
   const finalContent = `${imports + typeContent + sectionUnionType};\n`;
 
   writeCompareFile(blockTypesPath, finalContent);
+  writeCompareFile(
+    path.join(config.theme_path, "assets", "_cards.d.ts"),
+    finalContent.replace(/(\s+from\s+")types[\\/]([^"\\/]*")/gi, "$1_$2").replace(/(\s+from\s+"[^"]*?)\.js"/gi, '$1.js"')
+  );
 };
 
 export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {
@@ -99,7 +105,7 @@ export const getImports = (sections: { [T: string]: ShopifyThemeBlock }) => {
   }
 
   if (localTypes.length) {
-    return `import type { ${localTypes.join(", ")} } from "./shopify";\n\n`;
+    return `import type { ${localTypes.join(", ")} } from "./shopify.js";\n\n`;
   }
   return ``;
 };
@@ -209,6 +215,12 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
         return "?: string[]";
       }
       return "?: _Product_liquid[]";
+    }
+    case "metaobject": {
+      return "?: string";
+    }
+    case "metaobject_list": {
+      return "?: string[]";
     }
     case "color_scheme_group":
       return `?: {\n    [T:string]: {${setting.definition

@@ -32,6 +32,10 @@ export const watchTheme = () => {
   watch(Object.values(folders)?.filter((folder) => fs.existsSync(folder)), { recursive: true }, async (event, name) => {
     const startTime = Date.now();
 
+    if (/@utils[\\/]temp/gi.test(name)) {
+      return;
+    }
+
     try {
       if (running) return;
       const fileName = name.split(/[/\\]/gi).at(-1);

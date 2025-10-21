@@ -32,6 +32,7 @@ export const getSources = async () => {
   const sectionsSchemaFiles = [];
   const sectionsPresetFiles = [];
   const sectionsJs = [];
+  const assetsTs = [];
   const settingsFiles = [];
   const blocksPresetFiles = [];
   const blocksLiquid = [];
@@ -71,6 +72,9 @@ export const getSources = async () => {
     }
     if (isSectionTs(filePath)) {
       sectionsJs.push(filePath);
+    }
+    if (isAssetTs(filePath)) {
+      assetsTs.push(filePath);
     }
     if (isBlockLiquid(filePath)) {
       blocksLiquid.push(filePath);
@@ -133,6 +137,7 @@ export const getSources = async () => {
   config.sources.sectionsSchemaFiles = sectionsSchemaFiles;
   config.sources.sectionsPresetFiles = sectionsPresetFiles;
   config.sources.sectionsJs = sectionsJs;
+  config.sources.assetsTs = assetsTs;
   config.sources.blocksLiquid = blocksLiquid;
   config.sources.blocksPresetFiles = blocksPresetFiles;
   config.sources.blocksSchemaFiles = blocksSchemaFiles;
@@ -666,6 +671,9 @@ export const isSectionTs = (name: string) =>
   !isSectionSchema(name) &&
   !isSectionPreset(name) &&
   /[\\/][^\\/]*[\\/][^\\/]*\.ts$/gi.test(name);
+
+export const isAssetTs = (name: string) =>
+  name.includes(config.folders.assets) && /\.ts$/gi.test(name) && !/\.d\.ts$/gi.test(name);
 
 export const isSettingsSchema = (name: string) =>
   name.includes(config.folders.config) && /[\\/]settings_schema\.ts$/gi.test(name);

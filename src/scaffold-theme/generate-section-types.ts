@@ -26,6 +26,10 @@ export const generateSectionsTypes = () => {
   const finalContent = `${imports + typeContent + sectionUnionType};\n`;
 
   writeCompareFile(sectionTypesPath, finalContent);
+  writeCompareFile(
+    path.join(config.theme_path, "assets", "_sections.d.ts"),
+    finalContent.replace(/(\s+from\s+")types[\\/]([^"\\/]*")/gi, "$1_$2").replace(/(\s+from\s+"[^"]*?)\.js"/gi, '$1.js"')
+  );
 };
 
 export const getImports = (sections: { [T: string]: ShopifySection }) => {
@@ -116,14 +120,14 @@ export const getImports = (sections: { [T: string]: ShopifySection }) => {
   const returnArr = [];
 
   if (localTypes.length) {
-    returnArr.push(`import type { ${localTypes.join(", ")} } from "./shopify";`);
+    returnArr.push(`import type { ${localTypes.join(", ")} } from "./shopify.js";`);
   }
 
   if (themeBlocks) {
-    returnArr.push(`import type { ThemeBlocks, GlobalThemeBlocks } from "./blocks";`);
+    returnArr.push(`import type { ThemeBlocks, GlobalThemeBlocks } from "./blocks.js";`);
   }
   if (classicThemeBlocks) {
-    returnArr.push(`import type { ClassicThemeBlocks } from "./classic-blocks";`);
+    returnArr.push(`import type { ClassicThemeBlocks } from "./classic-blocks.js";`);
   }
   returnArr.push(``);
   return returnArr.join("\n");
@@ -351,6 +355,12 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
       }
       return "?: _Product_liquid[]";
     }
+    case "metaobject": {
+      return "?: string";
+    }
+    case "metaobject_list": {
+      return "?: string[]";
+    }
     case "color_scheme_group":
       return `?: {\n    [T:string]: {${setting.definition
         .map((option) => {
@@ -376,5 +386,7 @@ export const getSettingsType = (setting: ShopifySettingsInput) => {
       return "?: string";
     case "text_alignment":
       return `: "left" | "center" | "right"`;
+    default:
+      return `?: string`;
   }
 };

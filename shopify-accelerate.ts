@@ -7,7 +7,7 @@ import { generateAllMissingBlockPresetsFiles } from "./src/scaffold-theme/genera
 import { backupTemplates } from "./src/scaffold-theme/backup-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
-import { runEsbuild } from "./src/esbuild/esbuild";
+import { runEsbuild, startBundleScripts } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
@@ -106,6 +106,7 @@ export type GlobalsState = {
     sectionsPresetFiles: string[];
     sectionsSchemaFiles: string[];
     sectionsJs: string[];
+    assetsTs: string[];
     blocksLiquid: string[];
     blocksPresetFiles: string[];
     blocksSchemaFiles: string[];
@@ -185,6 +186,7 @@ export const config: GlobalsState = {
     sectionsPresetFiles: [],
     sectionsSchemaFiles: [],
     sectionsJs: [],
+    assetsTs: [],
     blocksLiquid: [],
     blocksPresetFiles: [],
     blocksSchemaFiles: [],
@@ -366,6 +368,7 @@ program
     runEsbuild();
     runTailwindCSSWatcher();
     watchTheme();
+    startBundleScripts({ watch: true, debug: false });
     backupTemplates();
   });
 
@@ -453,6 +456,7 @@ program
     config.options = options;
     await validateCliOptions(options);
     runEsbuild();
+    startBundleScripts({ watch: false, debug: false });
   });
 
 program

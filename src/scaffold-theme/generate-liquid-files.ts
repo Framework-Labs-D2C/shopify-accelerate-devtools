@@ -1043,9 +1043,19 @@ declare global {
   );
   writeCompareFile(path.join(process.cwd(), theme_path, "snippets", "_layout.translations.liquid"), translationsJs);
   writeCompareFile(path.join(folders.types, "translations.ts"), translationTypes);
+  writeCompareFile(
+    path.join(config.theme_path, "assets", "_translations.d.ts"),
+    translationTypes.replace(/(\s+from\s+")types[\\/]([^"\\/]*")/gi, "$1_$2").replace(/(\s+from\s+"[^"]*?)\.js"/gi, '$1.js"')
+  );
 
   const dynamicJsImports = [];
 
+  /*sources.assetsTs.forEach((name) => {
+    const filename = name.split(/[\\/]/gi).at(-1);
+    const targetName = `${filename.replace(/\.(ts)x?$/gi, ".js")}`;
+
+    dynamicJsImports.push(`<link rel="modulepreload" href="{{ '${targetName}' | asset_url }}">`);
+  });*/
   sources.sectionsJs.forEach((name) => {
     const filename = name.split(/[\\/]/gi).at(-1);
     const section = Object.values(sectionsSchemas).find((section) => section.path.includes(name.replace(filename, "")));

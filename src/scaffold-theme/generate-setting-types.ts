@@ -124,7 +124,7 @@ export const generateSettingTypes = () => {
   }
   arr.push(`};`);
 
-  const typesContent = `import type { ${localTypes.join(", ")} } from "./shopify";\n\n${arr.join("\n")}\n`;
+  const typesContent = `import type { ${localTypes.join(", ")} } from "./shopify.js";\n\n${arr.join("\n")}\n`;
 
   const settingsTypesPath = process.env.SHOPIFY_ACCELERATE_TYPES
     ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_TYPES, "settings.ts")
