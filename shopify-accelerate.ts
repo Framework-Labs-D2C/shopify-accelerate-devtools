@@ -34,6 +34,8 @@ const { Command } = require("commander");
 const program = new Command();
 require("dotenv").config();
 
+process.env.BROWSERSLIST_IGNORE_OLD_DATA = "1";
+
 export const root_dir = process.env.SHOPIFY_ACCELERATE_ROOT
   ? path.join(process.cwd(), process.env.SHOPIFY_ACCELERATE_ROOT)
   : process.cwd();
@@ -354,6 +356,7 @@ program
   .action(async (options) => {
     config.options = options;
     await validateCliOptions(options);
+
     generateBaseTypes();
     generateAllMissingPresetsFiles();
     generateAllMissingBlockPresetsFiles();

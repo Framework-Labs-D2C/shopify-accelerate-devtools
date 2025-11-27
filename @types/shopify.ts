@@ -689,6 +689,8 @@ export type MapBlocksPreset<T extends { blocks: (ShopifySectionBlock | ShopifyTh
     type: B;
     name?: string;
     settings?: Partial<MapPresetSettings<Extract<T["blocks"][number], { type: B }>>>;
+    static?: true;
+    id?: string;
     blocks?: Depth extends 7
       ? never
       : T extends { blocks: { type: string }[] }
@@ -775,6 +777,8 @@ export type ShopifySectionPreset<T = unknown> = {
   category?: string;
   development_only?: boolean;
   manual_preset?: boolean;
+  static?: true;
+  id?: string;
   blocks?: T extends { blocks: Array<any> }
     ? MapBlocksPreset<T, 0>[keyof MapBlocksPreset<T, 0>][]
     : T extends unknown

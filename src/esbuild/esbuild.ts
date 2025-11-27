@@ -2,82 +2,68 @@
 import { ESLint } from "fx-style/eslint";
 import { spawn } from "node:child_process";
 import path from "node:path";
+import { Worker } from "node:worker_threads";
 import { transform } from "sucrase";
-import * as ts from "typescript";
 import { config, root_dir } from "../../shopify-accelerate";
 import { isAssetTs, isBlockTs, isClassicBlockTs, isSectionTs } from "../scaffold-theme/parse-files";
-import { writeCompareFile } from "../utils/fs";
-
+import chalk from "chalk";
 const { build } = require("esbuild");
 
 // import watch from "node-watch";
 const watch = require("node-watch");
 const fs = require("fs");
+let initialPhase = true;
+let pendingEslintWorkers = 0;
+let initialEslintWorkersDoneLogged = false;
 
-export const emitDtsForFile = (entryAbs, outFileAbs) => {
-  const options = {
-    target: ts.ScriptTarget.ESNext,
-    module: ts.ModuleKind.ESNext,
-    moduleResolution: ts.ModuleResolutionKind.Bundler,
+function markWorkerStarted() {
+  pendingEslintWorkers++;
+}
 
-    declaration: true,
-    emitDeclarationOnly: true,
-    declarationMap: false,
-    noEmit: false,
+function markWorkerFinished() {
+  pendingEslintWorkers--;
 
-    importsNotUsedAsValues: ts.ImportsNotUsedAsValues.Preserve,
-    preserveValueImports: true,
-    verbatimModuleSyntax: true,
+  // Fire only once, and only when ALL initial workers finished
+  if (!initialEslintWorkersDoneLogged && pendingEslintWorkers === 0) {
+    initialEslintWorkersDoneLogged = true;
+    console.log(`[${chalk.gray(new Date().toLocaleTimeString())}]: ✔ All initial ESLint workers completed & code Prettified`);
+  }
+}
 
-    removeComments: false,
-    sourceMap: false,
-    paths: {
-      "types/*": ["./@types/*"],
-    },
-  };
+export const runEslint = (entryFile, tempName, content, filePath) => {
+  if (initialPhase) markWorkerStarted();
 
-  const host = ts.createCompilerHost(options, true);
-  fs.mkdirSync(path.dirname(outFileAbs), { recursive: true });
-
-  // --- Simple debounce setup ---
-  let debounceTimer = null;
-  const DEBOUNCE_MS = 150;
-  let lastContent = "";
-
-  host.writeFile = (fileName, content) => {
-    if (fileName.endsWith(".d.ts") && content) {
-      // clear any pending writes
-      clearTimeout(debounceTimer);
-
-      debounceTimer = setTimeout(() => {
-        // skip if content hasn’t changed
-        if (content === lastContent) return;
-        lastContent = content;
-
-        writeCompareFile(
-          outFileAbs,
-          content
-            .replace(/(\s+from\s+")sections\/[^."/]*?\/([^."/]*?).js"/gi, `$1./__section--$2.js"`)
-            .replace(/(\s+from\s+")blocks\/[^."/]*?\/([^."/]*?).js"/gi, `$1./__block--$2.js"`)
-            .replace(/(\s+from\s+")types\/([^."]*?).js"/gi, `$1./_$2.js"`)
-            .replace(/(\s+from\s+")assets\/types.js"/gi, `$1./_types.js"`)
-            .replace(/(\s+from\s+")assets\/([^."]*?).js"/gi, `$1./_$2.js"`)
-        );
-      }, DEBOUNCE_MS);
+  const worker = new Worker(
+    path.join(__dirname, "eslint-worker.js"), // compiled worker file
+    {
+      workerData: {
+        entryFile,
+        tempName,
+        content,
+        filePath,
+        config,
+      },
     }
-  };
+  );
 
-  const program = ts.createProgram({
-    rootNames: [entryAbs],
-    options,
-    host,
+  worker.on("message", (msg) => {
+    // your existing logic
+    markWorkerFinished(); // <-- add here
   });
 
-  // triggers host.writeFile()
-  program.emit(undefined, host.writeFile, undefined, true);
+  worker.on("error", (err) => {
+    console.error(err);
+    markWorkerFinished(); // <-- also here
+  });
+
+  worker.on("exit", (code) => {
+    if (code !== 0) console.error("Worker exit code:", code);
+    // if exit happened without "message" triggering finish:
+    markWorkerFinished(); // <-- and here
+  });
 };
 
-export const runEslint = async (entryFile, tempName, content, filePath) => {
+/*export const runEslint = async (entryFile, tempName, content, filePath) => {
   // Save the new output to a temporary file for ESLint
   const tempFilePath = path.join(config.project_root, "@utils", "temp_js", `${tempName}__temp.ts`);
   fs.mkdirSync(path.dirname(tempFilePath), { recursive: true });
@@ -131,7 +117,7 @@ export const runEslint = async (entryFile, tempName, content, filePath) => {
             },
           ],
         },
-        ignorePatterns: ["!node_modules/**"], // Force ESLint to include fx-style
+        ignorePatterns: ["!node_modules/!**"], // Force ESLint to include fx-style
       },
     });
 
@@ -159,7 +145,7 @@ export const runEslint = async (entryFile, tempName, content, filePath) => {
   } catch (err) {
     console.log(err);
   }
-};
+};*/
 
 const runEsBuildBundle = () => {
   const entryPoints = [];
@@ -448,6 +434,7 @@ const runClassicBlockJsEsbuild = (entryFile) => {
 export const runEsbuild = () => {
   let running = false;
   watch(root_dir, { recursive: true }, async (event, name) => {
+    initialPhase = false; // <-- Only initial workers counted
     if (running || event === "remove") return;
     if (!name.match(/\.(ts)x?$/) || /_schema\.ts$/gi.test(name) || /_presets\.ts$/gi.test(name)) return;
     running = true;
@@ -614,7 +601,7 @@ export const startBundleScripts = (opts: BundleOpts = {}) => {
 
   const child = spawn(process.execPath, [script, ...args], {
     stdio: "inherit",
-    env: process.env,
+    env: { ...process.env, BROWSERSLIST_IGNORE_OLD_DATA: "1" },
     cwd: process.cwd(),
   });
 

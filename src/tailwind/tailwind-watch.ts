@@ -20,49 +20,80 @@ export const runTailwindCSSWatcher = () => {
   const filePath = path.join(root_dir, `assets`, `tailwind_pre_sort.css.liquid`);
   deleteFile(filePath);
   /*= =============== Tailwind Watcher ================ */
-  child_process.spawn(
-    "npx",
-    [
-      "tailwindcss",
-      "--config",
-      /*hasConfig ? "tailwind.config.js" :*/ path.join(package_root, `src/tailwind/tailwind.config.js`),
-      "--postcss",
-      /*hasPostCss ? "postcss.config.js" : */ path.join(package_root, `src/tailwind/postcss.config.js`),
-      "-i",
-      path.join(root_dir, `assets`, `_tailwind.css`),
-      "-o",
-      filePath,
-      "--watch",
-    ],
-    {
-      shell: true,
-      stdio: "inherit",
-    }
-  );
+  const tailwindConfigPath = path.join(package_root, "src/tailwind/tailwind.config.js");
+  const postcssConfigPath = path.join(package_root, "src/tailwind/postcss.config.js");
+  const inputCssPath = path.join(root_dir, "assets", "_tailwind.css");
+
+  const gray = (s: string) => `\x1b[90m${s}\x1b[0m`;
+  const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
+  const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
+
+  const tailwindWatchCommand = [
+    "npx tailwindcss",
+    `--config "${tailwindConfigPath}"`,
+    `--postcss "${postcssConfigPath}"`,
+    `-i "${inputCssPath}"`,
+    `-o "${filePath}"`,
+    "--watch",
+  ].join(" ");
+
+  const tailwindProc = child_process.spawn(tailwindWatchCommand, {
+    shell: true,
+    stdio: ["inherit", "pipe", "pipe"],
+  });
+
+  let tailwindBuffer = "";
+
+  tailwindProc.stdout.on("data", (chunk) => {
+    tailwindBuffer += chunk.toString();
+    const lines = tailwindBuffer.split(/\r?\n/);
+    tailwindBuffer = lines.pop() ?? ""; // keep last partial line
+
+    /*for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+
+      if (trimmed === "Rebuilding...") {
+        console.log(`[${gray(new Date().toLocaleTimeString())}]: ${cyan("Tailwind rebuilding…")}`);
+      } else if (trimmed.startsWith("Done in")) {
+        // e.g. "Done in 858ms."
+        console.log(
+          `[${gray(new Date().toLocaleTimeString())}]: ${green(`Tailwind build ${trimmed.replace(/^Done in\s*!/i, "")}`)}`
+        );
+      } else {
+        // fallback: anything else Tailwind prints
+        console.log(`[${gray(new Date().toLocaleTimeString())}]: ${trimmed}`);
+      }
+    }*/
+  });
+
+  tailwindProc.stderr.on("data", (chunk) => {
+    // you can either color this differently or just pass through
+    const text = chunk.toString();
+    // console.error(`[${gray(new Date().toLocaleTimeString())}]: ${text.trim()}`);
+  });
 
   if (!resetInputFile) {
     console.log("Tailwind Reset Input file not found");
     return;
   }
   /*= =============== Tailwind Reset ================ */
-  child_process.spawn(
-    "npx",
-    [
-      "tailwindcss",
-      "--config",
-      /*hasConfig ? "tailwind.config.js" :*/ path.join(package_root, `src/tailwind/tailwind.config.js`),
-      "--postcss",
-      /*hasPostCss ? "postcss.config.js" :*/ path.join(package_root, `src/tailwind/postcss.config.js`),
-      "-i",
-      path.join(root_dir, `assets`, `_reset.css`),
-      "-o",
-      path.join(root_dir, `assets`, `reset.css.liquid`),
-    ],
-    {
-      shell: true,
-      stdio: "inherit",
-    }
-  );
+
+  const resetInputPath = path.join(root_dir, "assets", "_reset.css");
+  const resetOutputPath = path.join(root_dir, "assets", "reset.css.liquid");
+
+  const tailwindResetCommand = [
+    "npx tailwindcss",
+    `--config "${tailwindConfigPath}"`,
+    `--postcss "${postcssConfigPath}"`,
+    `-i "${resetInputPath}"`,
+    `-o "${resetOutputPath}"`,
+  ].join(" ");
+
+  child_process.spawn(tailwindResetCommand, {
+    shell: true,
+    stdio: ["inherit", "pipe", "pipe"],
+  });
 
   /*= =============== Tailwind Plugin Order ================ */
   watch(path.join(root_dir, "assets"), { recursive: false }, async (evt, name) => {

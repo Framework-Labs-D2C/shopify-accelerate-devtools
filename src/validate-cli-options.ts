@@ -24,6 +24,7 @@ export const validateCliOptions = async (
   } = { environment: "development", store: undefined, theme: undefined, reset_theme_id: false }
 ) => {
   const { environments } = config;
+
   const { ...currentEnvironment } = environments[environment] ?? {
     store: store?.replace(/\.myshopify\.com/gi, ""),
     theme: theme_id,
@@ -129,14 +130,17 @@ export const validateCliOptions = async (
           await buildTheme();
           generateConfigFiles();
 
-          const cp = child_process.spawn(
-            "npx",
-            ["shopify", "theme", "share", "-s", currentEnvironment.store, "--path", `./themes/${environment}`],
-            {
-              shell: true,
-              stdio: "inherit",
-            }
-          );
+          const shopifyShareCommand = [
+            "npx shopify theme share",
+            `-s "${currentEnvironment.store}"`,
+            `--path "./themes/${environment}"`,
+          ].join(" ");
+
+          const cp = child_process.spawn(shopifyShareCommand, {
+            shell: true,
+            stdio: "inherit",
+          });
+
           cp.on("exit", (e) => {
             resolve(true);
           });
@@ -153,7 +157,9 @@ export const validateCliOptions = async (
           //   resolve(true);
           // });
 
-          const cp = child_process.spawn("npx", ["shopify", "theme", "list", "-s", currentEnvironment.store], {
+          const shopifyListCommand = ["npx shopify theme list", `-s "${currentEnvironment.store}"`].join(" ");
+
+          const cp = child_process.spawn(shopifyListCommand, {
             shell: true,
             stdio: "inherit",
           });
@@ -205,7 +211,6 @@ export const validateCliOptions = async (
   currentEnvironment.ignore_sections = currentEnvironment.ignore_sections ?? "";
   currentEnvironment.ignore_assets = currentEnvironment.ignore_assets ?? "custom.css.liquid,custom.css,custom.js";
 
-  console.log(currentEnvironment);
   process.env["SHOPIFY_ACCELERATE_STORE"] = currentEnvironment.store;
   config.environments[environment] = currentEnvironment;
   config.environment = environment;
@@ -213,6 +218,9 @@ export const validateCliOptions = async (
   config.theme_id = +currentEnvironment?.theme;
   config.store = currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   config.mode = currentEnvironment?.mode;
+  config.all_presets = currentEnvironment.all_presets ?? config.all_presets;
+  config.sync_presets = currentEnvironment.sync_presets ?? config.sync_presets;
+  config.auto_backups = currentEnvironment.auto_backups ?? config.auto_backups;
   config.ignore_blocks = currentEnvironment?.ignore_blocks?.split(",").map((str) => str.trim()) ?? [];
   config.ignore_snippets = currentEnvironment?.ignore_snippets?.split(",").map((str) => str.trim()) ?? [];
   config.ignore_layouts = currentEnvironment?.ignore_layouts?.split(",").map((str) => str.trim()) ?? [];

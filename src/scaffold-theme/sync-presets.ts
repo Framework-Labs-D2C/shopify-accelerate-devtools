@@ -36,7 +36,7 @@ const formatBlockType = (blockType: string, folder: string) =>
       );
 
 const mapPresetBlocks = (
-  blocks: ShopifySectionPreset["blocks"],
+  rootBlocks: ShopifySectionPreset["blocks"],
   containerSchema: (ShopifySection & { path: string; folder: string }) | (ShopifyThemeBlock & { path: string; folder: string }),
   schema?: any,
   debug_name?: string
@@ -227,11 +227,15 @@ const mapPresetBlocks = (
     }, []);
   }
 
-  return Object.values(blocks)
-    ?.map(({ block_order, disabled, blocks, ...block }) => {
+  return Object.entries(rootBlocks)
+    ?.map(([block_id, { block_order, disabled, blocks, ...block }]) => {
+      if (block?.static) {
+        block.id = block_id;
+      }
       const returnBlock = {
         ...block,
       };
+
       if (blocks) {
         const nextContainerSchema = containerSchema?.blocks?.find((containerBlock) => containerBlock.type === block.type) as
           | (ShopifySection & { path: string; folder: string; type?: string; themeBlock: ShopifySection })

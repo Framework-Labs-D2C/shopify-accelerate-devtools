@@ -1,6 +1,6 @@
 {
   "name": "shopify-accelerate",
-  "version": "4.4.0-alpha.0",
+  "version": "4.4.0-alpha.10",
   "description": "Shopify Theme development with full Typescript Support",
   "author": "Felix Tellmann",
   "license": "MIT",
@@ -22,7 +22,7 @@
     "url": "https://github.com/FelixTellmann/shopify-accelerate.git"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "keywords": [
     "shopify",
@@ -54,7 +54,7 @@
     "json-schema-to-typescript": "^13.1.2",
     "json2toml": "^6.1.0",
     "node-watch": "^0.7.4",
-    "postcss": "^8.4.38",
+    "postcss": "^8.5.6",
     "postcss-import": "^16.1.0",
     "prettier": "3.3.2",
     "prompts": "^2.4.2",
