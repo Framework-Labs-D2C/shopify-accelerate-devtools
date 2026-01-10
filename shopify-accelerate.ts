@@ -2,12 +2,13 @@
 
 import fs from "fs";
 import path from "path";
+import { startBundleScripts } from "./src/esbuild/start-bundle-script";
 import { backupNamesInSettings, restoreNamesInSettingsFromBackup } from "./src/scaffold-theme/backup-names-in-settings";
 import { generateAllMissingBlockPresetsFiles } from "./src/scaffold-theme/generate-blocks-presets-files";
 import { backupTemplates } from "./src/scaffold-theme/backup-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
-import { runEsbuild, startBundleScripts } from "./src/esbuild/esbuild";
+import { runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
@@ -86,6 +87,7 @@ export type GlobalsState = {
   mode: "development" | "production";
   theme_id: number;
   theme_path: string;
+  rebuild_eslint: boolean;
   store: string;
   environment: string;
   environments: (typeof shopify_toml)["environments"];
@@ -165,11 +167,11 @@ export type GlobalsState = {
 };
 
 export const config: GlobalsState = {
-  ignore_blocks: shopify_toml?.environments?.["development"]?.ignore_blocks?.split(",").map((str) => str.trim()) ?? [],
-  ignore_snippets: shopify_toml?.environments?.["development"]?.ignore_snippets?.split(",").map((str) => str.trim()) ?? [],
-  ignore_layouts: shopify_toml?.environments?.["development"]?.ignore_layouts?.split(",").map((str) => str.trim()) ?? [],
-  ignore_sections: shopify_toml?.environments?.["development"]?.ignore_sections?.split(",").map((str) => str.trim()) ?? [],
-  ignore_assets: shopify_toml?.environments?.["development"]?.ignore_assets?.split(",").map((str) => str.trim()) ?? [],
+  ignore_blocks: shopify_toml?.environments?.["development"]?.ignore_blocks?.split(",")?.map((str) => str.trim()) ?? [],
+  ignore_snippets: shopify_toml?.environments?.["development"]?.ignore_snippets?.split(",")?.map((str) => str.trim()) ?? [],
+  ignore_layouts: shopify_toml?.environments?.["development"]?.ignore_layouts?.split(",")?.map((str) => str.trim()) ?? [],
+  ignore_sections: shopify_toml?.environments?.["development"]?.ignore_sections?.split(",")?.map((str) => str.trim()) ?? [],
+  ignore_assets: shopify_toml?.environments?.["development"]?.ignore_assets?.split(",")?.map((str) => str.trim()) ?? [],
   delete_external_layouts: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_LAYOUTS === "true",
   delete_external_sections: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SECTIONS === "true",
   delete_external_snippets: process.env.SHOPIFY_ACCELERATE_DELETE_EXTERNAL_SNIPPETS === "true",
@@ -276,6 +278,7 @@ export const config: GlobalsState = {
     : Object.keys(shopify_toml?.environments)?.[0] ?? "development",
   theme_id: +shopify_toml?.environments?.["development"]?.theme,
   theme_path: shopify_toml?.environments?.["development"]?.path ?? "./theme/development",
+  rebuild_eslint: false,
   store: shopify_toml?.environments?.["development"]?.store,
   all_presets: shopify_toml?.environments?.["development"]?.all_presets,
   sync_presets: shopify_toml?.environments?.["development"]?.sync_presets,
@@ -353,6 +356,7 @@ program
     "-t, --theme <theme_id>",
     "Shopify store id. I.e. `https://admin.shopify.com/store/<store_id>/themes/<theme_id>/editor`"
   )
+  .option("-rjs, --rebuild-js", "Rebuild all JS files via ESBuild using Prettier. This is a long running task.")
   .action(async (options) => {
     config.options = options;
     await validateCliOptions(options);

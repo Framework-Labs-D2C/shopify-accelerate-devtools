@@ -96,12 +96,13 @@ export const runTailwindCSSWatcher = () => {
   });
 
   /*= =============== Tailwind Plugin Order ================ */
-  watch(path.join(root_dir, "assets"), { recursive: false }, async (evt, name) => {
+  watch(path.join(root_dir, "assets"), { recursive: false, filter: /tailwind_pre_sort\.css\.liquid$/ }, async (evt, name) => {
     if (
       !name.match(/tailwind_pre_sort.css.liquid$/) ||
       !fs.existsSync(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"))
-    )
+    ) {
       return;
+    }
     const file = readFile(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"), {
       encoding: "utf-8",
     });

@@ -16,6 +16,7 @@ export const watchHeadless = () => {
   const { folders, theme_path, ignore_assets, delete_external_assets, targets } = config;
 
   let running = false;
+  console.log({ folders });
   watch(Object.values(folders)?.filter((folder) => fs.existsSync(folder)), { recursive: true }, async (event, name) => {
     if (running) return;
     const startTime = Date.now();

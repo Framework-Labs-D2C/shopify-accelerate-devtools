@@ -169,11 +169,11 @@ export const blockToTypes = (blockSchema, key, isSectionBlock = false, rootSchem
   const hasThemeBlocks = blockSchema.blocks?.some((block) => block.type === "@theme");
 
   arr.push(`export type ${capitalize(key)}Block = {`);
-  if (hasNonThemeBlocks && !hasThemeBlocks) {
+  if (hasNonThemeBlocks) {
     arr.push(`  blocks: ${capitalize(key)}Blocks[];`);
   }
   if (!hasNonThemeBlocks && hasThemeBlocks) {
-    arr.push(`  blocks: ThemeBlocks[];`);
+    arr.push(`  blocks: GlobalThemeBlocks[];`);
   }
   if (!hasNonThemeBlocks && !hasThemeBlocks) {
     arr.push(`  blocks${config.headless ? "?" : ""}: never[];`);

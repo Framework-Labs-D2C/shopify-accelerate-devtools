@@ -16,14 +16,18 @@ export const validateCliOptions = async (
     theme: theme_id,
     environment = "development",
     reset_theme_id = false,
+    rebuildJs = false,
   }: {
     store?: string;
     theme?: number;
     environment?: string;
     reset_theme_id?: boolean;
+    rebuildJs?: boolean;
   } = { environment: "development", store: undefined, theme: undefined, reset_theme_id: false }
 ) => {
   const { environments } = config;
+
+  config.rebuild_eslint = rebuildJs ?? false;
 
   const { ...currentEnvironment } = environments[environment] ?? {
     store: store?.replace(/\.myshopify\.com/gi, ""),

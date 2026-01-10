@@ -99,7 +99,9 @@ const emitDtsForFile = (entryAbs, outFileAbs) => {
 
 // 2) COPY your old runEslint body here, just renamed
 const runEslintTask = async (entryFile, tempName, content, filePath, config) => {
-  const tempFilePath = path.join(config.project_root, "@utils", "temp_js", `${tempName}__temp.ts`);
+  const unique = `${process.pid}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  const tempFilePath = path.join(config.project_root, "@utils", "temp_js", `${tempName}__temp.${unique}.ts`);
+
   fs.mkdirSync(path.dirname(tempFilePath), { recursive: true });
   fs.writeFileSync(tempFilePath, content);
 
@@ -154,7 +156,9 @@ const runEslintTask = async (entryFile, tempName, content, filePath, config) => 
       },
     });
 
-    const results = await eslint.lintFiles([tempFilePath]);
+    // const results = await eslint.lintFiles([tempFilePath]);
+    const results = await eslint.lintText(content, { filePath: tempFilePath });
+
     const formattedOutput = results[0]?.output ?? content;
 
     try {

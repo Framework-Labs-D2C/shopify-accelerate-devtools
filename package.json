@@ -1,6 +1,6 @@
 {
   "name": "shopify-accelerate",
-  "version": "4.4.0-alpha.10",
+  "version": "4.4.0-alpha.20",
   "description": "Shopify Theme development with full Typescript Support",
   "author": "Felix Tellmann",
   "license": "MIT",
@@ -66,7 +66,8 @@
     "toml": "^3.0.0",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",
-    "zustand": "^4.5.1"
+    "zustand": "^4.5.1",
+    "prettier-plugin-tailwindcss": "0.6.14"
   },
   "devDependencies": {
     "@types/inquirer": "^9.0.7",
@@ -110,9 +111,6 @@
     }
   },
   "prettier": {
-    "plugins": [
-      "prettier-plugin-tailwindcss"
-    ],
     "trailingComma": "es5",
     "arrowParens": "always",
     "singleQuote": false,

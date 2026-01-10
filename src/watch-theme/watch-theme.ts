@@ -262,7 +262,7 @@ export const watchTheme = () => {
           files_edited,
         });
       },
-      1000 * 60 * 5 /* 2 minutes */
+      1000 * 60 * 5 /* 5 minutes */
     );
   } catch (err) {
     console.log(

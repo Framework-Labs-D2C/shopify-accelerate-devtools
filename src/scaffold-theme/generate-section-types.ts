@@ -145,11 +145,11 @@ export const sectionToTypes = (section, key) => {
   const hasClassicThemeBlocks = section.blocks?.some((block) => block.type === "@classic_theme");
 
   arr.push(`export type ${capitalize(key)}Section = {`);
-  if (hasNonThemeBlocks && !hasThemeBlocks && !hasClassicThemeBlocks) {
+  if (hasNonThemeBlocks && !hasClassicThemeBlocks) {
     arr.push(`  blocks: ${capitalize(key)}Blocks[];`);
   }
   if (!hasNonThemeBlocks && hasThemeBlocks && !hasClassicThemeBlocks) {
-    arr.push(`  blocks: ThemeBlocks[];`);
+    arr.push(`  blocks: GlobalThemeBlocks[];`);
   }
   if (!hasNonThemeBlocks && !hasThemeBlocks && hasClassicThemeBlocks) {
     arr.push(`  blocks: ClassicThemeBlocks[];`);

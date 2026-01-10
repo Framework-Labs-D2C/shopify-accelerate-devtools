@@ -402,10 +402,12 @@ export const getSchemaSources = async () => {
 
   Object.keys(require.cache)?.forEach((file) => {
     if (/[\\/]@utils[\\/]settings[\\/][^\\/]*\.ts$/gi.test(file)) {
-      importFresh(file);
+      // importFresh(file);
+      delete require.cache[file];
     }
     if (/[\\/]_presets\.ts$/gi.test(file)) {
-      importFresh(file);
+      // importFresh(file);
+      delete require.cache[file];
     }
   });
 

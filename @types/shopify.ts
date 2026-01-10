@@ -961,7 +961,9 @@ export type ShopifySection<T = never> = {
   };
   max_blocks?: number;
   presets?: ShopifySectionPreset<T>[];
-  blockPresets?: ShopifySectionBlockPresetMap<T extends { blocks: { type: string }[] } ? T["blocks"][number] : never>;
+  blockPresets?: ShopifySectionBlockPresetMap<
+    T extends { blocks: { type: string; theme_block: true }[] } ? T["blocks"][number] : never
+  >;
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section";
 } & (
@@ -998,7 +1000,9 @@ export type ShopifyThemeBlock<T = never> = {
   class?: string;
   disabled?: boolean;
   presets?: ShopifySectionPreset<T>[];
-  blockPresets?: ShopifySectionBlockPresetMap<T extends { blocks: { type: string }[] } ? T["blocks"][number] : never>;
+  blockPresets?: ShopifySectionBlockPresetMap<
+    T extends { blocks: { type: string; theme_block: true }[] } ? T["blocks"][number] : never
+  >;
   settings?: (ShopifySettingsInput | ShopifyHeader | ShopifyParagraph)[];
   tag?: "article" | "aside" | "div" | "footer" | "header" | "section" | null;
   /* Used for direct dynamic block use only */
