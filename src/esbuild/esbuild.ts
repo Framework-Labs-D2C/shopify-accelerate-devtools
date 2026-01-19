@@ -11,10 +11,21 @@ const { build } = require("esbuild");
 // import watch from "node-watch";
 const watch = require("node-watch");
 const fs = require("fs");
+import crypto from "node:crypto";
 
 let initialPhase = true;
 let pendingEslintWorkers = 0;
 let initialEslintWorkersDoneLogged = false;
+
+const hashContent = (s: string) => crypto.createHash("sha1").update(s).digest("hex");
+
+const getLastHash = (s: string): string => {
+  const i = s.lastIndexOf("LAST HASH:");
+  if (i === -1) return "";
+  const start = i + "LAST HASH:".length;
+  const end = s.indexOf("*/", start);
+  return s.slice(start, end).trim();
+};
 
 const getLastEdit = (s) => {
   const i = s.lastIndexOf("LAST EDIT:");
@@ -145,18 +156,18 @@ const runSectionJsEsbuild = async (entryFile, watchTrigger = false) => {
     }
   }
 
-  const { mtimeMs } = await fs.promises.stat(entryFile);
-  const entryLastEditedAt = Math.floor(mtimeMs);
+  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
+  const entryHash = hashContent(entrySrc);
 
-  let outputLastEditedAt = NaN;
+  let outputHash = "";
   try {
     const outSrc = await fs.promises.readFile(outFile, "utf8");
-    outputLastEditedAt = getLastEdit(outSrc);
+    outputHash = getLastHash(outSrc);
   } catch {
     /* empty */
   }
 
-  if (outputLastEditedAt === entryLastEditedAt) {
+  if (outputHash === entryHash) {
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
         `No Change: Skipped JS compile on '${entryFile.split(/[\\/]/).at(-1)}'`
@@ -165,14 +176,12 @@ const runSectionJsEsbuild = async (entryFile, watchTrigger = false) => {
     return;
   }
 
-  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
-
   const { code } = transform(entrySrc, {
     transforms: ["typescript"],
     disableESTransforms: true,
   });
 
-  const editedCode = `${code}\n\n/* LAST EDIT: ${entryLastEditedAt} */`;
+  const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
 
   queueMicrotask(() => {
     runEslint(entryFile, `section__${name}`, editedCode, outFile);
@@ -195,18 +204,18 @@ const runAssetsJsEsbuild = async (entryFile, watchTrigger = false) => {
     }
   }
 
-  const { mtimeMs } = await fs.promises.stat(entryFile);
-  const entryLastEditedAt = Math.floor(mtimeMs);
+  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
+  const entryHash = hashContent(entrySrc);
 
-  let outputLastEditedAt = NaN;
+  let outputHash = "";
   try {
     const outSrc = await fs.promises.readFile(outFile, "utf8");
-    outputLastEditedAt = getLastEdit(outSrc);
+    outputHash = getLastHash(outSrc);
   } catch {
     /* empty */
   }
 
-  if (outputLastEditedAt === entryLastEditedAt) {
+  if (outputHash === entryHash) {
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
         `No Change: Skipped JS compile on '${entryFile.split(/[\\/]/).at(-1)}'`
@@ -215,14 +224,12 @@ const runAssetsJsEsbuild = async (entryFile, watchTrigger = false) => {
     return;
   }
 
-  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
-
   const { code } = transform(entrySrc, {
     transforms: ["typescript"],
     disableESTransforms: true,
   });
 
-  const editedCode = `${code}\n\n/* LAST EDIT: ${entryLastEditedAt} */`;
+  const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
 
   queueMicrotask(() => {
     runEslint(entryFile, `asset__${name}`, editedCode, outFile);
@@ -245,18 +252,18 @@ const runBlockJsEsbuild = async (entryFile, watchTrigger = false) => {
     }
   }
 
-  const { mtimeMs } = await fs.promises.stat(entryFile);
-  const entryLastEditedAt = Math.floor(mtimeMs);
+  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
+  const entryHash = hashContent(entrySrc);
 
-  let outputLastEditedAt = NaN;
+  let outputHash = "";
   try {
     const outSrc = await fs.promises.readFile(outFile, "utf8");
-    outputLastEditedAt = getLastEdit(outSrc);
+    outputHash = getLastHash(outSrc);
   } catch {
     /* empty */
   }
 
-  if (outputLastEditedAt === entryLastEditedAt) {
+  if (outputHash === entryHash) {
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
         `No Change: Skipped JS compile on '${entryFile.split(/[\\/]/).at(-1)}'`
@@ -265,14 +272,12 @@ const runBlockJsEsbuild = async (entryFile, watchTrigger = false) => {
     return;
   }
 
-  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
-
   const { code } = transform(entrySrc, {
     transforms: ["typescript"],
     disableESTransforms: true,
   });
 
-  const editedCode = `${code}\n\n/* LAST EDIT: ${entryLastEditedAt} */`;
+  const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
 
   queueMicrotask(() => {
     runEslint(entryFile, `block__${name}`, editedCode, outFile);
@@ -295,18 +300,18 @@ const runClassicBlockJsEsbuild = async (entryFile, watchTrigger = false) => {
     }
   }
 
-  const { mtimeMs } = await fs.promises.stat(entryFile);
-  const entryLastEditedAt = Math.floor(mtimeMs);
+  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
+  const entryHash = hashContent(entrySrc);
 
-  let outputLastEditedAt = NaN;
+  let outputHash = "";
   try {
     const outSrc = await fs.promises.readFile(outFile, "utf8");
-    outputLastEditedAt = getLastEdit(outSrc);
+    outputHash = getLastHash(outSrc);
   } catch {
     /* empty */
   }
 
-  if (outputLastEditedAt === entryLastEditedAt) {
+  if (outputHash === entryHash) {
     console.log(
       `[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.greenBright(
         `No Change: Skipped JS compile on '${entryFile.split(/[\\/]/).at(-1)}'`
@@ -315,14 +320,12 @@ const runClassicBlockJsEsbuild = async (entryFile, watchTrigger = false) => {
     return;
   }
 
-  const entrySrc = await fs.promises.readFile(entryFile, "utf8");
-
   const { code } = transform(entrySrc, {
     transforms: ["typescript"],
     disableESTransforms: true,
   });
 
-  const editedCode = `${code}\n\n/* LAST EDIT: ${entryLastEditedAt} */`;
+  const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
 
   queueMicrotask(() => {
     runEslint(entryFile, `classic_block__${name}`, editedCode, outFile);
