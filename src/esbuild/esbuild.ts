@@ -183,6 +183,8 @@ const runSectionJsEsbuild = async (entryFile, watchTrigger = false) => {
 
   const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
 
+  fs.writeFileSync(outFile, editedCode);
+
   queueMicrotask(() => {
     runEslint(entryFile, `section__${name}`, editedCode, outFile);
   });
@@ -230,6 +232,8 @@ const runAssetsJsEsbuild = async (entryFile, watchTrigger = false) => {
   });
 
   const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
+
+  fs.writeFileSync(outFile, editedCode);
 
   queueMicrotask(() => {
     runEslint(entryFile, `asset__${name}`, editedCode, outFile);
@@ -279,6 +283,8 @@ const runBlockJsEsbuild = async (entryFile, watchTrigger = false) => {
 
   const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
 
+  fs.writeFileSync(outFile, editedCode);
+
   queueMicrotask(() => {
     runEslint(entryFile, `block__${name}`, editedCode, outFile);
   });
@@ -326,6 +332,8 @@ const runClassicBlockJsEsbuild = async (entryFile, watchTrigger = false) => {
   });
 
   const editedCode = `${code}\n\n/* LAST HASH: ${entryHash} */`;
+
+  fs.writeFileSync(outFile, editedCode);
 
   queueMicrotask(() => {
     runEslint(entryFile, `classic_block__${name}`, editedCode, outFile);

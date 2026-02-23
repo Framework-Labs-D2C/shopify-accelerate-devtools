@@ -313,6 +313,14 @@ export type ShopifyArticle = {
   info?: string;
   // visible_if?: `{{${string}}}`;
 };
+export type ShopifyArticle_list = {
+  id: string;
+  label: string;
+  type: "article_list";
+  info?: string;
+  limit?: number;
+  // visible_if?: `{{${string}}}`;
+};
 export type ShopifyBlog = {
   id: string;
   label: string;
@@ -504,6 +512,7 @@ export type ShopifySettingsInput =
   | ShopifyText
   | ShopifyTextarea
   | ShopifyArticle
+  | ShopifyArticle_list
   | ShopifyBlog
   | ShopifyCollection
   | ShopifyCollection_list
