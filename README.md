@@ -3,7 +3,7 @@ Write udpated Readme.
 
 ## `build`
 
-Builds a theme once and exits. Meant for CI (e.g. a GitHub Action that builds on every push to `staging`).
+Builds a theme once and exits. Meant for CI, such as a GitHub Action you trigger on demand (`workflow_dispatch`) from the Actions tab, `gh workflow run` or the GitHub API.
 
 ```bash
 shopify-accelerate build -e production
