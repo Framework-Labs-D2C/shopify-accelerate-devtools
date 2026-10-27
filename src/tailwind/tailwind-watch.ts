@@ -97,52 +97,98 @@ export const runTailwindCSSWatcher = () => {
 
   /*= =============== Tailwind Plugin Order ================ */
   watch(path.join(root_dir, "assets"), { recursive: false, filter: /tailwind_pre_sort\.css\.liquid$/ }, async (evt, name) => {
-    if (
-      !name.match(/tailwind_pre_sort.css.liquid$/) ||
-      !fs.existsSync(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"))
-    ) {
+    if (!name.match(/tailwind_pre_sort.css.liquid$/)) return;
+    sortTailwindOutput();
+  });
+};
+
+/* Splits @container rules to the end of the file and writes tailwind.css.liquid + .tailwindorder */
+const sortTailwindOutput = () => {
+  if (!fs.existsSync(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"))) {
+    return;
+  }
+  const file = readFile(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"), {
+    encoding: "utf-8",
+  });
+
+  const top = file
+    .split(/\n}/gi)
+    .filter((str) => !/\n@container \(/gi.test(str))
+    .join("\n}");
+  const bottom = `${file
+    .split(/\n}/gi)
+    .filter((str) => /\n@container \(/gi.test(str))
+    .join("\n}")}\n}`;
+  const content = top + bottom;
+
+  const classesInOrder = [];
+  const omitCompoundClasses = [":not", ":where", ">", "*", ","];
+
+  content.split("\n").forEach((line) => {
+    if (!line.startsWith(".")) {
       return;
     }
-    const file = readFile(path.join(root_dir, "./assets/tailwind_pre_sort.css.liquid"), {
-      encoding: "utf-8",
-    });
 
-    const top = file
-      .split(/\n}/gi)
-      .filter((str) => !/\n@container \(/gi.test(str))
-      .join("\n}");
-    const bottom = `${file
-      .split(/\n}/gi)
-      .filter((str) => /\n@container \(/gi.test(str))
-      .join("\n}")}\n}`;
-    const content = top + bottom;
+    let writeOut = true;
 
-    const classesInOrder = [];
-    const omitCompoundClasses = [":not", ":where", ">", "*", ","];
-
-    content.split("\n").forEach((line) => {
-      if (!line.startsWith(".")) {
+    omitCompoundClasses.forEach((classToOmit) => {
+      if (line.includes(classToOmit)) {
+        writeOut = false;
         return;
       }
-
-      let writeOut = true;
-
-      omitCompoundClasses.forEach((classToOmit) => {
-        if (line.includes(classToOmit)) {
-          writeOut = false;
-          return;
-        }
-      });
-
-      if (writeOut) {
-        const finalClassName = line.replace(/\./g, "").replace(/{/g, "").replace(/}/g, "").replace(/\\/g, "").trim();
-        if (finalClassName !== "") {
-          classesInOrder.push(`${finalClassName}`);
-        }
-      }
     });
 
-    fs.writeFileSync(path.join(root_dir, `assets/tailwind.css.liquid`), content);
-    fs.writeFileSync(path.join(process.cwd(), ".tailwindorder"), classesInOrder.join("\n"));
+    if (writeOut) {
+      const finalClassName = line.replace(/\./g, "").replace(/{/g, "").replace(/}/g, "").replace(/\\/g, "").trim();
+      if (finalClassName !== "") {
+        classesInOrder.push(`${finalClassName}`);
+      }
+    }
   });
+
+  fs.writeFileSync(path.join(root_dir, `assets/tailwind.css.liquid`), content);
+  fs.writeFileSync(path.join(process.cwd(), ".tailwindorder"), classesInOrder.join("\n"));
+};
+
+/* One-shot Tailwind compile (main + reset), then the same class sort the watcher runs */
+export const buildTailwindCSS = async () => {
+  const { package_root } = config;
+  const inputCssPath = path.join(root_dir, "assets", "_tailwind.css");
+  const resetInputPath = path.join(root_dir, "assets", "_reset.css");
+
+  if (!fs.existsSync(inputCssPath)) {
+    console.log("Tailwind Input file not found");
+    return true;
+  }
+
+  const run = (input: string, output: string) =>
+    new Promise<boolean>((resolve) => {
+      const command = [
+        "npx tailwindcss",
+        `--config "${path.join(package_root, "src/tailwind/tailwind.config.js")}"`,
+        `--postcss "${path.join(package_root, "src/tailwind/postcss.config.js")}"`,
+        `-i "${input}"`,
+        `-o "${output}"`,
+      ].join(" ");
+
+      const proc = child_process.spawn(command, { shell: true, stdio: ["inherit", "inherit", "pipe"] });
+      let stderr = "";
+      proc.stderr.on("data", (chunk) => (stderr += chunk.toString()));
+      proc.on("close", (code) => {
+        if (code !== 0) console.error(stderr.trim());
+        resolve(code === 0);
+      });
+    });
+
+  const preSortPath = path.join(root_dir, "assets", "tailwind_pre_sort.css.liquid");
+  deleteFile(preSortPath);
+
+  const [mainOk, resetOk] = await Promise.all([
+    run(inputCssPath, preSortPath),
+    fs.existsSync(resetInputPath) ? run(resetInputPath, path.join(root_dir, "assets", "reset.css.liquid")) : true,
+  ]);
+
+  if (mainOk) sortTailwindOutput();
+
+  return mainOk && resetOk;
 };

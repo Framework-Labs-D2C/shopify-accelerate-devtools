@@ -17,12 +17,15 @@ export const validateCliOptions = async (
     environment = "development",
     reset_theme_id = false,
     rebuildJs = false,
+    build = false,
   }: {
     store?: string;
     theme?: number;
     environment?: string;
     reset_theme_id?: boolean;
     rebuildJs?: boolean;
+    /* One-shot build: never prompt or call the Shopify CLI. Store and theme are optional. */
+    build?: boolean;
   } = { environment: "development", store: undefined, theme: undefined, reset_theme_id: false }
 ) => {
   const { environments } = config;
@@ -49,7 +52,7 @@ export const validateCliOptions = async (
     currentEnvironment.theme = undefined;
   }
 
-  if (store && currentEnvironment.store !== store) {
+  if (store && currentEnvironment.store !== store && !build) {
     const { update_store } = await userInput([
       {
         type: "confirm",
@@ -64,7 +67,7 @@ export const validateCliOptions = async (
     }
   }
 
-  if (theme_id && +currentEnvironment.theme !== +theme_id) {
+  if (theme_id && +currentEnvironment.theme !== +theme_id && !build) {
     const { update_theme_id } = await userInput([
       {
         type: "confirm",
@@ -78,7 +81,7 @@ export const validateCliOptions = async (
   }
 
   const prompts = [];
-  if (!store && !currentEnvironment.store) {
+  if (!store && !currentEnvironment.store && !build) {
     console.log(`[${chalk.gray(new Date().toLocaleTimeString())}]: ${chalk.redBright(`Store handle missing.`)}`);
     const results = await userInput([
       {
@@ -94,7 +97,7 @@ export const validateCliOptions = async (
       currentEnvironment?.store?.replace(/\.myshopify\.com/gi, "");
   }
 
-  if (!theme_id && !currentEnvironment.theme) {
+  if (!theme_id && !currentEnvironment.theme && !build) {
     if (currentEnvironment.store) {
       const results = await userInput([
         {
@@ -183,7 +186,7 @@ export const validateCliOptions = async (
     });
   }
 
-  if ((store && currentEnvironment.store !== store) || (theme_id && currentEnvironment.theme !== +theme_id)) {
+  if (((store && currentEnvironment.store !== store) || (theme_id && currentEnvironment.theme !== +theme_id)) && !build) {
     prompts.push({
       type: "text",
       name: "environment",
@@ -243,6 +246,14 @@ export const validateCliOptions = async (
   const { project_root, package_templates } = config;
 
   writeOnlyNew(path.join(process.cwd(), ".env"), readFile(path.join(package_templates, "/.env.template")));
+
+  if (build) {
+    if (!currentEnvironment?.path) {
+      throw new Error(`Missing output path for the "${environment}" environment`);
+    }
+    process.env.THEME_PATH = currentEnvironment?.path;
+    return;
+  }
 
   if (!currentEnvironment?.store || !currentEnvironment?.theme || !currentEnvironment?.path || !environment) {
     throw new Error("Missing information to initialize the theme environment");

@@ -49,6 +49,9 @@ function markWorkerFinished() {
   }
 }
 
+// Tracked so a one-shot build can wait for every worker before exiting
+const eslintWorkers: Promise<void>[] = [];
+
 export const runEslint = (entryFile, tempName, content, filePath) => {
   if (initialPhase) markWorkerStarted();
 
@@ -61,6 +64,8 @@ export const runEslint = (entryFile, tempName, content, filePath) => {
       config,
     },
   });
+
+  eslintWorkers.push(new Promise((resolve) => worker.once("exit", () => resolve())));
 
   worker.on("message", () => {
     markWorkerFinished();
@@ -495,4 +500,42 @@ export const runEsbuild = () => {
   });
 
   // runEsBuildBundle();
+};
+
+// ----------------------------
+// One-shot build: compile every entry (hash-checked), no watcher
+// ----------------------------
+export const buildEsbuild = async () => {
+  const findEnabled = (name: string, schemas: Record<string, { path: string; disabled?: boolean }>) => {
+    const filename = name.split(/[\\/]/gi).at(-1);
+    const entry = Object.values(schemas ?? {}).find((schema) => schema.path.includes(name.replace(filename, "")));
+    return entry && !entry.disabled;
+  };
+
+  const jobs: Promise<void>[] = [
+    ...config.sources.assetsTs.filter((name) => isAssetTs(name)).map((name) => runAssetsJsEsbuild(name, true)),
+    ...config.sources.sectionsJs
+      .filter((name) => isSectionTs(name) && findEnabled(name, config.sources.sectionSchemas))
+      .map((name) => runSectionJsEsbuild(name, true)),
+    ...config.sources.blocksJs
+      .filter((name) => isBlockTs(name) && findEnabled(name, config.sources.blockSchemas))
+      .map((name) => runBlockJsEsbuild(name, true)),
+    ...config.sources.classic_blocksJs
+      .filter((name) => isClassicBlockTs(name) && findEnabled(name, config.sources.classic_blockSchemas))
+      .map((name) => runClassicBlockJsEsbuild(name, true)),
+  ];
+
+  const results = await Promise.allSettled(jobs);
+  const failed = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+  failed.forEach((result) => console.error(result.reason));
+
+  // ESLint workers are queued via queueMicrotask after each write
+  await new Promise((resolve) => setImmediate(resolve));
+  await Promise.all(eslintWorkers);
+
+  console.log(
+    `[${chalk.gray(new Date().toLocaleTimeString())}]: ESBuild compiled ${jobs.length - failed.length}/${jobs.length} entries`
+  );
+
+  return failed.length === 0;
 };

@@ -8,7 +8,7 @@ import { generateAllMissingBlockPresetsFiles } from "./src/scaffold-theme/genera
 import { backupTemplates } from "./src/scaffold-theme/backup-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
-import { runEsbuild } from "./src/esbuild/esbuild";
+import { buildEsbuild, runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
@@ -23,7 +23,7 @@ import { getSchemaSources, getSources, getTargets } from "./src/scaffold-theme/p
 import { syncPresets } from "./src/scaffold-theme/sync-presets";
 import { validateTemplates } from "./src/scaffold-theme/validate-templates";
 import { shopifyCliPull } from "./src/shopify-cli/pull";
-import { runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
+import { buildTailwindCSS, runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
 import { capitalize } from "./src/utils/capitalize";
 import { readFile, writeCompareFile, writeOnlyNew } from "./src/utils/fs";
 import { JSONParse } from "./src/utils/json";
@@ -464,6 +464,34 @@ program
     await validateCliOptions(options);
     runEsbuild();
     startBundleScripts({ watch: false, debug: false });
+  });
+
+program
+  .command("build")
+  .description("One-shot theme build (Liquid, JS, Tailwind, bundles) without watchers or the Shopify CLI. For CI.")
+  .option("-e, --environment <environment_name>", "Development environment name", "development")
+  .action(async (options) => {
+    config.options = options;
+    await validateCliOptions({ ...options, build: true });
+    generateBaseTypes();
+
+    // Tailwind writes to the root assets folder, so it must run before sources are collected and copied
+    const tailwindOk = await buildTailwindCSS();
+    await getSources();
+    getTargets();
+
+    await buildTheme();
+    generateConfigFiles();
+    const esbuildOk = await buildEsbuild();
+
+    const bundle = startBundleScripts({ watch: false, debug: false });
+    const bundleOk = bundle ? await new Promise<boolean>((resolve) => bundle.on("close", (code) => resolve(code === 0))) : true;
+
+    if (!tailwindOk || !esbuildOk || !bundleOk) {
+      console.error("Build finished with errors");
+      process.exit(1);
+    }
+    process.exit(0);
   });
 
 program
