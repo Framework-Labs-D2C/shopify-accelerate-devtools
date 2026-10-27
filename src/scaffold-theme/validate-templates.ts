@@ -6,7 +6,7 @@ import { getSources, getTargets } from "../../src/scaffold-theme/parse-files";
 import { shopifyCliCreate, shopifyCliPull, shopifyCliPush } from "../../src/shopify-cli/pull";
 import { readFile, writeCompareFile } from "../../src/utils/fs";
 
-export const validateTemplates = async (novalidate = false) => {
+export const validateTemplates = async (novalidate = false, once = false) => {
   const count = 0;
   const templates = [
     ...new Set([
@@ -62,23 +62,29 @@ export const validateTemplates = async (novalidate = false) => {
   const blockTypes = Object.values(config.sources.allBlockSchemas)?.map((schema) => schema.type);
   const allTypes = [...sectionTypes, blockTypes];
 
-  if (
-    templates.some((template) => {
-      if (/"(type|id)":\s+(["'`])(?!(shopify:\/\/apps))([^'"`]*-[^'"`]*)\2/gi.test(readFile(template))) {
-        const templateData: { sections: Sections; order: string[] }[] = [];
-        const content = readFile(template);
-        eval(`"use strict"; templateData.push(${content})`);
+  const mismatchedTemplates = templates.filter((template) => {
+    if (/"(type|id)":\s+(["'`])(?!(shopify:\/\/apps))([^'"`]*-[^'"`]*)\2/gi.test(readFile(template))) {
+      const templateData: { sections: Sections; order: string[] }[] = [];
+      const content = readFile(template);
+      eval(`"use strict"; templateData.push(${content})`);
 
-        return Object.values(templateData[0].sections ?? {})?.some((section) => {
-          if (/-/gi.test(section.type) && allTypes.includes(section.type)) {
-            return true;
-          }
-          return false;
-        });
-      }
-      return false;
-    })
-  ) {
+      return Object.values(templateData[0].sections ?? {})?.some((section) => {
+        if (/-/gi.test(section.type) && allTypes.includes(section.type)) {
+          return true;
+        }
+        return false;
+      });
+    }
+    return false;
+  });
+
+  if (mismatchedTemplates.length) {
+    if (once) {
+      throw new Error(
+        `Template validation failed. Re-initialize these templates with \`dev\` (dashed section/block types):\n${mismatchedTemplates.join("\n")}`
+      );
+    }
+
     const results = novalidate
       ? { reinitialize: true, shopify_cli_method: "" }
       : await userInput([

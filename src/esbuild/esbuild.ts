@@ -1,5 +1,6 @@
 // @ts-ignore
 import chalk from "chalk";
+import os from "node:os";
 import path from "node:path";
 import { Worker } from "node:worker_threads";
 import { transform } from "sucrase";
@@ -49,32 +50,53 @@ function markWorkerFinished() {
   }
 }
 
+// Tracked so a one-shot build can wait for every worker before exiting
+const eslintWorkers: Promise<{ entryFile: string; code: number }>[] = [];
+
+// dev starts every worker at once; a one-shot build caps them to stay within CI memory
+let maxEslintWorkers = Infinity;
+let activeEslintWorkers = 0;
+const queuedEslintWorkers: (() => void)[] = [];
+
 export const runEslint = (entryFile, tempName, content, filePath) => {
   if (initialPhase) markWorkerStarted();
 
-  const worker = new Worker(path.join(__dirname, "eslint-worker.js"), {
-    workerData: {
-      entryFile,
-      tempName,
-      content,
-      filePath,
-      config,
-    },
-  });
+  const start = (resolve: (result: { entryFile: string; code: number }) => void) => {
+    activeEslintWorkers++;
+    const worker = new Worker(path.join(__dirname, "eslint-worker.js"), {
+      workerData: {
+        entryFile,
+        tempName,
+        content,
+        filePath,
+        config,
+      },
+    });
 
-  worker.on("message", () => {
-    markWorkerFinished();
-  });
+    worker.on("message", () => {
+      markWorkerFinished();
+    });
 
-  worker.on("error", (err) => {
-    console.error(err);
-    markWorkerFinished();
-  });
+    worker.on("error", (err) => {
+      console.error(err);
+      markWorkerFinished();
+    });
 
-  worker.on("exit", (code) => {
-    if (code !== 0) console.error("Worker exit code:", code);
-    markWorkerFinished();
-  });
+    worker.on("exit", (code) => {
+      if (code !== 0) console.error("Worker exit code:", code);
+      markWorkerFinished();
+      activeEslintWorkers--;
+      queuedEslintWorkers.shift()?.();
+      resolve({ entryFile, code });
+    });
+  };
+
+  eslintWorkers.push(
+    new Promise((resolve) => {
+      if (activeEslintWorkers < maxEslintWorkers) start(resolve);
+      else queuedEslintWorkers.push(() => start(resolve));
+    })
+  );
 };
 
 // ----------------------------
@@ -495,4 +517,49 @@ export const runEsbuild = () => {
   });
 
   // runEsBuildBundle();
+};
+
+// ----------------------------
+// One-shot build: compile every entry (hash-checked), no watcher
+// ----------------------------
+export const buildEsbuild = async () => {
+  maxEslintWorkers = Math.max(1, os.availableParallelism() - 1);
+
+  const findEnabled = (name: string, schemas: Record<string, { path: string; disabled?: boolean }>) => {
+    const filename = name.split(/[\\/]/gi).at(-1);
+    const entry = Object.values(schemas ?? {}).find((schema) => schema.path.includes(name.replace(filename, "")));
+    return entry && !entry.disabled;
+  };
+
+  const entries: (readonly [string, (entryFile: string, watchTrigger: boolean) => Promise<void>])[] = [
+    ...config.sources.assetsTs.filter((name) => isAssetTs(name)).map((name) => [name, runAssetsJsEsbuild] as const),
+    ...config.sources.sectionsJs
+      .filter((name) => isSectionTs(name) && findEnabled(name, config.sources.sectionSchemas))
+      .map((name) => [name, runSectionJsEsbuild] as const),
+    ...config.sources.blocksJs
+      .filter((name) => isBlockTs(name) && findEnabled(name, config.sources.blockSchemas))
+      .map((name) => [name, runBlockJsEsbuild] as const),
+    ...config.sources.classic_blocksJs
+      .filter((name) => isClassicBlockTs(name) && findEnabled(name, config.sources.classic_blockSchemas))
+      .map((name) => [name, runClassicBlockJsEsbuild] as const),
+  ];
+
+  const results = await Promise.allSettled(entries.map(([name, compile]) => compile(name, true)));
+  const failed = entries.filter((entry, i) => results[i].status === "rejected");
+  results.forEach((result, i) => {
+    if (result.status === "rejected") {
+      console.error(chalk.redBright(`JS compile failed: ${entries[i][0]}\n${result.reason?.message ?? result.reason}`));
+    }
+  });
+
+  // ESLint workers are queued via queueMicrotask after each write
+  await new Promise((resolve) => setImmediate(resolve));
+  const crashedWorkers = (await Promise.all(eslintWorkers)).filter(({ code }) => code !== 0);
+  crashedWorkers.forEach(({ entryFile }) => console.error(chalk.redBright(`ESLint worker failed: ${entryFile}`)));
+
+  console.log(
+    `[${chalk.gray(new Date().toLocaleTimeString())}]: ESBuild compiled ${entries.length - failed.length}/${entries.length} entries`
+  );
+
+  return failed.length === 0 && crashedWorkers.length === 0;
 };

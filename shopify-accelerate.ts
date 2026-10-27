@@ -1,14 +1,15 @@
 #!/usr/bin/env ts-node-script
 
+import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { startBundleScripts } from "./src/esbuild/start-bundle-script";
+import { buildBundleScripts, startBundleScripts } from "./src/esbuild/start-bundle-script";
 import { backupNamesInSettings, restoreNamesInSettingsFromBackup } from "./src/scaffold-theme/backup-names-in-settings";
 import { generateAllMissingBlockPresetsFiles } from "./src/scaffold-theme/generate-blocks-presets-files";
 import { backupTemplates } from "./src/scaffold-theme/backup-templates";
 import toml from "toml";
 import { ShopifyBlock, ShopifyCard, ShopifySection, ShopifySettings, ShopifyThemeBlock } from "./@types/shopify";
-import { runEsbuild } from "./src/esbuild/esbuild";
+import { buildEsbuild, runEsbuild } from "./src/esbuild/esbuild";
 import { buildTheme } from "./src/scaffold-theme/build-theme";
 import { fixNamingConventions } from "./src/scaffold-theme/fix-naming-conventions";
 import { generateBaseTypes } from "./src/scaffold-theme/generate-base-types";
@@ -23,7 +24,7 @@ import { getSchemaSources, getSources, getTargets } from "./src/scaffold-theme/p
 import { syncPresets } from "./src/scaffold-theme/sync-presets";
 import { validateTemplates } from "./src/scaffold-theme/validate-templates";
 import { shopifyCliPull } from "./src/shopify-cli/pull";
-import { runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
+import { buildTailwindCSS, runTailwindCSSWatcher } from "./src/tailwind/tailwind-watch";
 import { capitalize } from "./src/utils/capitalize";
 import { readFile, writeCompareFile, writeOnlyNew } from "./src/utils/fs";
 import { JSONParse } from "./src/utils/json";
@@ -464,6 +465,59 @@ program
     await validateCliOptions(options);
     runEsbuild();
     startBundleScripts({ watch: false, debug: false });
+  });
+
+program
+  .command("build")
+  .description("One-shot theme build for CI: builds once and exits. No watchers, prompts, Shopify CLI or telemetry.")
+  .option("-e, --environment <environment_name>", "Development environment name", "development")
+  .action(async (options) => {
+    const startTime = Date.now();
+    config.options = options;
+
+    const fail = (message: string) => {
+      console.error(chalk.redBright(`Build failed: ${message}`));
+      process.exit(1);
+    };
+
+    try {
+      await validateCliOptions({ ...options, rebuildJs: true, build: true });
+
+      generateBaseTypes();
+      generateAllMissingPresetsFiles();
+      generateAllMissingBlockPresetsFiles();
+      await getSources();
+      getTargets();
+
+      await fixNamingConventions(true);
+      await buildTheme();
+      generateConfigFiles();
+
+      // Validate after the output templates exist, so a fresh checkout is checked too
+      getTargets();
+      await validateTemplates(true, true);
+
+      // Order matters: the bundle concatenates the compiled JS, and Tailwind scans the finished output for classes
+      if (!(await buildEsbuild())) fail("JS compile errors (see above)");
+      await buildBundleScripts();
+      if (!(await buildTailwindCSS())) fail("Tailwind compile errors (see above)");
+    } catch (err) {
+      console.error(err);
+      fail(err?.message ?? String(err));
+    }
+
+    const outputDir = path.join(process.cwd(), config.theme_path);
+    console.log(chalk.greenBright(`\nBuild complete in ${((Date.now() - startTime) / 1000).toFixed(1)}s`));
+    console.log(`Output: ${outputDir}`);
+    fs.readdirSync(outputDir, { withFileTypes: true })
+      .filter((dirent) => dirent.isDirectory())
+      .forEach((dirent) => {
+        const count = fs
+          .readdirSync(path.join(outputDir, dirent.name), { recursive: true, withFileTypes: true })
+          .filter((file) => file.isFile()).length;
+        console.log(`  ${dirent.name.padEnd(12)} ${count} files`);
+      });
+    process.exit(0);
   });
 
 program
