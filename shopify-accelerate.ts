@@ -1,8 +1,9 @@
 #!/usr/bin/env ts-node-script
 
+import chalk from "chalk";
 import fs from "fs";
 import path from "path";
-import { startBundleScripts } from "./src/esbuild/start-bundle-script";
+import { buildBundleScripts, startBundleScripts } from "./src/esbuild/start-bundle-script";
 import { backupNamesInSettings, restoreNamesInSettingsFromBackup } from "./src/scaffold-theme/backup-names-in-settings";
 import { generateAllMissingBlockPresetsFiles } from "./src/scaffold-theme/generate-blocks-presets-files";
 import { backupTemplates } from "./src/scaffold-theme/backup-templates";
@@ -468,29 +469,54 @@ program
 
 program
   .command("build")
-  .description("One-shot theme build (Liquid, JS, Tailwind, bundles) without watchers or the Shopify CLI. For CI.")
+  .description("One-shot theme build for CI: builds once and exits. No watchers, prompts, Shopify CLI or telemetry.")
   .option("-e, --environment <environment_name>", "Development environment name", "development")
   .action(async (options) => {
+    const startTime = Date.now();
     config.options = options;
-    await validateCliOptions({ ...options, build: true });
-    generateBaseTypes();
 
-    // Tailwind writes to the root assets folder, so it must run before sources are collected and copied
-    const tailwindOk = await buildTailwindCSS();
-    await getSources();
-    getTargets();
-
-    await buildTheme();
-    generateConfigFiles();
-    const esbuildOk = await buildEsbuild();
-
-    const bundle = startBundleScripts({ watch: false, debug: false });
-    const bundleOk = bundle ? await new Promise<boolean>((resolve) => bundle.on("close", (code) => resolve(code === 0))) : true;
-
-    if (!tailwindOk || !esbuildOk || !bundleOk) {
-      console.error("Build finished with errors");
+    const fail = (message: string) => {
+      console.error(chalk.redBright(`Build failed: ${message}`));
       process.exit(1);
+    };
+
+    try {
+      await validateCliOptions({ ...options, rebuildJs: true, build: true });
+
+      generateBaseTypes();
+      generateAllMissingPresetsFiles();
+      generateAllMissingBlockPresetsFiles();
+      await getSources();
+      getTargets();
+
+      await fixNamingConventions(true);
+      await buildTheme();
+      generateConfigFiles();
+
+      // Validate after the output templates exist, so a fresh checkout is checked too
+      getTargets();
+      await validateTemplates(true, true);
+
+      // Order matters: the bundle concatenates the compiled JS, and Tailwind scans the finished output for classes
+      if (!(await buildEsbuild())) fail("JS compile errors (see above)");
+      await buildBundleScripts();
+      if (!(await buildTailwindCSS())) fail("Tailwind compile errors (see above)");
+    } catch (err) {
+      console.error(err);
+      fail(err?.message ?? String(err));
     }
+
+    const outputDir = path.join(process.cwd(), config.theme_path);
+    console.log(chalk.greenBright(`\nBuild complete in ${((Date.now() - startTime) / 1000).toFixed(1)}s`));
+    console.log(`Output: ${outputDir}`);
+    fs.readdirSync(outputDir, { withFileTypes: true })
+      .filter((dirent) => dirent.isDirectory())
+      .forEach((dirent) => {
+        const count = fs
+          .readdirSync(path.join(outputDir, dirent.name), { recursive: true, withFileTypes: true })
+          .filter((file) => file.isFile()).length;
+        console.log(`  ${dirent.name.padEnd(12)} ${count} files`);
+      });
     process.exit(0);
   });
 

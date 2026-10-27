@@ -2,7 +2,7 @@ import child_process from "child_process";
 import fs from "fs";
 import path from "path";
 import { config, root_dir } from "../../shopify-accelerate";
-import { deleteFile, readFile } from "../utils/fs";
+import { deleteFile, readFile, writeCompareFile, writeOnlyNew } from "../utils/fs";
 const watch = require("node-watch");
 
 export const runTailwindCSSWatcher = () => {
@@ -150,7 +150,8 @@ const sortTailwindOutput = () => {
   fs.writeFileSync(path.join(process.cwd(), ".tailwindorder"), classesInOrder.join("\n"));
 };
 
-/* One-shot Tailwind compile (main + reset), then the same class sort the watcher runs */
+/* One-shot Tailwind compile (main + reset), then the same class sort the watcher runs.
+   Run it after the theme and JS are built: Tailwind scans the output folder for classes. */
 export const buildTailwindCSS = async () => {
   const { package_root } = config;
   const inputCssPath = path.join(root_dir, "assets", "_tailwind.css");
@@ -189,6 +190,18 @@ export const buildTailwindCSS = async () => {
   ]);
 
   if (mainOk) sortTailwindOutput();
+
+  // In `dev` the theme watcher copies these into the output assets folder
+  ["tailwind_pre_sort.css.liquid", "tailwind.css.liquid", "reset.css.liquid"].forEach((fileName) => {
+    const sourcePath = path.join(root_dir, "assets", fileName);
+    if (!fs.existsSync(sourcePath)) return;
+    const targetPath = path.join(process.cwd(), config.theme_path, "assets", fileName);
+    if (config.ignore_assets?.includes(fileName)) {
+      writeOnlyNew(targetPath, readFile(sourcePath));
+    } else {
+      writeCompareFile(targetPath, readFile(sourcePath));
+    }
+  });
 
   return mainOk && resetOk;
 };
